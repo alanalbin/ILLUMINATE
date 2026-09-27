@@ -1,6 +1,7 @@
 import React from 'react';
 import { DataStore } from '@/lib/storage/data-store';
-import ScrollExperience from '@/components/phone-3d/ScrollExperience';
+import HeroSection from '@/components/home/HeroSection';
+import BackgroundCanvas3D from '@/components/background-3d/BackgroundCanvas3D';
 import AboutSection from '@/components/home/AboutSection';
 import WorkshopStructureSection from '@/components/home/WorkshopStructureSection';
 import BenefitsSection from '@/components/home/BenefitsSection';
@@ -14,9 +15,12 @@ export default async function HomePage() {
   const event = await DataStore.getEventConfig();
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Signature 3D Apple-Inspired Phone Scroll Experience */}
-      <ScrollExperience />
+    <div className="flex flex-col min-h-screen relative bg-[#05030a]">
+      {/* Professional 3D Ambient Background Animation */}
+      <BackgroundCanvas3D />
+
+      {/* Hero Section with intentional balance and Alan Albin contact details */}
+      <HeroSection event={event} />
 
       {/* Workshop Narrative & Mission */}
       <AboutSection />

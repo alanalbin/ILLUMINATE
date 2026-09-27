@@ -249,7 +249,7 @@ function PaymentContent() {
     );
   }
 
-  const fee = eventConfig?.registrationFee || 700;
+  const fee = eventConfig?.registrationFee || 699;
 
   return (
     <div className="min-h-screen bg-[#05030a] py-28 relative">
@@ -324,16 +324,18 @@ function PaymentContent() {
               </p>
             </div>
 
-            {/* Test Sandbox Notice */}
-            <div className="p-4 rounded-xl bg-purple-950/50 border border-purple-800/40 flex items-start gap-3 text-xs text-purple-200">
-              <Info className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-purple-300">Sandbox Environment Mode:</p>
-                <p className="text-slate-300 mt-0.5 leading-relaxed">
-                  Live merchant gateway is kept disabled until the fee and merchant account are verified by the KMCT / E-Cell coordinator. Clicking the button below simulates an end-to-end verified server order, signature check, and generates your confirmed digital pass.
-                </p>
+            {/* Gateway Status Notice */}
+            {!eventConfig?.livePaymentsEnabled ? (
+              <div className="p-4 rounded-xl bg-purple-950/60 border border-purple-800/50 flex items-start gap-3 text-xs text-purple-200">
+                <Info className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-purple-300">Gateway Status Notice:</p>
+                  <p className="text-slate-300 mt-0.5 leading-relaxed">
+                    Live Razorpay merchant payments are currently protected until coordinator live credentials confirmation. You can complete registration immediately via <strong>Direct UPI Transfer</strong> (Tab 2), or test the full order flow in sandbox mode below.
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : null}
 
             <button
               onClick={handleGatewayPayment}

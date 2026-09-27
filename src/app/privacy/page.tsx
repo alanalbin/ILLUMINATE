@@ -68,7 +68,7 @@ export default function PrivacyPolicyPage() {
             <section className="space-y-2">
               <h2 className="text-base font-bold text-white">5. Coordinator Contact</h2>
               <p>
-                For questions regarding your data or to request corrections, contact Rachit Kumar (Official Lead, E-Cell IIT Bombay) at <a href="mailto:rachit@ecell.in" className="text-purple-400 hover:underline">rachit@ecell.in</a> or +91 9719362033.
+                For questions regarding your data or to request corrections, contact Alan Albin (Registration Details & Local Coordinator) at <a href="tel:8848563266" className="text-purple-400 hover:underline">8848563266</a> or <a href="mailto:alan.albin@kmct.edu.in" className="text-purple-400 hover:underline">alan.albin@kmct.edu.in</a>.
               </p>
             </section>
           </div>

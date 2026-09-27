@@ -26,6 +26,11 @@
   --glow-violet: rgba(124, 58, 237, 0.35);
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);

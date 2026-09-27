@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Building,
   CheckCircle2,
+  Phone,
 } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -314,7 +315,7 @@ export default function RegisterPage() {
                     </>
                   ) : (
                     <>
-                      <span>Proceed to Payment (₹700)</span>
+                      <span>Proceed to Payment (₹699)</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -336,7 +337,7 @@ export default function RegisterPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-300">Workshop Pass</span>
-                  <span className="font-bold text-white">₹700</span>
+                  <span className="font-bold text-white">₹699</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-300">Duration</span>
@@ -349,14 +350,14 @@ export default function RegisterPage() {
 
                 <div className="pt-3 border-t border-purple-950/60 flex justify-between items-baseline">
                   <span className="text-sm font-semibold text-white">Total Amount</span>
-                  <span className="text-2xl font-black text-gradient-vibrant">₹700</span>
+                  <span className="text-2xl font-black text-gradient-vibrant">₹699</span>
                 </div>
               </div>
 
-              {/* Discrepancy note */}
+              {/* Verified note */}
               <div className="mt-5 p-3 rounded-xl bg-purple-950/40 border border-purple-800/30 text-xs text-purple-200 leading-relaxed">
-                <p className="font-semibold text-purple-300 mb-0.5">Pricing Transparency Note:</p>
-                The official E-Cell NEC guidelines state ₹699 per participant until 30 Sept 2026. The configured ₹700 fee is subject to coordinator verification before live billing.
+                <p className="font-semibold text-purple-300 mb-0.5">Official Fee Confirmed:</p>
+                The official E-Cell IIT Bombay NEC discount rate of ₹699/- is applied. Includes full 6-hour masterclass, certificate, and startup kit.
               </div>
             </div>
 
@@ -383,10 +384,16 @@ export default function RegisterPage() {
             </div>
 
             {/* Registration Contact Box */}
-            <div className="p-5 rounded-2xl bg-purple-950/20 border border-purple-900/30 text-xs text-slate-400 space-y-1.5">
-              <p className="font-semibold text-slate-200">Registration Details & Inquiries:</p>
-              <p className="text-purple-300 font-bold">Alan Albin: <a href="tel:+918848563266" className="underline hover:text-purple-200">+91 8848563266</a></p>
-              <p className="text-[11px] text-slate-400 pt-1 border-t border-purple-950/50">E-Cell IIT Bombay Lead: Rachit Kumar (+91 9719362033)</p>
+            <div className="p-5 rounded-2xl bg-purple-950/30 border border-purple-900/40 text-xs text-slate-300 space-y-2">
+              <p className="text-[11px] uppercase font-bold text-purple-400">Contact Person</p>
+              <p className="text-white font-bold text-sm">Alan Albin</p>
+              <div className="pt-1 border-t border-purple-950/60">
+                <p className="text-[11px] uppercase font-bold text-purple-400">Mobile</p>
+                <a href="tel:8848563266" className="text-purple-300 hover:text-purple-200 font-bold text-sm inline-flex items-center gap-1.5 mt-0.5">
+                  <Phone className="w-3.5 h-3.5 text-purple-400" />
+                  <span>8848563266</span>
+                </a>
+              </div>
             </div>
 
           </div>

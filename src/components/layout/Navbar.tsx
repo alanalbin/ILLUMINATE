@@ -77,7 +77,7 @@ export default function Navbar() {
             href="/register"
             className="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-purple-950/60 hover:shadow-purple-700/40"
           >
-            Register (₹700)
+            Register (₹699)
           </Link>
         </div>
 
@@ -137,7 +137,7 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full py-3 rounded-xl text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-purple-950"
             >
-              Register (₹700)
+              Register (₹699)
             </Link>
           </div>
         </div>

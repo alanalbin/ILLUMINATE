@@ -81,14 +81,14 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
                   <span className="text-xs text-slate-400">per participant</span>
                 </div>
                 <div className="mt-2 p-2.5 rounded-lg bg-purple-950/40 border border-purple-800/30 text-[11px] text-purple-200">
-                  <span className="font-semibold text-purple-300">Pricing Note:</span> Official NEC discount info lists ₹699 per person until 30 Sept 2026. Rate is subject to coordinator confirmation.
+                  <span className="font-semibold text-purple-300">Official Rate:</span> Registration fee is ₹699/- in accordance with the official E-Cell IIT Bombay NEC discount guidelines.
                 </div>
               </div>
 
               <div>
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Target Cohort</p>
                 <p className="text-base font-bold text-white mt-1">
-                  {event.minimumTarget} Participants Minimum
+                  {event.minimumTarget || 70} Participants Minimum
                 </p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {event.capacity ? `Configured capacity: ${event.capacity} seats` : 'Open cohort (target is not a capacity cap)'}
@@ -101,45 +101,32 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
           <div className="glass-card rounded-2xl p-7 border border-purple-900/30 space-y-6">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-purple-400" />
-              <span>Official Contacts</span>
+              <span>Event Contact</span>
             </h3>
 
             <div className="space-y-4">
               <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">E-Cell IIT Bombay Lead</p>
-                <p className="text-base font-bold text-white mt-1">{event.officialContact.name}</p>
-                <div className="mt-2 space-y-1.5 text-xs text-slate-300">
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Contact Person</p>
+                <p className="text-base font-bold text-white mt-1">{event.localCoordinator?.name || 'Alan Albin'}</p>
+                <p className="text-xs text-slate-400">Registration Details & Local Coordinator</p>
+              </div>
+
+              <div className="pt-2 border-t border-purple-950/60">
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Mobile</p>
+                <div className="mt-1">
                   <a
-                    href={`mailto:${event.officialContact.email}`}
-                    className="flex items-center gap-2 text-purple-300 hover:text-purple-200"
+                    href={`tel:${event.localCoordinator?.phone || '8848563266'}`}
+                    className="inline-flex items-center gap-2 text-sm font-bold text-purple-300 hover:text-purple-200 transition-colors"
                   >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>{event.officialContact.email}</span>
-                  </a>
-                  <a
-                    href={`tel:${event.officialContact.phone}`}
-                    className="flex items-center gap-2 text-purple-300 hover:text-purple-200"
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>{event.officialContact.phone}</span>
+                    <Phone className="w-4 h-4 text-purple-400" />
+                    <span>{event.localCoordinator?.phone || '8848563266'}</span>
                   </a>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-purple-950/60">
-                <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Registration Details Contact</p>
-                <p className="text-sm font-bold text-white mt-1">
-                  {event.localCoordinator?.name || 'Alan Albin'}
-                </p>
-                <div className="mt-1">
-                  <a
-                    href={`tel:${event.localCoordinator?.phone || '+918848563266'}`}
-                    className="flex items-center gap-1.5 text-xs text-purple-300 hover:text-purple-200"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-purple-400" />
-                    <span>{event.localCoordinator?.phone || '+91 8848563266'}</span>
-                  </a>
-                </div>
+              <div className="pt-2 border-t border-purple-950/60 text-xs text-slate-400">
+                <p>E-Cell, IIT Bombay Initiative</p>
+                <p className="text-[11px] text-purple-400/80 mt-0.5">National Entrepreneurship Challenge (NEC)</p>
               </div>
 
               <div className="pt-2">

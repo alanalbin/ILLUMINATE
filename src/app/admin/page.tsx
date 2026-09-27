@@ -25,6 +25,7 @@ import {
   Building,
   Calendar,
   Save,
+  ShieldCheck,
 } from 'lucide-react';
 import { Registration, EventConfig, DashboardMetrics, AuditLog } from '@/types';
 
@@ -339,23 +340,23 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
         
-        {/* PROMINENT PRICE DISCREPANCY & GATEWAY SAFETY BANNER */}
-        <div className="p-6 rounded-2xl bg-amber-950/40 border-2 border-amber-500/50 shadow-2xl space-y-3">
+        {/* OFFICIAL PRICE CONFIRMATION & GATEWAY SAFETY CONTROLS */}
+        <div className="p-6 rounded-2xl bg-purple-950/40 border border-purple-500/40 shadow-2xl space-y-3">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-900/60 border border-amber-500/50 flex items-center justify-center shrink-0 text-amber-300 mt-0.5">
-              <AlertTriangle className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-500/50 flex items-center justify-center shrink-0 text-purple-300 mt-0.5">
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-base font-bold text-amber-200 uppercase tracking-wide">
-                  Pricing Discrepancy & Gateway Verification Warning
+                <h3 className="text-base font-bold text-white uppercase tracking-wide">
+                  Official Registration Fee: ₹{eventConfig?.registrationFee || 699}/-
                 </h3>
-                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-900/80 text-amber-200 border border-amber-700">
-                  CRITICAL CONDITION
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-950 text-emerald-300 border border-emerald-700">
+                  NEC DISCOUNT CONFIRMED
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-amber-100/90 mt-1 leading-relaxed">
-                The requested workshop fee is configured at <strong>₹{eventConfig?.registrationFee || 700}</strong> per participant. However, the official E-Cell IIT Bombay NEC discount guideline explicitly specifies <strong>₹{eventConfig?.officialDiscountFee || 699}</strong> until <strong>{eventConfig?.discountDeadline || '30 September 2026'}</strong>.
+              <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+                The official workshop registration fee is configured at <strong>₹{eventConfig?.registrationFee || 699}</strong> per participant, in full alignment with the official E-Cell IIT Bombay NEC discount guidelines (valid until <strong>{eventConfig?.discountDeadline || '30 September 2026'}</strong>).
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
                 <div className="flex items-center gap-2">
@@ -371,15 +372,6 @@ export default function AdminPage() {
                     {eventConfig?.livePaymentsEnabled ? 'ENABLED (LIVE)' : 'DISABLED (PROTECTED TEST MODE)'}
                   </button>
                 </div>
-
-                {!eventConfig?.priceDiscrepancyAcknowledged && (
-                  <button
-                    onClick={handleAcknowledgePrice}
-                    className="px-3 py-1 rounded-md bg-amber-900/60 hover:bg-amber-800/80 border border-amber-600 text-amber-200 font-semibold"
-                  >
-                    Acknowledge Price Discrepancy
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -767,7 +759,7 @@ export default function AdminPage() {
                   </label>
                   <input
                     type="number"
-                    value={settingsForm.registrationFee || 700}
+                    value={settingsForm.registrationFee || 699}
                     onChange={(e) =>
                       setSettingsForm({
                         ...settingsForm,
@@ -777,8 +769,8 @@ export default function AdminPage() {
                     }
                     className="w-full px-4 py-2.5 rounded-xl bg-[#0e071c] border border-purple-900/50 text-white text-xs"
                   />
-                  <span className="text-[11px] text-amber-400 mt-1 block">
-                    Reminder: Official E-Cell discount is ₹699 till 30 Sept 2026.
+                  <span className="text-[11px] text-emerald-400 mt-1 block">
+                    Official E-Cell IIT Bombay NEC discount rate is ₹699/- (valid till 30 Sept 2026).
                   </span>
                 </div>
 

@@ -30,7 +30,7 @@ export const EmailService = {
         </p>
 
         <div style="border-top: 1px solid #7c3aed20; margin-top: 28px; padding-top: 20px; text-align: center; color: #64748b; font-size: 12px;">
-          <p>For questions or assistance: Rachit Kumar (E-Cell IIT Bombay) | +91 9719362033 | rachit@ecell.in</p>
+          <p>For questions or assistance: Alan Albin (Registration Details & Local Coordinator) | 8848563266</p>
           <p>KMCT College of Engineering for Emerging Technologies and Management, Kasaragod</p>
         </div>
       </div>
@@ -79,7 +79,7 @@ export const EmailService = {
 
         <div style="border-top: 1px solid #7c3aed20; margin-top: 28px; padding-top: 20px; text-align: center; color: #64748b; font-size: 12px;">
           <p>Please present this digital pass or your Registration ID at the venue desk.</p>
-          <p>E-Cell IIT Bombay Official Contact: Rachit Kumar (+91 9719362033 | rachit@ecell.in)</p>
+          <p>Registration Details & Contact Person: Alan Albin (8848563266)</p>
         </div>
       </div>
     `;

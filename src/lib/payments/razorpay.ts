@@ -184,7 +184,7 @@ export const PaymentService = {
       providerOrderId: orderId,
       providerPaymentId: paymentId,
       providerSignature: signature,
-      amountPaise: registration.amountPaise || 70000,
+      amountPaise: registration.amountPaise || 69900,
       currency: 'INR',
       status: 'captured',
       verifiedAt: new Date().toISOString(),
@@ -195,7 +195,7 @@ export const PaymentService = {
       status: 'confirmed',
       paymentStatus: 'verified',
       paymentMethod: 'razorpay',
-      amountPaid: (registration.amountPaise || 70000) / 100,
+      amountPaid: (registration.amountPaise || 69900) / 100,
       paymentId,
       confirmationSentAt: new Date().toISOString(),
     });
@@ -206,7 +206,7 @@ export const PaymentService = {
       'PAYMENT_VERIFIED_SUCCESS',
       'registration',
       registrationId,
-      { orderId, paymentId, amountINR: (registration.amountPaise || 70000) / 100 }
+      { orderId, paymentId, amountINR: (registration.amountPaise || 69900) / 100 }
     );
 
     return { success: true, message: 'Payment verified and registration confirmed' };

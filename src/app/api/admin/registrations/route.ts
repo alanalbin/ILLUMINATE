@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest) {
       updates.paymentStatus = paymentStatus;
       if (paymentStatus === 'verified') {
         updates.status = 'confirmed';
-        updates.amountPaid = (reg.amountPaise || 70000) / 100;
+        updates.amountPaid = (reg.amountPaise || 69900) / 100;
         updates.confirmationSentAt = new Date().toISOString();
       }
     }

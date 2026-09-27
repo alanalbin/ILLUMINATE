@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
             providerOrderId: orderId,
             providerPaymentId: paymentId,
             providerSignature: signature,
-            amountPaise: paymentEntity.amount || 70000,
+            amountPaise: paymentEntity.amount || 69900,
             currency: 'INR',
             status: 'captured',
             verifiedAt: new Date().toISOString(),
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
             status: 'confirmed',
             paymentStatus: 'verified',
             paymentMethod: 'razorpay',
-            amountPaid: (paymentEntity.amount || 70000) / 100,
+            amountPaid: (paymentEntity.amount || 69900) / 100,
             paymentId,
             confirmationSentAt: new Date().toISOString(),
           });

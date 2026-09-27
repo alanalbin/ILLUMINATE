@@ -298,10 +298,14 @@ function SuccessContent() {
           </ul>
 
           <div className="pt-4 border-t border-purple-950/60 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
-            <span>Official Program Contact: Rachit Kumar (E-Cell IIT Bombay)</span>
-            <div className="flex items-center gap-4">
-              <a href="mailto:rachit@ecell.in" className="text-purple-400 hover:underline">rachit@ecell.in</a>
-              <a href="tel:+919719362033" className="text-purple-400 hover:underline">+91 9719362033</a>
+            <div>
+              <span className="font-semibold text-slate-300">Contact Person:</span> Alan Albin (Local Coordinator)
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Mobile:</span>
+              <a href="tel:8848563266" className="text-purple-400 font-bold hover:underline">
+                8848563266
+              </a>
             </div>
           </div>
         </div>

@@ -42,40 +42,31 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Col 3: Official E-Cell Contact */}
-          <div className="space-y-2">
+          {/* Col 3: Official Event Contact */}
+          <div className="space-y-3">
             <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">
-              Official Program Lead
+              Event Contact
             </h4>
-            <p className="text-slate-300 font-medium">Rachit Kumar</p>
-            <p className="text-slate-400 text-[11px]">E-Cell, IIT Bombay</p>
-            <div className="pt-1 space-y-1">
+            <div>
+              <p className="text-[10px] uppercase font-bold text-purple-400">Contact Person</p>
+              <p className="text-slate-200 font-semibold text-sm mt-0.5">Alan Albin</p>
+              <p className="text-[11px] text-slate-400">Registration Details & Local Coordinator</p>
+            </div>
+
+            <div className="pt-2 border-t border-purple-950/60">
+              <p className="text-[10px] uppercase font-bold text-purple-400">Mobile</p>
               <a
-                href="mailto:rachit@ecell.in"
-                className="flex items-center gap-1.5 text-slate-300 hover:text-purple-400 transition-colors"
-              >
-                <Mail className="w-3.5 h-3.5 text-purple-400" />
-                <span>rachit@ecell.in</span>
-              </a>
-              <a
-                href="tel:+919719362033"
-                className="flex items-center gap-1.5 text-slate-300 hover:text-purple-400 transition-colors"
+                href="tel:8848563266"
+                className="inline-flex items-center gap-1.5 text-slate-200 hover:text-purple-300 font-bold text-sm transition-colors mt-0.5"
               >
                 <Phone className="w-3.5 h-3.5 text-purple-400" />
-                <span>+91 9719362033</span>
+                <span>8848563266</span>
               </a>
             </div>
 
-            <div className="pt-2 border-t border-purple-950/50">
-              <p className="text-[10px] uppercase font-bold text-purple-400">Registration Inquiries</p>
-              <p className="text-slate-300 font-semibold text-xs mt-0.5">Alan Albin</p>
-              <a
-                href="tel:+918848563266"
-                className="flex items-center gap-1.5 text-slate-300 hover:text-purple-400 transition-colors mt-0.5"
-              >
-                <Phone className="w-3 h-3 text-purple-400" />
-                <span>+91 8848563266</span>
-              </a>
+            <div className="pt-1">
+              <p className="text-[11px] text-slate-400">E-Cell, IIT Bombay Initiative</p>
+              <p className="text-[10px] text-purple-400/80">KMCT College of Engineering, Kasaragod</p>
             </div>
           </div>
 
@@ -133,7 +124,7 @@ export default function Footer() {
             © {currentYear} ILLUMINATE KMCT. Conducted under the initiative of E-Cell, IIT Bombay. All rights reserved.
           </p>
           <p className="text-[11px] text-slate-400 max-w-md">
-            Workshop date and exact venue hall subject to final institutional confirmation. Registration fee is set at ₹700 (subject to official review against ₹699 NEC discount guidelines).
+            Workshop date and exact venue hall subject to institutional scheduling. Registration fee is ₹699/- per participant in accordance with official E-Cell IIT Bombay NEC guidelines.
           </p>
         </div>
 

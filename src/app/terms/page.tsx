@@ -46,7 +46,7 @@ export default function TermsPage() {
             <section className="space-y-2">
               <h2 className="text-base font-bold text-white">3. Pricing and Fees</h2>
               <p>
-                The workshop registration fee is configured at ₹700 per person. Note: The official NEC discount guideline denotes ₹699 per person until 30 September 2026. The final applicable fee is confirmed by the organizing committee in accordance with E-Cell guidelines.
+                The workshop registration fee is ₹699/- per participant in accordance with the official E-Cell IIT Bombay NEC discount guidelines (valid until 30 September 2026).
               </p>
             </section>
 

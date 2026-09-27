@@ -22,12 +22,12 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
   registrationClosingDate: null, // To be announced
 
   // Pricing & Capacities
-  registrationFee: 700, // Requested: ₹700
-  registrationFeePaise: 70000,
+  registrationFee: 699, // Official NEC Discounted Fee: ₹699
+  registrationFeePaise: 69900,
   officialDiscountFee: 699, // Official NEC Discount: ₹699
   discountDeadline: '30 September 2026',
-  priceDiscrepancyAcknowledged: false, // Flagged for organizer review
-  livePaymentsEnabled: false, // Security condition: disabled until confirmed
+  priceDiscrepancyAcknowledged: true, // Confirmed at official ₹699 rate
+  livePaymentsEnabled: false, // Security condition: disabled until live credentials confirmed
   minimumTarget: 70, // 70 participants minimum target (not capacity cap)
   capacity: null, // Configurable separately
 
@@ -37,15 +37,15 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
 
   // Contacts
   officialContact: {
-    name: 'Rachit Kumar',
-    email: 'rachit@ecell.in',
-    phone: '+91 9719362033',
-    role: 'Official E-Cell IIT Bombay Program Lead',
+    name: 'Alan Albin',
+    email: 'alan.albin@kmct.edu.in',
+    phone: '8848563266',
+    role: 'Registration Details & Contact Person',
   },
   localCoordinator: {
     name: 'Alan Albin',
     email: 'alan.albin@kmct.edu.in',
-    phone: '+91 8848563266',
+    phone: '8848563266',
     role: 'Registration Details & Local Coordinator',
   },
 
@@ -131,7 +131,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
       id: 'faq-3',
       question: 'What is the registration fee?',
       answer:
-        'The registration fee is currently configured at ₹700 per participant (under review with the official ₹699 NEC discount rate valid until 30 September 2026). Payments can be made securely via UPI or Razorpay Checkout once live payments are enabled.',
+        'The registration fee is ₹699/- per participant in accordance with the official E-Cell IIT Bombay NEC discount guidelines (valid until 30 September 2026). Payments can be made securely via UPI or Razorpay Checkout once live payments are enabled.',
       category: 'payment',
     },
     {

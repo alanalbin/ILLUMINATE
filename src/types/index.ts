@@ -50,8 +50,8 @@ export interface EventConfig {
   registrationClosingDate: string | null;
   
   // Pricing & Capacities
-  registrationFee: number; // in INR e.g. 700
-  registrationFeePaise: number; // 70000
+  registrationFee: number; // in INR e.g. 699
+  registrationFeePaise: number; // 69900
   officialDiscountFee: number; // 699
   discountDeadline: string; // "30 September 2026"
   priceDiscrepancyAcknowledged: boolean;
