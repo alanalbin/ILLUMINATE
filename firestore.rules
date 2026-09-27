@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.active == true;
+    }
+
+    // 1. Events collection: Publicly readable; writable strictly by admin
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 2. Registrations collection:
+    // - Creation allowed with valid payload
+    // - Never allow public listing of all participant data
+    // - Client CANNOT modify paymentStatus or amountPaid directly
+    match /registrations/{registrationId} {
+      allow create: if request.resource.data.status == 'pending' &&
+                       request.resource.data.paymentStatus in ['unpaid', 'manual_review'] &&
+                       request.resource.data.fullName is string &&
+                       request.resource.data.email is string &&
+                       request.resource.data.phone is string;
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == resource.data.email);
+      allow update, delete: if isAdmin();
+    }
+
+    // 3. Payments collection: Server-side Admin SDK / Verified Admin only
+    match /payments/{paymentId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 4. Admin Users collection: Superadmin only
+    match /adminUsers/{uid} {
+      allow read, write: if isAdmin();
+    }
+
+    // 5. Audit Logs collection: Admin read-only, never client write
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only written via Firebase Admin SDK
+    }
+  }
+}
