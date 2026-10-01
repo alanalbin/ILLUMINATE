@@ -73,7 +73,7 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
       </head>
-      <body className={`min-h-screen min-h-[100dvh] flex flex-col bg-[#05030a] text-slate-100 ${spaceGrotesk.className} selection:bg-purple-600 selection:text-white antialiased relative`}>
+      <body className={`min-h-screen flex flex-col bg-[#05030a] text-slate-100 ${spaceGrotesk.className} selection:bg-purple-600 selection:text-white antialiased relative`}>
         {/* Ambient Brand Logo Watermark Background (Low Opacity) */}
         <div 
           className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden" 
@@ -88,7 +88,7 @@ export default function RootLayout({
         <ScrollProgressBar />
         <AuthProvider>
           <Navbar />
-          <main className="flex-1 relative z-10 flex flex-col">{children}</main>
+          <main className="flex-1 relative z-10">{children}</main>
           <Footer />
           <AuthModal />
         </AuthProvider>

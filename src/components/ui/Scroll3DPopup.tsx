@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 interface Scroll3DPopupProps {
   children: React.ReactNode;
@@ -10,40 +10,66 @@ interface Scroll3DPopupProps {
   duration?: number;
   distance?: number;
   rotateX?: number;
+  enableContinuous3D?: boolean;
 }
 
 export default function Scroll3DPopup({
   children,
   className = '',
-  delay = 0,
-  duration = 0.7,
-  distance = 50,
-  rotateX = 14,
+  rotateX = 10,
+  enableContinuous3D = true,
 }: Scroll3DPopupProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Measure scroll progress through the viewport
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end start'],
+  });
+
+  // Smooth out scroll progression using spring physics
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 22,
+    restDelta: 0.001,
+  });
+
+  // Dynamic 3D perspective transformations mapped to scroll entry, focus, and departure
+  const scrollRotateX = useTransform(
+    smoothProgress,
+    [0, 0.42, 0.58, 1],
+    [rotateX, 0, 0, -rotateX * 0.75]
+  );
+  const scrollScale = useTransform(
+    smoothProgress,
+    [0, 0.42, 0.58, 1],
+    [0.94, 1, 1, 0.96]
+  );
+  const scrollOpacity = useTransform(
+    smoothProgress,
+    [0, 0.22, 0.78, 1],
+    [0.4, 1, 1, 0.45]
+  );
+  const scrollY = useTransform(
+    smoothProgress,
+    [0, 0.45, 0.55, 1],
+    [45, 0, 0, -35]
+  );
+
   return (
-    <div className={`overflow-hidden perspective-[1200px] ${className}`}>
+    <div
+      ref={ref}
+      className={`overflow-hidden ${className}`}
+      style={{ perspective: 1400 }}
+    >
       <motion.div
-        initial={{
-          opacity: 0,
-          y: distance,
-          scale: 0.92,
-          rotateX: rotateX,
-        }}
-        whileInView={{
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          rotateX: 0,
-        }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{
-          duration: duration,
-          delay: delay,
-          ease: [0.22, 1, 0.36, 1], // Cubic bezier for snappy, tactile popup
-        }}
         style={{
+          rotateX: enableContinuous3D ? scrollRotateX : 0,
+          scale: enableContinuous3D ? scrollScale : 1,
+          opacity: enableContinuous3D ? scrollOpacity : 1,
+          y: enableContinuous3D ? scrollY : 0,
           transformStyle: 'preserve-3d',
-          transformOrigin: '50% 100%',
+          transformOrigin: '50% 50%',
         }}
       >
         {children}
