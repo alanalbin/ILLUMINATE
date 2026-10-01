@@ -3,12 +3,14 @@ import { DataStore } from '@/lib/storage/data-store';
 import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 import HeroSection from '@/components/home/HeroSection';
 import BackgroundCanvas3D from '@/components/background-3d/BackgroundCanvas3D';
+import DisplayWorkstation3D from '@/components/home/DisplayWorkstation3D';
 import AboutSection from '@/components/home/AboutSection';
 import WorkshopStructureSection from '@/components/home/WorkshopStructureSection';
 import BenefitsSection from '@/components/home/BenefitsSection';
 import EventDetailsSection from '@/components/home/EventDetailsSection';
 import FaqSection from '@/components/home/FaqSection';
 import CtaBanner from '@/components/home/CtaBanner';
+import Scroll3DPopup from '@/components/ui/Scroll3DPopup';
 
 // Statically pre-render on CDN with background revalidation
 export const revalidate = 60;
@@ -23,29 +25,44 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#05030a]">
-      {/* Professional 3D Ambient Background Animation */}
+      {/* Calm 3D Ambient Background Animation */}
       <BackgroundCanvas3D />
 
-      {/* Hero Section with intentional balance and Alan Albin contact details */}
+      {/* Hero Section */}
       <HeroSection event={event} />
 
+      {/* 3D PC Display Workstation Rectangle with Loading Sequence */}
+      <DisplayWorkstation3D />
+
       {/* Workshop Narrative & Mission */}
-      <AboutSection />
+      <Scroll3DPopup delay={0.05}>
+        <AboutSection />
+      </Scroll3DPopup>
 
       {/* Six-Hour Detailed Curriculum Breakdown */}
-      <WorkshopStructureSection />
+      <Scroll3DPopup delay={0.05}>
+        <WorkshopStructureSection />
+      </Scroll3DPopup>
 
       {/* Verified Participant Takeaways & Benefits */}
-      <BenefitsSection benefits={event.benefits} />
+      <Scroll3DPopup delay={0.05}>
+        <BenefitsSection benefits={event.benefits} />
+      </Scroll3DPopup>
 
       {/* Schedule, Pricing Transparency & Venue Logistics */}
-      <EventDetailsSection event={event} />
+      <Scroll3DPopup delay={0.05}>
+        <EventDetailsSection event={event} />
+      </Scroll3DPopup>
 
       {/* Detailed FAQs addressing Student & Faculty inquiries */}
-      <FaqSection faq={event.faq} />
+      <Scroll3DPopup delay={0.05}>
+        <FaqSection faq={event.faq} />
+      </Scroll3DPopup>
 
       {/* Final Action Banner */}
-      <CtaBanner fee={event.registrationFee} />
+      <Scroll3DPopup delay={0.05}>
+        <CtaBanner fee={event.registrationFee} />
+      </Scroll3DPopup>
     </div>
   );
 }
