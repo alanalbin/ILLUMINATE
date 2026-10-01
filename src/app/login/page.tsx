@@ -48,17 +48,11 @@ function LoginContent() {
   const {
     user,
     signInWithGoogle,
-    loginAsDemoUser,
     signOut,
   } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showDemoOptions, setShowDemoOptions] = useState(false);
-
-  // Custom Quick Login
-  const [demoName, setDemoName] = useState('Alan Albin');
-  const [demoEmail, setDemoEmail] = useState('alanalbin06112005@gmail.com');
 
   const handleGoogleSignIn = async () => {
     setError(null);
@@ -73,26 +67,10 @@ function LoginContent() {
         setError(res.error || 'Failed to sign in with Google. Please try again.');
       }
     } catch (err: any) {
-      setError(err?.message || 'Google Sign-in failed. Please try again or use direct login.');
+      setError(err?.message || 'Google Sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!demoName.trim() || !demoEmail.trim()) {
-      setError('Please provide your name and email');
-      return;
-    }
-
-    loginAsDemoUser({
-      displayName: demoName.trim(),
-      email: demoEmail.trim(),
-      phoneNumber: '+918848563266',
-    });
-
-    router.push(redirectPath);
   };
 
   return (
@@ -152,12 +130,6 @@ function LoginContent() {
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="font-semibold">{error}</p>
-                <button
-                  onClick={() => setShowDemoOptions(true)}
-                  className="text-red-300 hover:text-white underline text-[11px] mt-1 block font-medium"
-                >
-                  Popup blocked? Click here for 1-click instant login
-                </button>
               </div>
             </div>
           )}
@@ -278,65 +250,6 @@ function LoginContent() {
                     Certificate tied directly to your verified Google account.
                   </p>
                 </div>
-              </div>
-
-              {/* Instant Sign-In Option for Testing / Backup */}
-              <div className="pt-2 border-t border-purple-900/30">
-                {!showDemoOptions ? (
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowDemoOptions(true)}
-                      className="text-xs text-purple-400/80 hover:text-purple-300 transition-colors underline cursor-pointer"
-                    >
-                      Organizer / Quick 1-Click Access
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleDemoSignIn} className="space-y-3 p-4 rounded-2xl bg-purple-950/50 border border-purple-700/40 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
-                        <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-                        Quick Direct Login
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowDemoOptions(false)}
-                        className="text-[11px] text-slate-400 hover:text-white"
-                      >
-                        Close
-                      </button>
-                    </div>
-
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Full Name"
-                        value={demoName}
-                        onChange={(e) => setDemoName(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-black/60 border border-purple-800/50 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        value={demoEmail}
-                        onChange={(e) => setDemoEmail(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-black/60 border border-purple-800/50 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
-                        required
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer shadow-md"
-                    >
-                      Login Directly & Continue
-                    </button>
-                  </form>
-                )}
               </div>
 
             </div>

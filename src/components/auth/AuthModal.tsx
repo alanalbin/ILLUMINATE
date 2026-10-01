@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  UserCheck,
   LogOut,
   ArrowRight,
   Zap,
@@ -45,15 +44,11 @@ export default function AuthModal() {
     isAuthModalOpen,
     closeAuthModal,
     signInWithGoogle,
-    loginAsDemoUser,
     signOut,
   } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showDemo, setShowDemo] = useState(false);
-  const [demoName, setDemoName] = useState('Alan Albin');
-  const [demoEmail, setDemoEmail] = useState('alanalbin06112005@gmail.com');
 
   if (!isAuthModalOpen) return null;
 
@@ -74,23 +69,6 @@ export default function AuthModal() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!demoName.trim() || !demoEmail.trim()) {
-      setError('Please provide your name and email');
-      return;
-    }
-
-    loginAsDemoUser({
-      displayName: demoName.trim(),
-      email: demoEmail.trim(),
-      phoneNumber: '+918848563266',
-    });
-
-    closeAuthModal();
-    router.push('/register');
   };
 
   return (
@@ -128,12 +106,6 @@ export default function AuthModal() {
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <div className="flex-1">
               <p>{error}</p>
-              <button
-                onClick={() => setShowDemo(true)}
-                className="text-red-300 hover:text-white underline text-[11px] mt-1 block font-medium"
-              >
-                Popup blocked? Use 1-click instant login
-              </button>
             </div>
           </div>
         )}
@@ -201,57 +173,6 @@ export default function AuthModal() {
               )}
               <span>{loading ? 'Connecting...' : 'Continue with Google'}</span>
             </button>
-
-            {!showDemo ? (
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDemo(true)}
-                  className="text-xs text-purple-400 hover:text-purple-300 underline cursor-pointer"
-                >
-                  Quick 1-Click Access
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleDemoSignIn} className="space-y-2.5 p-3.5 rounded-xl bg-purple-950/40 border border-purple-800/40 text-left">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-purple-300 flex items-center gap-1">
-                    <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    Quick Direct Login
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowDemo(false)}
-                    className="text-[10px] text-slate-400 hover:text-white"
-                  >
-                    Close
-                  </button>
-                </div>
-
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={demoName}
-                  onChange={(e) => setDemoName(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg bg-black/60 border border-purple-800/50 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={demoEmail}
-                  onChange={(e) => setDemoEmail(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg bg-black/60 border border-purple-800/50 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
-                >
-                  Login Directly
-                </button>
-              </form>
-            )}
 
             <div className="pt-4 border-t border-purple-950/60 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
               <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
