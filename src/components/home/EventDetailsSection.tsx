@@ -13,7 +13,7 @@ interface EventDetailsSectionProps {
 
 export default function EventDetailsSection({ event }: EventDetailsSectionProps) {
   return (
-    <section className="py-28 bg-[#05030a] border-t border-purple-950/40 relative z-10 overflow-hidden">
+    <section className="py-28 bg-[#05030a]/30 backdrop-blur-[2px] border-t border-purple-950/40 relative z-10 overflow-hidden">
       
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/3 w-[650px] h-[350px] bg-purple-900/15 rounded-full blur-[140px] pointer-events-none" />

@@ -50,7 +50,7 @@ export default function WorkshopStructureSection() {
   ];
 
   return (
-    <section id="workshop" className="py-28 bg-[#05030a] relative overflow-hidden z-10 border-t border-purple-950/40">
+    <section id="workshop" className="py-28 bg-[#05030a]/30 backdrop-blur-[2px] relative overflow-hidden z-10 border-t border-purple-950/40">
       
       {/* Glow aura */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-purple-900/10 rounded-full blur-[150px] pointer-events-none" />

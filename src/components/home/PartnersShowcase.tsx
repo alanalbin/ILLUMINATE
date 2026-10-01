@@ -66,7 +66,7 @@ const PARTNERS: Partner[] = [
 
 export default function PartnersShowcase() {
   return (
-    <section className="relative py-20 bg-[#06030e] border-y border-purple-950/40 overflow-hidden z-10">
+    <section className="relative py-20 bg-[#06030e]/30 backdrop-blur-[2px] border-y border-purple-950/40 overflow-hidden z-10">
       
       {/* Subtle backdrop ambient glows */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[300px] bg-purple-900/10 rounded-full blur-[140px] pointer-events-none" />

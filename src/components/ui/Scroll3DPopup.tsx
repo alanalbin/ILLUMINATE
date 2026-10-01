@@ -38,29 +38,34 @@ export default function Scroll3DPopup({
   const scrollRotateX = useTransform(
     smoothProgress,
     [0, 0.42, 0.58, 1],
-    [rotateX, 0, 0, -rotateX * 0.75]
+    [14, 0, 0, -11]
   );
   const scrollScale = useTransform(
     smoothProgress,
     [0, 0.42, 0.58, 1],
-    [0.94, 1, 1, 0.96]
+    [0.92, 1, 1, 0.94]
   );
   const scrollOpacity = useTransform(
     smoothProgress,
-    [0, 0.22, 0.78, 1],
-    [0.4, 1, 1, 0.45]
+    [0, 0.18, 0.82, 1],
+    [0.45, 1, 1, 0.5]
   );
   const scrollY = useTransform(
     smoothProgress,
     [0, 0.45, 0.55, 1],
-    [45, 0, 0, -35]
+    [40, 0, 0, -30]
+  );
+  const scrollZ = useTransform(
+    smoothProgress,
+    [0, 0.42, 0.58, 1],
+    [-80, 0, 0, -70]
   );
 
   return (
     <div
       ref={ref}
       className={`overflow-hidden ${className}`}
-      style={{ perspective: 1400 }}
+      style={{ perspective: 1100 }}
     >
       <motion.div
         style={{
@@ -68,6 +73,7 @@ export default function Scroll3DPopup({
           scale: enableContinuous3D ? scrollScale : 1,
           opacity: enableContinuous3D ? scrollOpacity : 1,
           y: enableContinuous3D ? scrollY : 0,
+          z: enableContinuous3D ? scrollZ : 0,
           transformStyle: 'preserve-3d',
           transformOrigin: '50% 50%',
         }}

@@ -74,7 +74,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     scene.add(softCyanGlow);
 
     // Real-time Cursor Follower Light
-    const pointerLight = new THREE.PointLight(0xc084fc, 3.2, 380);
+    const pointerLight = new THREE.PointLight(0xc084fc, 4.5, 420);
     pointerLight.position.set(0, 0, 90);
     scene.add(pointerLight);
 
@@ -82,70 +82,70 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     // 4. FLOATING CELESTIAL PRISM & GYROSCOPIC RINGS (Drag & Scroll Reactive)
     // =========================================================================
     const prismGroup = new THREE.Group();
-    prismGroup.position.set(0, 8, -45);
+    prismGroup.position.set(0, 10, -40);
     scene.add(prismGroup);
 
     // 4A. Outer Faceted Holographic Icosahedron
-    const icoGeo = new THREE.IcosahedronGeometry(isMobile ? 26 : 38, 1);
+    const icoGeo = new THREE.IcosahedronGeometry(isMobile ? 32 : 48, 1);
     const icoMat = new THREE.MeshPhongMaterial({
-      color: 0x6b21a8,
-      emissive: 0x2e1065,
+      color: 0x7c3aed,
+      emissive: 0x3b0764,
       specular: 0xc084fc,
-      shininess: 80,
+      shininess: 90,
       wireframe: true,
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.32,
     });
     const icoMesh = new THREE.Mesh(icoGeo, icoMat);
     prismGroup.add(icoMesh);
 
     // Semi-translucent inner crystal face
-    const innerFaceGeo = new THREE.IcosahedronGeometry(isMobile ? 25.5 : 37.2, 0);
+    const innerFaceGeo = new THREE.IcosahedronGeometry(isMobile ? 31.4 : 47.1, 0);
     const innerFaceMat = new THREE.MeshPhongMaterial({
       color: 0x9333ea,
-      emissive: 0x1e0838,
+      emissive: 0x2e1065,
       specular: 0x38bdf8,
       shininess: 100,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.16,
       flatShading: true,
     });
     const innerFaceMesh = new THREE.Mesh(innerFaceGeo, innerFaceMat);
     prismGroup.add(innerFaceMesh);
 
     // 4B. Inner Concentric Octahedron Core
-    const octGeo = new THREE.OctahedronGeometry(isMobile ? 15 : 22, 0);
+    const octGeo = new THREE.OctahedronGeometry(isMobile ? 18 : 28, 0);
     const octMat = new THREE.MeshPhongMaterial({
       color: 0x38bdf8,
-      emissive: 0x082f49,
+      emissive: 0x0369a1,
       specular: 0xffffff,
-      shininess: 90,
+      shininess: 100,
       wireframe: true,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.42,
     });
     const octMesh = new THREE.Mesh(octGeo, octMat);
     prismGroup.add(octMesh);
 
     // 4C. Primary Celestial Orbital Ring
-    const ring1Geo = new THREE.TorusGeometry(isMobile ? 55 : 80, 0.8, 12, 64);
+    const ring1Geo = new THREE.TorusGeometry(isMobile ? 65 : 98, 1.0, 12, 64);
     const ring1Mat = new THREE.MeshBasicMaterial({
       color: 0x818cf8,
       wireframe: true,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.28,
     });
     const ring1Mesh = new THREE.Mesh(ring1Geo, ring1Mat);
     ring1Mesh.rotation.x = Math.PI / 3;
     prismGroup.add(ring1Mesh);
 
     // 4D. Secondary Orthogonal Gyroscopic Ring
-    const ring2Geo = new THREE.TorusGeometry(isMobile ? 65 : 94, 0.6, 12, 64);
+    const ring2Geo = new THREE.TorusGeometry(isMobile ? 78 : 115, 0.8, 12, 64);
     const ring2Mat = new THREE.MeshBasicMaterial({
       color: 0xc084fc,
       wireframe: true,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.22,
     });
     const ring2Mesh = new THREE.Mesh(ring2Geo, ring2Mat);
     ring2Mesh.rotation.y = Math.PI / 4;
@@ -168,7 +168,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     // =========================================================================
     // 5. INTERACTIVE LUMINESCENT EMBERS (Cosmic particle field with parallax)
     // =========================================================================
-    const emberCount = isMobile ? 28 : 46;
+    const emberCount = isMobile ? 38 : 65;
     const emberGeo = new THREE.BufferGeometry();
     const emberPositions = new Float32Array(emberCount * 3);
     const emberBaseSpeeds = new Float32Array(emberCount);
@@ -384,44 +384,45 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
       // Smooth damped camera tilt & scroll traversal
       if (!prefersReducedMotion) {
-        currentX += (targetX - currentX) * 0.035;
-        currentY += (targetY - currentY) * 0.035;
+        currentX += (targetX - currentX) * 0.04;
+        currentY += (targetY - currentY) * 0.04;
 
-        // Camera navigates downward in 3D as user scrolls through sections
-        const scrollCameraY = -currentScrollProgress * 95;
-        const scrollCameraZ = 210 - Math.sin(currentScrollProgress * Math.PI) * 35;
+        // Camera navigates through 3D cosmic coordinates as user scrolls
+        const scrollCameraY = -currentScrollProgress * 135;
+        const scrollCameraZ = 210 - Math.sin(currentScrollProgress * Math.PI) * 50;
+        const scrollCameraTilt = Math.sin(currentScrollProgress * Math.PI * 2) * 6;
 
-        camera.position.x = currentX * 10;
-        camera.position.y = -currentY * 7 + scrollCameraY;
+        camera.position.x = currentX * 12 + scrollCameraTilt;
+        camera.position.y = -currentY * 8 + scrollCameraY;
         camera.position.z = scrollCameraZ;
-        camera.lookAt(0, scrollCameraY * 0.65, 0);
+        camera.lookAt(0, scrollCameraY * 0.6, 0);
 
         // Apply drag momentum with smooth inertia
         manualRotX += dragVelocityX;
         manualRotY += dragVelocityY;
-        dragVelocityX *= 0.93;
-        dragVelocityY *= 0.93;
+        dragVelocityX *= 0.94;
+        dragVelocityY *= 0.94;
 
-        // Celestial prism rotation: time + user drag + 3D scroll progression
-        const scrollRot = currentScrollProgress * Math.PI * 1.8;
-        icoMesh.rotation.y = time * 0.025 + manualRotX + scrollRot;
-        icoMesh.rotation.x = time * 0.015 + manualRotY;
+        // Celestial prism rotation: time + user drag + continuous 3D scroll progression
+        const scrollRot = currentScrollProgress * Math.PI * 2.6;
+        icoMesh.rotation.y = time * 0.03 + manualRotX + scrollRot;
+        icoMesh.rotation.x = time * 0.02 + manualRotY + Math.sin(currentScrollProgress * Math.PI) * 0.35;
         innerFaceMesh.rotation.y = icoMesh.rotation.y;
         innerFaceMesh.rotation.x = icoMesh.rotation.x;
 
-        octMesh.rotation.y = -time * 0.035 - manualRotX * 1.2;
-        octMesh.rotation.z = time * 0.025 + manualRotY * 0.8;
+        octMesh.rotation.y = -time * 0.04 - manualRotX * 1.3 - scrollRot * 1.2;
+        octMesh.rotation.z = time * 0.03 + manualRotY * 0.8;
 
-        ring1Mesh.rotation.z = time * 0.015 + manualRotX * 0.5;
-        ring2Mesh.rotation.z = -time * 0.018 + manualRotY * 0.5;
+        ring1Mesh.rotation.z = time * 0.02 + manualRotX * 0.6 + scrollRot * 0.5;
+        ring2Mesh.rotation.z = -time * 0.022 + manualRotY * 0.6 - scrollRot * 0.4;
 
         // Breathing elevation
-        prismGroup.position.y = 8 + Math.sin(time * 0.6) * 3.5;
+        prismGroup.position.y = 10 + Math.sin(time * 0.6) * 4;
       }
 
       // Smoothly return pointer light intensity to ambient baseline
-      if (pointerLight.intensity > 3.2) {
-        pointerLight.intensity += (3.2 - pointerLight.intensity) * 0.08;
+      if (pointerLight.intensity > 4.5) {
+        pointerLight.intensity += (4.5 - pointerLight.intensity) * 0.08;
       }
 
       // 3D Shockwave ring propagation

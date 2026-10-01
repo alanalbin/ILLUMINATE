@@ -22,7 +22,7 @@ export default function BenefitsSection({ benefits }: BenefitsSectionProps) {
   const list = benefits || [];
 
   return (
-    <section id="benefits" className="py-28 bg-[#070312] border-t border-purple-950/40 relative overflow-hidden z-10">
+    <section id="benefits" className="py-28 bg-[#070312]/30 backdrop-blur-[2px] border-t border-purple-950/40 relative overflow-hidden z-10">
       
       {/* Background radial glow */}
       <div className="absolute top-1/3 right-10 w-[550px] h-[350px] bg-purple-900/15 rounded-full blur-[130px] pointer-events-none" />

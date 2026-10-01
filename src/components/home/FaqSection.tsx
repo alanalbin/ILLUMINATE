@@ -18,7 +18,7 @@ export default function FaqSection({ faq }: FaqSectionProps) {
   };
 
   return (
-    <section id="faq" className="py-28 bg-[#06030e] border-t border-purple-950/40 relative z-10 overflow-hidden">
+    <section id="faq" className="py-28 bg-[#06030e]/30 backdrop-blur-[2px] border-t border-purple-950/40 relative z-10 overflow-hidden">
       
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-purple-900/10 rounded-full blur-[140px] pointer-events-none" />

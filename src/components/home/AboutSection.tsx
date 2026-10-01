@@ -28,7 +28,7 @@ export default function AboutSection() {
   ];
 
   return (
-    <section id="about" className="py-28 bg-[#070410] border-t border-purple-950/40 relative overflow-hidden z-10">
+    <section id="about" className="py-28 bg-[#070410]/30 backdrop-blur-[2px] border-t border-purple-950/40 relative overflow-hidden z-10">
       
       {/* Subtle backdrop glow */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-purple-900/10 rounded-full blur-3xl pointer-events-none" />
