@@ -53,12 +53,23 @@ export default function Navbar() {
             FAQ
           </a>
           <a
+            href="https://nxtbyteksd.netlify.app/#cta"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs uppercase font-semibold tracking-wider text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/30 hover:border-emerald-400/50 shadow-sm shadow-emerald-950/40"
+            title="Nxt Byte — KMCTCEEM College E-Cell"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>College E-Cell (Nxt Byte)</span>
+            <ArrowUpRight className="w-3 h-3" />
+          </a>
+          <a
             href="https://www.ecell.in/illuminate/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs uppercase font-medium tracking-wider text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
           >
-            <span>Official E-Cell</span>
+            <span>IIT Bombay E-Cell</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
           <Link
@@ -122,6 +133,16 @@ export default function Navbar() {
             className="block text-sm font-medium text-slate-200 hover:text-purple-400"
           >
             FAQ
+          </a>
+          <a
+            href="https://nxtbyteksd.netlify.app/#cta"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center justify-between text-sm font-semibold text-emerald-400 p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30"
+          >
+            <span>College E-Cell (Nxt Byte)</span>
+            <ArrowUpRight className="w-4 h-4" />
           </a>
           <Link
             href="/admin"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { manualUpiSubmissionSchema } from '@/lib/validation/registration';
 import { DataStore } from '@/lib/storage/data-store';
+import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,6 +55,13 @@ export async function POST(req: NextRequest) {
       registrationId,
       { utrNumber, payerUpiId }
     );
+
+    // Sync updated UPI UTR to Google Sheet in background
+    syncCandidateToGoogleSheet({
+      ...registration,
+      paymentStatus: 'manual_review',
+      manualUtr: utrNumber,
+    }).catch((err) => console.warn('Google sheet sync error:', err));
 
     return NextResponse.json({
       success: true,

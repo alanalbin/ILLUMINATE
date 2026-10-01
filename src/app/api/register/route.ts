@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { registrationFormSchema } from '@/lib/validation/registration';
 import { DataStore } from '@/lib/storage/data-store';
 import { EmailService } from '@/lib/email/sender';
+import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 
 export async function POST(req: NextRequest) {
   try {
@@ -99,6 +100,11 @@ export async function POST(req: NextRequest) {
     // 6. Send transactional registration received email in background
     EmailService.sendRegistrationReceivedEmail(newReg, eventConfig).catch((err) =>
       console.warn('Background email error:', err)
+    );
+
+    // 7. Sync candidate to Google Sheet in background
+    syncCandidateToGoogleSheet(newReg).catch((err) =>
+      console.warn('Background Google Sheet sync error:', err)
     );
 
     return NextResponse.json({

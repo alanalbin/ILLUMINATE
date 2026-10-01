@@ -41,9 +41,22 @@ export default function HeroSection({ event }: HeroSectionProps) {
           <div className="lg:col-span-7 flex flex-col justify-center">
             
             {/* Event Association Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/70 border border-purple-500/30 text-xs font-semibold text-purple-300 w-fit mb-5 shadow-sm backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>E-Cell, IIT Bombay Initiative • KMCT Kasaragod</span>
+            <div className="flex flex-wrap items-center gap-2.5 mb-5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/70 border border-purple-500/30 text-xs font-semibold text-purple-300 shadow-sm backdrop-blur-md">
+                <span className="w-2 h-2 rounded-full bg-purple-400" />
+                <span>E-Cell, IIT Bombay Initiative</span>
+              </div>
+              <a
+                href="https://nxtbyteksd.netlify.app/#cta"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-xs font-bold text-emerald-300 hover:text-emerald-200 hover:border-emerald-400 transition-all shadow-sm backdrop-blur-md group"
+                title="Visit KMCT College E-Cell (Nxt Byte)"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Organized by Nxt Byte (KMCT E-Cell)</span>
+                <span className="text-[10px] group-hover:translate-x-0.5 transition-transform">↗</span>
+              </a>
             </div>
 
             {/* Main Headline */}

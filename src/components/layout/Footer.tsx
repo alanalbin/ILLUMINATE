@@ -78,12 +78,34 @@ export default function Footer() {
             <ul className="space-y-1.5">
               <li>
                 <a
+                  href="https://nxtbyteksd.netlify.app/#cta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                >
+                  <span>KMCT E-Cell (Nxt Byte)</span>
+                  <ExternalLink className="w-3 h-3 text-emerald-500" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.instagram.com/ecellkmctcemksd/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-purple-300 hover:text-purple-200 transition-colors"
+                >
+                  <span>Instagram @ecellkmctcemksd</span>
+                  <ExternalLink className="w-3 h-3 text-purple-400" />
+                </a>
+              </li>
+              <li>
+                <a
                   href="https://www.ecell.in/illuminate/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-slate-300 hover:text-purple-400 transition-colors"
                 >
-                  <span>Official Illuminate Portal</span>
+                  <span>IIT Bombay Illuminate Portal</span>
                   <ExternalLink className="w-3 h-3 text-slate-500" />
                 </a>
               </li>

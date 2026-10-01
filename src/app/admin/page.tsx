@@ -308,7 +308,29 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <a
+              href="https://docs.google.com/spreadsheets/d/146f_VkQ6NnYNmxkTjVtBD22y5JzXRQi3zvxO3QwI5O4/edit?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-2 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+              title="Open Live Candidate Google Sheet"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Google Sheet</span>
+            </a>
+
+            <a
+              href="https://nxtbyteksd.netlify.app/#cta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-2 rounded-lg bg-purple-950/80 hover:bg-purple-900/80 border border-purple-500/40 text-purple-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              title="Visit Nxt Byte College E-Cell"
+            >
+              <span>Nxt Byte E-Cell</span>
+              <ExternalLink className="w-3.5 h-3.5 text-purple-400" />
+            </a>
+
             <button
               onClick={fetchDashboardData}
               disabled={loadingData}
