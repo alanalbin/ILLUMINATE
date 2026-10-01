@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
+import { Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
 import ScrollProgressBar from '@/components/ui/ScrollProgressBar';
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space-grotesk',
+  weight: ['300', '400', '500', '600', '700'],
+});
 
 export const metadata: Metadata = {
   title: 'ILLUMINATE | 6-Hour Entrepreneurship Workshop | KMCT Kasaragod & E-Cell IIT Bombay',
@@ -52,14 +60,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark scroll-smooth" data-scroll-behavior="smooth">
+    <html lang="en" className={`dark scroll-smooth ${spaceGrotesk.variable}`} data-scroll-behavior="smooth">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
         <Script
           src="https://checkout.razorpay.com/v1/checkout.js"
           strategy="lazyOnload"
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#05030a] text-slate-100 font-sans selection:bg-purple-600 selection:text-white antialiased relative">
+      <body className={`min-h-screen flex flex-col bg-[#05030a] text-slate-100 ${spaceGrotesk.className} selection:bg-purple-600 selection:text-white antialiased relative`}>
         {/* Ambient Brand Logo Watermark Background (Low Opacity) */}
         <div 
           className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden" 
