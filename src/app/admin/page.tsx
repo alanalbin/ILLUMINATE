@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Shield,
-  Lock,
   Users,
   CheckCircle2,
   Clock,
@@ -17,7 +16,6 @@ import {
   X,
   Settings,
   Activity,
-  LogOut,
   RefreshCw,
   ExternalLink,
   ChevronRight,
@@ -26,15 +24,11 @@ import {
   Calendar,
   Save,
   ShieldCheck,
+  ArrowLeft,
 } from 'lucide-react';
 import { Registration, EventConfig, DashboardMetrics, AuditLog } from '@/types';
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [passcode, setPasscode] = useState('');
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(false);
-
   // Dashboard Data State
   const [activeTab, setActiveTab] = useState<'registrations' | 'manualQueue' | 'settings' | 'audit'>('registrations');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -52,49 +46,10 @@ export default function AdminPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState(false);
 
-  // Check initial login state
+  // Load dashboard data directly
   useEffect(() => {
-    // If previously authorized in session
-    const savedAuth = sessionStorage.getItem('illuminate_admin_auth');
-    if (savedAuth === 'true') {
-      setIsAuthenticated(true);
-      fetchDashboardData();
-    }
+    fetchDashboardData();
   }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setAuthError(null);
-
-    try {
-      const res = await fetch('/api/admin/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passcode }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setAuthError(data.message || 'Invalid passcode.');
-        setAuthLoading(false);
-        return;
-      }
-
-      setIsAuthenticated(true);
-      sessionStorage.setItem('illuminate_admin_auth', 'true');
-      fetchDashboardData();
-    } catch (err: any) {
-      setAuthError('Connection error. Please try again.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    sessionStorage.removeItem('illuminate_admin_auth');
-  };
 
   const fetchDashboardData = async () => {
     setLoadingData(true);
@@ -229,65 +184,7 @@ export default function AdminPage() {
 
   const manualReviewQueue = registrations.filter((r) => r.paymentStatus === 'manual_review');
 
-  // --- LOGIN GATE VIEW ---
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[#05030a] flex items-center justify-center p-6 relative">
-        <div className="glass-card max-w-md w-full p-8 rounded-3xl border border-purple-900/50 shadow-2xl relative z-10">
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-purple-950/80 border border-purple-700/50 flex items-center justify-center mx-auto mb-4 text-purple-400">
-              <Shield className="w-7 h-7" />
-            </div>
-            <h1 className="text-2xl font-black text-white">ILLUMINATE Portal</h1>
-            <p className="text-xs text-purple-300 mt-1">KMCT Kasaragod • Coordinator Access</p>
-          </div>
-
-          {authError && (
-            <div className="mb-6 p-3 rounded-xl bg-red-950/50 border border-red-800/50 text-xs text-red-200 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-              <span>{authError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Coordinator Security Passcode
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  required
-                  placeholder="Enter access passcode"
-                  value={passcode}
-                  onChange={(e) => setPasscode(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0e071c] border border-purple-900/50 focus:border-purple-400 focus:outline-none text-white text-sm"
-                />
-                <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-purple-400" />
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1.5">
-                Default development passcode: <code className="text-purple-300">illuminate2026</code>
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-purple-950 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {authLoading ? 'Verifying...' : 'Access Dashboard'}
-            </button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-purple-950/60 text-center text-xs text-slate-400">
-            <Link href="/" className="hover:text-purple-300">← Back to public website</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // --- AUTHENTICATED DASHBOARD VIEW ---
+  // --- COORDINATOR DASHBOARD VIEW (NO LOGIN GATE) ---
   return (
     <div className="min-h-screen bg-[#05030a] text-slate-200 pt-20 pb-16">
       
@@ -349,13 +246,14 @@ export default function AdminPage() {
               <span>Export CSV</span>
             </a>
 
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg bg-white/5 hover:bg-red-950/40 hover:text-red-300 text-slate-400 transition-colors"
-              title="Log out"
+            <Link
+              href="/"
+              className="px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              title="Return to Illuminate Website"
             >
-              <LogOut className="w-4 h-4" />
-            </button>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Exit to Site</span>
+            </Link>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyBvXgWojJ4_OhU43e-qjldh7VdBNyXfES4',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'illuminate-kmct-117e5.firebaseapp.com',
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'illuminate-kmct-117e5',
@@ -12,11 +12,7 @@ const firebaseConfig = {
 };
 
 export const isFirebaseConfigured = (): boolean => {
-  return Boolean(
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'demo-api-key'
-  );
+  return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 };
 
 let app: FirebaseApp | undefined;
@@ -31,6 +27,19 @@ if (typeof window !== 'undefined') {
   } catch (error) {
     console.warn('Firebase client initialization note:', error);
   }
+}
+
+export function getClientAuth(): Auth | null {
+  if (typeof window === 'undefined') return null;
+  if (!auth) {
+    try {
+      app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+      auth = getAuth(app);
+    } catch (e) {
+      console.warn('Firebase Auth init error:', e);
+    }
+  }
+  return auth || null;
 }
 
 export { app, auth, db };

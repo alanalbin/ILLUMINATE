@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { AuthProvider } from '@/context/AuthContext';
+import AuthModal from '@/components/auth/AuthModal';
 
 export const metadata: Metadata = {
   title: 'ILLUMINATE | 6-Hour Entrepreneurship Workshop | KMCT Kasaragod & E-Cell IIT Bombay',
@@ -49,10 +52,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark scroll-smooth" data-scroll-behavior="smooth">
+      <head>
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
+      </head>
       <body className="min-h-screen flex flex-col bg-[#05030a] text-slate-100 font-sans selection:bg-purple-600 selection:text-white antialiased">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <AuthModal />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -14,10 +14,14 @@ import {
   Building,
   CheckCircle2,
   Phone,
+  LogIn,
+  UserCheck,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { user, openAuthModal } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -28,6 +32,18 @@ export default function RegisterPage() {
     yearOfStudy: '3rd Year',
     privacyConsent: false,
   });
+
+  // Pre-fill form details if user is signed in
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || user.displayName || '',
+        email: prev.email || user.email || '',
+        phone: prev.phone || (user.phoneNumber ? user.phoneNumber.replace('+91', '') : ''),
+      }));
+    }
+  }, [user]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,6 +164,32 @@ export default function RegisterPage() {
               <div className="mb-6 p-4 rounded-xl bg-red-950/40 border border-red-800/50 flex items-start gap-3 text-sm text-red-200">
                 <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
                 <p>{serverError}</p>
+              </div>
+            )}
+
+            {/* Auth Sign-in Banner / Verified Pill */}
+            {user ? (
+              <div className="mb-6 p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between text-xs text-emerald-200">
+                <div className="flex items-center gap-2.5">
+                  <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>
+                    Verified as <strong>{user.displayName || user.email || user.phoneNumber}</strong> (Auto-filled)
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 p-3.5 rounded-xl bg-purple-950/40 border border-purple-800/40 flex items-center justify-between text-xs text-purple-200">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span>Sign in with Mobile OTP or Google for instant auto-fill</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={openAuthModal}
+                  className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[11px] transition-colors cursor-pointer"
+                >
+                  Sign In
+                </button>
               </div>
             )}
 
