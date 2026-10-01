@@ -192,7 +192,7 @@ export default function DisplayWorkstation3D() {
 
                           <p className="text-purple-300 flex items-center gap-2">
                             <span className="text-zinc-500">09:00:09</span>
-                            <span>[LIVE] Cohort Registration Desk active: Coordinator Alan Albin (8848563266)</span>
+                            <span>[LIVE] Cohort Registration Desk active: KMCT E-Cell Coordination Desk (Admissions Open)</span>
                           </p>
                         </div>
                       </div>

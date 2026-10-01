@@ -26,7 +26,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="flex flex-col relative bg-[#05030a]">
+    <div className="flex flex-col relative bg-[#05030a] overflow-x-hidden">
       {/* 3D Beam Intro Loading Screen & 3 Layered Background Animations with Interactive Controls */}
       <HomeExperienceManager />
 
@@ -74,9 +74,7 @@ export default async function HomePage() {
       </Scroll3DPopup>
 
       {/* Final Action Banner */}
-      <Scroll3DPopup delay={0.05}>
-        <CtaBanner fee={event.registrationFee} />
-      </Scroll3DPopup>
+      <CtaBanner fee={event.registrationFee} />
     </div>
   );
 }

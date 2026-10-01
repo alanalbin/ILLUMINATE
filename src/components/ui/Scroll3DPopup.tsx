@@ -21,7 +21,7 @@ export default function Scroll3DPopup({
   rotateX = 14,
 }: Scroll3DPopupProps) {
   return (
-    <div className={`perspective-[1200px] ${className}`}>
+    <div className={`overflow-hidden perspective-[1200px] ${className}`}>
       <motion.div
         initial={{
           opacity: 0,
