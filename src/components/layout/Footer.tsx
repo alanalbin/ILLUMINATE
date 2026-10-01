@@ -7,7 +7,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#030107] border-t border-purple-950/40 text-slate-400 text-xs">
-      <div className="max-w-7xl mx-auto px-6 py-14">
+      <div className="max-w-7xl mx-auto px-6 pt-10 pb-6">
         
         {/* Partner Logos Strip */}
         <div className="mb-12 pb-10 border-b border-purple-950/40">
@@ -220,7 +220,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar & Disclaimers */}
-        <div className="mt-12 pt-8 border-t border-purple-950/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div className="mt-8 pt-6 border-t border-purple-950/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <p className="text-[11px] text-slate-400">
             © {currentYear} ILLUMINATE KMCT. Conducted under the initiative of E-Cell, IIT Bombay. All rights reserved.
           </p>

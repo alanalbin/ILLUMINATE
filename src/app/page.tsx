@@ -26,7 +26,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen relative bg-[#05030a]">
+    <div className="flex flex-col relative bg-[#05030a]">
       {/* 3D Beam Intro Loading Screen & 3 Layered Background Animations with Interactive Controls */}
       <HomeExperienceManager />
 

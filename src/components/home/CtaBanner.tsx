@@ -12,7 +12,7 @@ interface CtaBannerProps {
 
 export default function CtaBanner({ fee }: CtaBannerProps) {
   return (
-    <section className="py-24 bg-[#05030a] relative overflow-hidden border-t border-purple-950/40 z-10">
+    <section className="pt-16 pb-12 bg-[#05030a] relative overflow-hidden border-t border-purple-950/40 z-10">
       
       {/* Background glow */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-950/20 via-transparent to-transparent pointer-events-none" />
