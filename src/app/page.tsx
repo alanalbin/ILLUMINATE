@@ -2,8 +2,9 @@ import React from 'react';
 import { DataStore } from '@/lib/storage/data-store';
 import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 import HeroSection from '@/components/home/HeroSection';
-import BackgroundCanvas3D from '@/components/background-3d/BackgroundCanvas3D';
+import HomeExperienceManager from '@/components/home/HomeExperienceManager';
 import DisplayWorkstation3D from '@/components/home/DisplayWorkstation3D';
+import Interactive3DPrism from '@/components/ui/Interactive3DPrism';
 import PartnersShowcase from '@/components/home/PartnersShowcase';
 import AboutSection from '@/components/home/AboutSection';
 import WorkshopStructureSection from '@/components/home/WorkshopStructureSection';
@@ -26,14 +27,21 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#05030a]">
-      {/* Calm 3D Ambient Background Animation */}
-      <BackgroundCanvas3D />
+      {/* 3D Beam Intro Loading Screen & 3 Layered Background Animations with Interactive Controls */}
+      <HomeExperienceManager />
 
       {/* Hero Section */}
       <HeroSection event={event} />
 
       {/* 3D PC Display Workstation Rectangle with Loading Sequence */}
       <DisplayWorkstation3D />
+
+      {/* Interactive 3D Quantum Prism Showcase (Drag & Click) */}
+      <Scroll3DPopup delay={0.05}>
+        <div className="max-w-xl mx-auto px-6 -mt-6 mb-16 relative z-20">
+          <Interactive3DPrism />
+        </div>
+      </Scroll3DPopup>
 
       {/* Institutional & Organizing Partners Showcase */}
       <Scroll3DPopup delay={0.05}>
