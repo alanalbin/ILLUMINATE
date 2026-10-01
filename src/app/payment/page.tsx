@@ -22,6 +22,7 @@ import {
   School,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { Registration, EventConfig } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -298,6 +299,33 @@ function PaymentContent() {
     <div className="min-h-screen bg-[#05030a] py-28 relative">
       <div className="max-w-4xl mx-auto px-6 relative z-10">
         
+        {/* Navigation / Back Button */}
+        <div className="mb-6 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push('/register');
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-purple-500/40 text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer group shadow-sm backdrop-blur-md active:scale-95"
+            title="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-purple-400 group-hover:-translate-x-1 transition-transform" />
+            <span>Back</span>
+          </button>
+
+          <Link
+            href="/"
+            className="text-xs text-slate-400 hover:text-purple-300 transition-colors flex items-center gap-1.5"
+          >
+            <span>Event Home</span>
+            <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-xs font-bold text-purple-300 uppercase tracking-widest mb-3 shadow-sm">
