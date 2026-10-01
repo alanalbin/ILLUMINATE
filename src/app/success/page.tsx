@@ -8,11 +8,16 @@ import {
   CheckCircle2,
   Clock,
   Printer,
+  Sparkles,
+  MapPin,
+  Calendar,
   Award,
   Package,
+  Mail,
+  Phone,
   AlertCircle,
   Loader2,
-  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import { Registration, EventConfig } from '@/types';
 
@@ -49,12 +54,13 @@ function SuccessContent() {
         setRegistration(regData.registration);
         setEventConfig(eventData.event);
 
+        // Fire celebratory confetti only if payment is verified
         if (regData.registration.paymentStatus === 'verified') {
           confetti({
-            particleCount: 60,
-            spread: 60,
+            particleCount: 80,
+            spread: 70,
             origin: { y: 0.6 },
-            colors: ['#a78bfa', '#818cf8', '#34d399', '#ffffff'],
+            colors: ['#c084fc', '#9333ea', '#6366f1', '#10b981'],
           });
         }
       } catch (err: any) {
@@ -73,23 +79,23 @@ function SuccessContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#07060b] flex flex-col items-center justify-center p-6 text-zinc-400">
-        <Loader2 className="w-8 h-8 text-white animate-spin mb-3" />
-        <p className="font-mono text-xs uppercase tracking-wider">Generating Credential Pass...</p>
+      <div className="min-h-screen bg-[#05030a] flex flex-col items-center justify-center p-6 text-slate-300">
+        <Loader2 className="w-10 h-10 text-purple-400 animate-spin mb-4" />
+        <p className="text-sm font-medium">Generating official workshop pass...</p>
       </div>
     );
   }
 
   if (error || !registration || !eventConfig) {
     return (
-      <div className="min-h-screen bg-[#07060b] flex items-center justify-center p-6 text-center">
-        <div className="surface-card max-w-md w-full p-8 rounded-xl border border-red-800/40">
-          <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <h2 className="text-lg font-bold text-white mb-2">Registration Not Found</h2>
-          <p className="text-xs text-zinc-400 mb-6 leading-relaxed">{error || 'Invalid registration reference.'}</p>
+      <div className="min-h-screen bg-[#05030a] flex items-center justify-center p-6 text-center">
+        <div className="glass-card max-w-md w-full p-8 rounded-2xl border border-red-900/50">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Registration Not Found</h2>
+          <p className="text-sm text-slate-300 mb-6">{error || 'Invalid registration reference.'}</p>
           <Link
             href="/register"
-            className="inline-block w-full py-2.5 rounded-lg bg-white text-zinc-950 font-semibold text-xs uppercase tracking-wider transition-colors"
+            className="inline-block w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm"
           >
             Go to Registration
           </Link>
@@ -102,97 +108,95 @@ function SuccessContent() {
   const isManualReview = registration.paymentStatus === 'manual_review';
 
   return (
-    <div className="min-h-screen bg-[#07060b] py-28 relative">
-      <div className="max-w-2xl mx-auto px-6 relative z-10">
+    <div className="min-h-screen bg-[#05030a] py-28 relative">
+      <div className="max-w-3xl mx-auto px-6 relative z-10">
         
-        {/* Status Notification */}
+        {/* Status Notification Banner */}
         {isVerified ? (
-          <div className="mb-8 p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center gap-3.5 text-emerald-200">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <div className="text-xs">
-              <p className="font-semibold text-white">Payment Confirmed — Seat Secured</p>
-              <p className="text-zinc-400 mt-0.5">
-                Official pass active for <strong className="text-white">{registration.email}</strong>.
+          <div className="mb-8 p-6 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center gap-4 text-emerald-200 shadow-xl shadow-emerald-950/20">
+            <div className="w-12 h-12 rounded-xl bg-emerald-900/60 border border-emerald-500/40 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Payment Verified & Seat Confirmed!</h2>
+              <p className="text-xs text-emerald-300 mt-0.5">
+                Your official ILLUMINATE workshop pass is generated below. A confirmation has been dispatched to{' '}
+                <strong className="text-white">{registration.email}</strong>.
               </p>
             </div>
           </div>
         ) : isManualReview ? (
-          <div className="mb-8 p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center gap-3.5 text-amber-200">
-            <Clock className="w-5 h-5 text-amber-400 shrink-0" />
-            <div className="text-xs">
-              <p className="font-semibold text-white">Verification In Progress</p>
-              <p className="text-zinc-400 mt-0.5">
-                UTR ref (<strong className="text-white font-mono">{registration.manualUtr}</strong>) logged with local campus coordinator.
+          <div className="mb-8 p-6 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex items-center gap-4 text-amber-200 shadow-xl shadow-amber-950/20">
+            <div className="w-12 h-12 rounded-xl bg-amber-900/60 border border-amber-500/40 flex items-center justify-center shrink-0">
+              <Clock className="w-7 h-7 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Awaiting Coordinator Verification</h2>
+              <p className="text-xs text-amber-300 mt-0.5">
+                Your UPI transaction reference (<strong>{registration.manualUtr}</strong>) has been queued for review by the campus coordinator. Your pass will be activated upon approval.
               </p>
             </div>
           </div>
         ) : (
-          <div className="mb-8 p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center gap-3.5 text-zinc-300">
-            <Clock className="w-5 h-5 text-zinc-400 shrink-0" />
-            <div className="text-xs">
-              <p className="font-semibold text-white">Awaiting Payment</p>
-              <p className="text-zinc-400 mt-0.5">
-                Complete your payment verification to activate this credential pass.
+          <div className="mb-8 p-6 rounded-2xl bg-purple-950/40 border border-purple-500/40 flex items-center gap-4 text-purple-200">
+            <Clock className="w-7 h-7 text-purple-400 shrink-0" />
+            <div>
+              <h2 className="text-lg font-bold text-white">Payment Pending</h2>
+              <p className="text-xs text-purple-300 mt-0.5">
+                Please complete your registration payment to activate this pass.
               </p>
             </div>
           </div>
         )}
 
-        {/* Printable Physical Conference Delegate Pass */}
+        {/* Printable Pass Container */}
         <div
           ref={passRef}
-          className="rounded-xl border border-white/[0.12] bg-[#0c0a13] p-7 sm:p-9 shadow-2xl relative overflow-hidden print:border-black print:bg-white print:text-black"
+          className="rounded-3xl bg-gradient-to-b from-[#140b2a] via-[#0d071c] to-[#080413] border-2 border-purple-500/30 p-8 shadow-2xl relative overflow-hidden print:border-black print:bg-white print:text-black"
         >
-          {/* Lanyard punch slit indicator */}
-          <div className="mx-auto w-12 h-1.5 rounded-full bg-white/[0.08] mb-6 print:hidden" />
-
-          {/* Pass Header */}
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-white/[0.08] print:border-gray-300">
+          {/* Top Pass Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-900/50 pb-6 print:border-gray-300">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-violet-400 print:text-purple-700">
-                  E-Cell, IIT Bombay Initiative
-                </span>
-                <span className="text-zinc-600 print:hidden">•</span>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500 print:text-gray-500">
-                  NEC 2026
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight print:text-black">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-purple-400 print:text-purple-700">
+                E-Cell, IIT Bombay Initiative
+              </span>
+              <h1 className="text-3xl font-black text-white tracking-wider mt-1 print:text-black">
                 ILLUMINATE PASS
               </h1>
-              <p className="text-xs text-zinc-400 mt-1 print:text-gray-600">
+              <p className="text-xs text-slate-300 mt-0.5 print:text-gray-600">
                 KMCT College of Engineering, Kasaragod
               </p>
             </div>
 
-            <div className="text-left sm:text-right flex items-center sm:items-start justify-between sm:justify-end gap-4">
-              <div className="w-16 h-16 bg-white p-1 rounded-lg hidden sm:flex items-center justify-center shrink-0">
+            <div className="text-left sm:text-right flex items-center sm:items-start gap-4 justify-between sm:justify-end">
+              <div className="w-16 h-16 bg-white p-1.5 rounded-xl hidden sm:flex items-center justify-center shrink-0 shadow-md">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                    `ILLUMINATE:${registration.registrationNumber}:${registration.fullName}`
+                    `ILLUMINATE-PASS:${registration.registrationNumber}:${registration.fullName}`
                   )}`}
-                  alt="Pass QR Code"
+                  alt="Ticket QR Code"
                   className="w-full h-full object-contain"
                 />
               </div>
 
               <div>
-                <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">
-                  Serial Number
+                <span className="text-[10px] text-purple-400 font-extrabold uppercase tracking-wider block">
+                  Unique Ticket ID
                 </span>
-                <span className="font-mono text-sm sm:text-base font-bold text-white tracking-wider block print:text-black mt-0.5">
-                  {registration.registrationNumber}
-                </span>
-                <div className="mt-1.5">
+                <div className="flex items-center gap-1.5 sm:justify-end">
+                  <span className="text-base sm:text-lg font-mono font-black text-purple-300 tracking-wide print:text-purple-900 bg-purple-950/70 border border-purple-800/40 px-2 py-0.5 rounded-lg shadow-sm">
+                    {registration.registrationNumber}
+                  </span>
+                </div>
+                <div className="mt-1">
                   <span
-                    className={`inline-block font-mono text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                       isVerified
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                        : 'bg-amber-950 text-amber-300 border border-amber-700'
                     }`}
                   >
-                    {isVerified ? 'VERIFIED ✓' : 'REVIEW PENDING'}
+                    {isVerified ? 'VERIFIED PASS ✓' : 'PENDING APPROVAL'}
                   </span>
                 </div>
               </div>
@@ -200,75 +204,72 @@ function SuccessContent() {
           </div>
 
           {/* Participant Information */}
-          <div className="py-6 space-y-4 border-b border-white/[0.08] print:border-gray-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 my-8">
             <div>
-              <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block mb-1">
-                Delegate Name
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                Participant Name
               </span>
-              <p className="text-xl font-bold text-white tracking-tight print:text-black">
+              <span className="text-xl font-bold text-white mt-1 block print:text-black">
                 {registration.fullName}
+              </span>
+              <p className="text-xs text-slate-300 mt-0.5 print:text-gray-600">
+                {registration.course} ({registration.yearOfStudy})
               </p>
-              <p className="text-xs text-zinc-400 mt-0.5 print:text-gray-600">
-                {registration.course} ({registration.yearOfStudy}) • {registration.institution}
+              <p className="text-xs text-slate-400 mt-0.5 print:text-gray-500">
+                {registration.institution}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="space-y-3">
               <div>
-                <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">
-                  Email & Phone
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Contact Details
                 </span>
-                <p className="text-xs text-zinc-300 font-mono mt-0.5 print:text-gray-700 truncate">
-                  {registration.email}
-                </p>
-                <p className="text-xs text-zinc-400 font-mono print:text-gray-600">
-                  +91 {registration.phone}
+                <p className="text-xs text-slate-300 mt-1 print:text-gray-700">
+                  {registration.email} • +91 {registration.phone}
                 </p>
               </div>
 
               <div>
-                <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">
-                  Fee Tariff
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Amount Recorded
                 </span>
-                <p className="text-sm font-mono font-bold text-white mt-0.5 print:text-black">
+                <p className="text-base font-bold text-gradient-vibrant print:text-black">
                   ₹{registration.amountPaid || eventConfig.registrationFee} INR
                 </p>
-                <span className="text-[10px] text-emerald-400 font-mono">
-                  Official Rate Applied
-                </span>
               </div>
             </div>
           </div>
 
-          {/* Logistics Strip */}
-          <div className="py-5 grid grid-cols-3 gap-3 text-xs border-b border-white/[0.08] print:border-gray-300">
+          {/* Event Logistics Badge */}
+          <div className="p-5 rounded-2xl bg-[#090514] border border-purple-900/40 grid grid-cols-1 sm:grid-cols-3 gap-4 print:bg-gray-100 print:border-gray-300">
             <div>
-              <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">Duration</span>
-              <p className="text-xs font-semibold text-white mt-0.5 print:text-black">6 Hours Offline</p>
+              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Duration</span>
+              <p className="text-xs font-bold text-white mt-0.5 print:text-black">6 Hours Offline</p>
             </div>
             <div>
-              <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">Date</span>
-              <p className="text-xs font-semibold text-white mt-0.5 print:text-black">
-                {eventConfig.date || 'TBA'}
+              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Date</span>
+              <p className="text-xs font-bold text-white mt-0.5 print:text-black">
+                {eventConfig.date || 'To be announced (TBA)'}
               </p>
             </div>
             <div>
-              <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">Venue</span>
-              <p className="text-xs font-semibold text-white mt-0.5 truncate print:text-black">
+              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Venue</span>
+              <p className="text-xs font-bold text-white mt-0.5 truncate print:text-black">
                 {eventConfig.venue}
               </p>
             </div>
           </div>
 
-          {/* Deliverables Footer */}
-          <div className="pt-5 flex items-center justify-between text-xs text-zinc-400 print:text-gray-600">
+          {/* Guaranteed Deliverables Reminder */}
+          <div className="mt-8 pt-6 border-t border-purple-950/60 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400 print:border-gray-300 print:text-gray-600">
             <div className="flex items-center gap-2">
-              <Award className="w-3.5 h-3.5 text-violet-400" />
-              <span className="text-[11px]">E-Cell IIT Bombay Certificate</span>
+              <Award className="w-4 h-4 text-purple-400" />
+              <span>Official Certificate from E-Cell IIT Bombay</span>
             </div>
             <div className="flex items-center gap-2">
-              <Package className="w-3.5 h-3.5 text-violet-400" />
-              <span className="text-[11px]">Physical Startup Kit</span>
+              <Package className="w-4 h-4 text-purple-400" />
+              <span>Illuminate Physical Startup Kit</span>
             </div>
           </div>
 
@@ -278,45 +279,50 @@ function SuccessContent() {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
           <button
             onClick={handlePrint}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-white text-zinc-950 hover:bg-zinc-200 font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-purple-950/60 hover:bg-purple-900/60 border border-purple-800/50 text-purple-200 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
           >
             <Printer className="w-4 h-4" />
-            <span>Print / Save Credential (PDF)</span>
+            <span>Print or Save Pass (PDF)</span>
           </button>
 
           <Link
             href="/"
-            className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 text-xs font-medium text-center transition-colors"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-medium text-center transition-colors"
           >
             Return to Homepage
           </Link>
         </div>
 
-        {/* Participant Protocol */}
-        <div className="mt-12 surface-card rounded-xl p-6 space-y-3">
-          <h3 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">
-            Important Information for Participants
+        {/* Next Steps Guidance */}
+        <div className="mt-12 glass-card rounded-2xl p-7 border border-purple-900/30 space-y-4">
+          <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+            Important Next Steps for Participants
           </h3>
-          <ul className="space-y-2 text-xs text-zinc-400 leading-relaxed">
-            <li className="flex items-start gap-2">
-              <span className="font-mono text-zinc-600">•</span>
-              <span>Keep your Pass ID (<strong className="text-white font-mono">{registration.registrationNumber}</strong>) saved on your phone for campus entry.</span>
+          <ul className="space-y-2.5 text-xs text-slate-300 leading-relaxed">
+            <li className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-purple-950 text-purple-300 flex items-center justify-center shrink-0 text-[10px] font-bold">1</span>
+              <span>Keep your Pass ID (<strong>{registration.registrationNumber}</strong>) handy on your phone.</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="font-mono text-zinc-600">•</span>
-              <span>The campus coordinators will announce the confirmed hall and schedule via college notifications.</span>
+            <li className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-purple-950 text-purple-300 flex items-center justify-center shrink-0 text-[10px] font-bold">2</span>
+              <span>The organizing faculty coordinators will announce the confirmed hall and schedule via email & college bulletin.</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="font-mono text-zinc-600">•</span>
-              <span>Present this pass at the registration desk on the event morning to collect your official Illuminate startup kit.</span>
+            <li className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-purple-950 text-purple-300 flex items-center justify-center shrink-0 text-[10px] font-bold">3</span>
+              <span>Arrive on time to claim your physical Illuminate Startup Kit at the venue reception.</span>
             </li>
           </ul>
 
-          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-500">
-            <span>Desk Coordinator: Alan Albin</span>
-            <a href="tel:8848563266" className="text-zinc-300 hover:text-white font-mono">
-              8848563266
-            </a>
+          <div className="pt-4 border-t border-purple-950/60 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+            <div>
+              <span className="font-semibold text-slate-300">Contact Person:</span> Alan Albin (Local Coordinator)
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Mobile:</span>
+              <a href="tel:8848563266" className="text-purple-400 font-bold hover:underline">
+                8848563266
+              </a>
+            </div>
           </div>
         </div>
 
@@ -329,8 +335,8 @@ export default function SuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#07060b] flex items-center justify-center text-zinc-500">
-          <Loader2 className="w-6 h-6 animate-spin text-white" />
+        <div className="min-h-screen bg-[#05030a] flex items-center justify-center text-slate-400">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
         </div>
       }
     >

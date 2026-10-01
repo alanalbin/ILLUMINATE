@@ -1,22 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  /* Restrained, Human-Crafted Palette */
-  --bg-primary: #07060b;
-  --bg-surface: #0e0d15;
-  --bg-surface-subtle: #13121d;
+  /* Cinematic Purple & Black Palette */
+  --bg-primary: #05030a;
+  --bg-secondary: #0c0817;
+  --bg-surface: #140d24;
+  --bg-surface-elevated: #1d1334;
+  --bg-card: rgba(20, 13, 36, 0.7);
   
+  --accent-purple-light: #c084fc;
+  --accent-purple: #9333ea;
+  --accent-purple-deep: #6b21a8;
   --accent-violet: #7c3aed;
-  --accent-violet-light: #a78bfa;
-  --accent-emerald: #10b981;
+  --accent-magenta: #a855f7;
   
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.14);
-  --border-focus: rgba(167, 139, 250, 0.5);
+  --border-subtle: rgba(168, 85, 247, 0.15);
+  --border-active: rgba(192, 132, 252, 0.4);
   
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  
+  --glow-purple: rgba(147, 51, 234, 0.25);
+  --glow-violet: rgba(124, 58, 237, 0.35);
 }
 
 html {
@@ -27,11 +34,11 @@ html {
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  selection-background-color: var(--accent-purple);
+  selection-color: #ffffff;
 }
 
 ::selection {
@@ -39,39 +46,80 @@ body {
   color: #ffffff;
 }
 
-/* Minimal Custom Scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #07060b;
+  background: #05030a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e1b2e;
-  border-radius: 3px;
+  background: #251642;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2e2a44;
+  background: #49287f;
 }
 
-/* Clean hairline borders & surfaces */
-.surface-card {
-  background: #0d0c14;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Cinematic Mesh & Glows */
+.purple-mesh-bg {
+  background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(5, 3, 10, 0) 70%),
+              radial-gradient(circle at 85% 30%, rgba(147, 51, 234, 0.1) 0%, rgba(5, 3, 10, 0) 50%),
+              radial-gradient(circle at 15% 60%, rgba(107, 33, 168, 0.12) 0%, rgba(5, 3, 10, 0) 60%),
+              #05030a;
 }
 
-.surface-hover {
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-.surface-hover:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  background-color: #11101a;
+.glass-card {
+  background: rgba(18, 11, 31, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 85, 247, 0.16);
 }
 
-/* Print styling for official pass */
-@media print {
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card-hover:hover {
+  border-color: rgba(192, 132, 252, 0.4);
+  box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.3);
+  transform: translateY(-2px);
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, #ffffff 20%, #e9d5ff 60%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-vibrant {
+  background: linear-gradient(135deg, #f3e8ff 0%, #c084fc 50%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-glow {
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
   }
 }
+
+.animate-ripple {
+  animation: ripple 0.6s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+/* Touch active styles */
+.touch-card {
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+

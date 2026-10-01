@@ -1,114 +1,147 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Lightbulb, Compass, Zap, Presentation, CheckCircle, ArrowRight } from 'lucide-react';
+import TouchInteractiveTilt from '@/components/ui/TouchInteractiveTilt';
 
 export default function WorkshopStructureSection() {
-  const syllabus = [
+  const modules = [
     {
       step: '01',
-      timeframe: 'Hour 1 – 2',
-      phase: 'Validation Phase',
-      title: 'Problem Discovery & Market Validation',
+      title: 'Ideation & Problem-Market Validation',
+      duration: 'Hour 1 - 2',
+      tag: 'Foundation & Validation',
       description:
-        'Discovering non-obvious problems. How to validate consumer pain points, interview potential users with unbiased questions, and avoid building solutions nobody wants.',
-      deliverables: ['Customer discovery framework', 'Problem scoring matrix', 'Market sizing methodology'],
+        'Discovering non-obvious problems. How to validate consumer pain points, interview potential users, and avoid building things nobody wants.',
+      keyTakeaways: ['Customer discovery framework', 'Problem scoring matrix', 'Lean market sizing'],
+      icon: Lightbulb,
     },
     {
       step: '02',
-      timeframe: 'Hour 3 – 4',
-      phase: 'Architecture Phase',
-      title: 'Lean Business Models & Unit Economics',
+      title: 'Lean Business Model & Unit Economics',
+      duration: 'Hour 3 - 4',
+      tag: 'Architecture & Scalability',
       description:
-        'Constructing a 1-page Lean Canvas. Understanding Customer Acquisition Cost (CAC), Lifetime Value (LTV), monetization loops, and high-margin go-to-market strategies.',
-      deliverables: ['1-Page Lean Canvas', 'Monetization modeling', 'Distribution channels breakdown'],
+        'Mapping out Lean Canvas architecture. Understanding CAC (Customer Acquisition Cost), LTV (Lifetime Value), monetization models, and go-to-market loops.',
+      keyTakeaways: ['1-Page Lean Canvas', 'Monetization strategy', 'Pricing psychology'],
+      icon: Compass,
     },
     {
       step: '03',
-      timeframe: 'Hour 5',
-      phase: 'Lab Sprint',
       title: 'Rapid Prototyping & Startup Kit Lab',
+      duration: 'Hour 5',
+      tag: 'Hands-on Sprint',
       description:
-        'Utilizing physical Illuminate Startup Kit materials to construct an initial MVP concept, clear value propositions, and a rapid distribution hypothesis.',
-      deliverables: ['Physical kit ideation cards', 'Low-fidelity MVP design', 'Value hypothesis checklist'],
+        'Using your physical Illuminate Startup Kit materials to construct an initial MVP concept, value proposition, and distribution hypothesis.',
+      keyTakeaways: ['Physical kit ideation cards', 'Low-fidelity MVP design', 'Value hypothesis testing'],
+      icon: Zap,
     },
     {
       step: '04',
-      timeframe: 'Hour 6',
-      phase: 'Pitch & Ecosystem',
-      title: 'Mentor Pitch, Critique & IIT Bombay Gateway',
+      title: 'The Pitch, Feedback & IIT Bombay Ecosystem',
+      duration: 'Hour 6',
+      tag: 'Mentorship & Access',
       description:
-        'Pitching venture ideas to mentors. Structured Q&A, actionable critique, and explicit entryways to E-Summit, NEC competitions, and venture incubators.',
-      deliverables: ['3-Minute founder pitch structure', 'Mentor feedback notes', 'Direct NEC & E-Summit entryways'],
+        'Presenting venture ideas to mentors. Q&A session with experienced entrepreneurs and pathways to E-Summit, NEC competitions, and incubator access.',
+      keyTakeaways: ['3-Minute founder pitch format', 'Mentor critique session', 'Direct NEC & E-Summit entry'],
+      icon: Presentation,
     },
   ];
 
   return (
-    <section id="workshop" className="py-24 md:py-32 bg-[#07060b] border-b border-white/[0.08] relative">
-      <div className="max-w-7xl mx-auto px-6 sm:px-10">
+    <section id="workshop" className="py-28 bg-[#05030a] relative overflow-hidden z-10 border-t border-purple-950/40">
+      
+      {/* Glow aura */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-purple-900/10 rounded-full blur-[150px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 relative z-20">
         
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-12 border-b border-white/[0.08]">
-          <div className="max-w-2xl">
-            <span className="text-xs uppercase font-mono tracking-widest text-violet-400 block mb-3">
-              Curriculum & Syllabus
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              Six Hours. Four Critical Milestones.
-            </h2>
-          </div>
-          <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
-            Every hour builds sequentially on the previous, transitioning from abstract ideation into a validated, pitched prototype.
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.6 }}
+          className="text-center max-w-3xl mx-auto"
+        >
+          <span className="text-xs uppercase font-extrabold tracking-widest text-purple-400 bg-purple-950/70 border border-purple-800/40 px-4 py-1.5 rounded-full shadow-sm">
+            Curriculum Blueprint
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight mt-4">
+            Six Hours That Shift Your Perspective.
+          </h2>
+          <p className="mt-3.5 text-slate-300 text-base sm:text-lg">
+            Engineered by E-Cell IIT Bombay to guide participants step-by-step through the core phases of real-world venture building.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Structured Agenda Table / Editorial Schedule */}
-        <div className="divide-y divide-white/[0.08]">
-          {syllabus.map((item) => (
-            <div
-              key={item.step}
-              className="py-10 first:pt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start hover:bg-white/[0.01] transition-colors"
-            >
-              {/* Step & Timeframe (3 cols) */}
-              <div className="lg:col-span-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-mono font-bold text-violet-400">
-                    {item.step}
-                  </span>
-                  <span className="text-xs font-mono text-zinc-400 bg-white/[0.04] px-2.5 py-1 rounded border border-white/[0.06]">
-                    {item.timeframe}
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider block mt-2">
-                  {item.phase}
-                </span>
-              </div>
+        {/* Modules Grid with Interactive 3D Touch Tilt */}
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-7">
+          {modules.map((m, idx) => {
+            const Icon = m.icon;
+            return (
+              <motion.div
+                key={m.step}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+              >
+                <TouchInteractiveTilt maxTilt={8} glareOpacity={0.22}>
+                  <div className="glass-card rounded-3xl p-7 sm:p-8 border border-purple-900/40 hover:border-purple-500/50 flex flex-col justify-between group transition-all duration-300 shadow-xl shadow-black/40 hover:shadow-purple-950/50 h-full">
+                    <div>
+                      {/* Step & Duration Header */}
+                      <div className="flex items-center justify-between mb-5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-3xl font-black font-mono text-purple-500/40 group-hover:text-purple-300 transition-colors">
+                            {m.step}
+                          </span>
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-purple-400/90 bg-purple-950/60 px-2.5 py-0.5 rounded-full border border-purple-800/40">
+                            {m.tag}
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold px-3 py-1 rounded-xl bg-purple-900/40 border border-purple-700/40 text-purple-200">
+                          {m.duration}
+                        </span>
+                      </div>
 
-              {/* Title & Narrative (6 cols) */}
-              <div className="lg:col-span-6">
-                <h3 className="text-xl font-bold text-white tracking-tight">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
+                      {/* Title & Icon */}
+                      <div className="flex items-start gap-3.5 mb-3.5">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-900/60 to-indigo-900/60 border border-purple-700/50 flex items-center justify-center shrink-0 text-purple-300 shadow-inner group-hover:scale-105 transition-transform">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white group-hover:text-purple-200 transition-colors pt-1">
+                          {m.title}
+                        </h3>
+                      </div>
 
-              {/* Tangible Deliverables (3 cols) */}
-              <div className="lg:col-span-3">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 block mb-2">
-                  Key Outputs
-                </span>
-                <ul className="space-y-1.5 text-xs text-zinc-300">
-                  {item.deliverables.map((d, dIdx) => (
-                    <li key={dIdx} className="flex items-center gap-2">
-                      <span className="w-1 h-1 rounded-full bg-violet-400" />
-                      <span>{d}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
+                      {/* Description */}
+                      <p className="text-sm text-slate-300 leading-relaxed mt-2">
+                        {m.description}
+                      </p>
+                    </div>
+
+                    {/* Key Takeaways Checklist */}
+                    <div className="mt-6 pt-5 border-t border-purple-950/60">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-purple-400/80 mb-2.5">
+                        Key Milestones
+                      </p>
+                      <ul className="space-y-1.5">
+                        {m.keyTakeaways.map((takeaway, tIdx) => (
+                          <li key={tIdx} className="flex items-center gap-2 text-xs text-slate-300">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{takeaway}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                  </div>
+                </TouchInteractiveTilt>
+              </motion.div>
+            );
+          })}
         </div>
 
       </div>
