@@ -224,35 +224,63 @@ function PaymentContent() {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* LEFT COLUMN: THE OFFICIAL PAYMENT QR IMAGE */}
+            {/* LEFT COLUMN: THE OFFICIAL PAYMENT QR IMAGE WITH CYBERNETIC SCANNER ANIMATIONS */}
             <div className="lg:col-span-5 flex flex-col items-center text-center space-y-4">
-              <div className="w-full p-4 rounded-3xl bg-[#0b0619]/90 border border-purple-700/40 shadow-2xl flex flex-col items-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-2.5 flex items-center gap-1.5">
-                  <QrCode className="w-3.5 h-3.5" />
-                  Official Google Pay QR
-                </span>
+              <div className="relative w-full">
+                {/* Ambient breathing neon pulse behind the QR card */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-emerald-500 to-indigo-600 rounded-3xl blur-xl opacity-40 animate-glow-pulse pointer-events-none" />
 
-                {/* Actual User Uploaded QR Image */}
-                <div className="w-full max-w-[260px] sm:max-w-[280px] bg-white rounded-2xl p-2 shadow-xl border border-white/20 transition-transform duration-300 hover:scale-[1.02]">
-                  <img
-                    src="/payment-qr.jpg"
-                    alt="Alan Albin UPI Payment QR Code"
-                    className="w-full h-auto object-contain rounded-xl block"
-                  />
-                </div>
+                <div className="relative w-full p-5 rounded-3xl bg-[#0b0619]/95 border border-purple-700/50 shadow-2xl flex flex-col items-center backdrop-blur-xl">
+                  {/* Status header with live pulsing radar dot */}
+                  <div className="flex items-center justify-between w-full mb-3 px-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                      <QrCode className="w-3.5 h-3.5 text-purple-400" />
+                      Official UPI QR
+                    </span>
+                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[10px] font-semibold text-emerald-300">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <span>Scan Active</span>
+                    </div>
+                  </div>
 
-                <div className="mt-3.5 text-center">
-                  <p className="text-xs font-semibold text-white">
-                    Scan with any UPI App
-                  </p>
-                  <p className="text-[11px] text-purple-300/80 mt-0.5">
-                    Google Pay • PhonePe • Paytm • BHIM • Cred
-                  </p>
+                  {/* High-Tech Animated QR Scanner Frame with Floating Physics */}
+                  <div className="relative w-full max-w-[270px] sm:max-w-[290px] rounded-2xl p-2.5 bg-white shadow-2xl border border-white/20 transition-all duration-300 group animate-float-gentle">
+                    
+                    {/* Viewfinder Target Reticle Corners */}
+                    <div className="absolute top-1.5 left-1.5 w-4 h-4 border-t-2 border-l-2 border-emerald-500 rounded-tl z-20 animate-corner-pulse pointer-events-none" />
+                    <div className="absolute top-1.5 right-1.5 w-4 h-4 border-t-2 border-r-2 border-emerald-500 rounded-tr z-20 animate-corner-pulse pointer-events-none" />
+                    <div className="absolute bottom-1.5 left-1.5 w-4 h-4 border-b-2 border-l-2 border-emerald-500 rounded-bl z-20 animate-corner-pulse pointer-events-none" />
+                    <div className="absolute bottom-1.5 right-1.5 w-4 h-4 border-b-2 border-r-2 border-emerald-500 rounded-br z-20 animate-corner-pulse pointer-events-none" />
+
+                    {/* Holographic Laser Scanner Line */}
+                    <div className="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399,0_0_24px_#10b981] animate-qr-scan pointer-events-none z-20" />
+
+                    {/* New Uploaded Square QR Image */}
+                    <div className="relative overflow-hidden rounded-xl bg-white p-1">
+                      <img
+                        src="/payment-qr.png"
+                        alt="Official UPI Payment QR Code"
+                        className="w-full h-auto object-contain rounded-lg block transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3.5 text-center">
+                    <p className="text-xs font-bold text-white tracking-wide">
+                      Scan with any UPI App
+                    </p>
+                    <p className="text-[11px] text-purple-300/80 mt-0.5">
+                      Google Pay • PhonePe • Paytm • BHIM • Cred
+                    </p>
+                  </div>
                 </div>
               </div>
 
               {/* Coordinator UPI ID with 1-Click Copy */}
-              <div className="w-full p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-left">
+              <div className="w-full p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-left hover:border-purple-500/30 transition-colors">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                   Or transfer directly to UPI ID:
                 </span>
@@ -268,7 +296,7 @@ function PaymentContent() {
                   <button
                     type="button"
                     onClick={() => handleCopyUpi(coordinatorUpiId)}
-                    className="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/30 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                    className="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/30 text-xs font-mono flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
                   >
                     {copiedUpi ? (
                       <>
@@ -302,7 +330,7 @@ function PaymentContent() {
                 <div className="grid grid-cols-2 gap-2.5">
                   <a
                     href={upiIntentUri}
-                    className="p-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="p-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.03] hover:shadow-blue-900/40 active:scale-[0.97]"
                   >
                     <Smartphone className="w-4 h-4" />
                     <span>Google Pay</span>
@@ -310,7 +338,7 @@ function PaymentContent() {
 
                   <a
                     href={upiIntentUri}
-                    className="p-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="p-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.03] hover:shadow-purple-900/40 active:scale-[0.97]"
                   >
                     <Smartphone className="w-4 h-4" />
                     <span>PhonePe</span>
@@ -318,7 +346,7 @@ function PaymentContent() {
 
                   <a
                     href={upiIntentUri}
-                    className="p-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="p-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.03] hover:shadow-sky-900/40 active:scale-[0.97]"
                   >
                     <Smartphone className="w-4 h-4" />
                     <span>Paytm</span>
@@ -326,7 +354,7 @@ function PaymentContent() {
 
                   <a
                     href={upiIntentUri}
-                    className="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.03] hover:shadow-fuchsia-900/40 active:scale-[0.97]"
                   >
                     <Zap className="w-4 h-4" />
                     <span>Any UPI App</span>
@@ -338,7 +366,7 @@ function PaymentContent() {
               <form onSubmit={(e) => handleUpiVerification(e, false)} className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-base font-bold text-white flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">✓</span>
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.5)]">✓</span>
                     <span>Enter Transfer UTR / UPI Reference</span>
                   </h4>
                   <span className="text-[11px] text-slate-400 font-mono">
@@ -347,7 +375,7 @@ function PaymentContent() {
                 </div>
 
                 {utrError && (
-                  <div className="p-3.5 rounded-xl bg-red-950/60 border border-red-800/40 text-xs text-red-200 flex items-center gap-2">
+                  <div className="p-3.5 rounded-xl bg-red-950/60 border border-red-800/40 text-xs text-red-200 flex items-center gap-2 animate-shake">
                     <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
                     <span>{utrError}</span>
                   </div>
@@ -364,7 +392,7 @@ function PaymentContent() {
                     placeholder="e.g. 427189023418"
                     value={utrNumber}
                     onChange={(e) => setUtrNumber(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-                    className="w-full px-4 py-3.5 rounded-xl bg-black/60 border border-purple-900/50 focus:border-emerald-400 focus:outline-none text-white text-base font-mono tracking-wider transition-colors placeholder:text-zinc-600"
+                    className="w-full px-4 py-3.5 rounded-xl bg-black/60 border border-purple-900/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 focus:shadow-[0_0_20px_rgba(16,185,129,0.25)] focus:outline-none text-white text-base font-mono tracking-wider transition-all placeholder:text-zinc-600"
                   />
                   <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                     Check your UPI payment receipt under <strong className="text-slate-200">&quot;UPI Ref No.&quot;</strong>, <strong className="text-slate-200">&quot;UTR&quot;</strong>, or <strong className="text-slate-200">&quot;Google Transaction ID&quot;</strong>.
@@ -380,7 +408,7 @@ function PaymentContent() {
                     placeholder="e.g. yourname@oksbi or 9876543210"
                     value={payerUpiId}
                     onChange={(e) => setPayerUpiId(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-black/60 border border-purple-900/50 focus:border-purple-400 focus:outline-none text-white text-sm placeholder:text-zinc-600"
+                    className="w-full px-4 py-3 rounded-xl bg-black/60 border border-purple-900/50 focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30 focus:outline-none text-white text-sm placeholder:text-zinc-600 transition-all"
                   />
                 </div>
 
@@ -388,17 +416,20 @@ function PaymentContent() {
                   <button
                     type="submit"
                     disabled={isSubmittingUtr}
-                    className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-emerald-950/80 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                    className="relative overflow-hidden flex-1 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-emerald-950/80 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 group hover:shadow-[0_0_25px_rgba(16,185,129,0.4)]"
                   >
+                    {/* Continuous Shimmer Light Beam */}
+                    <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer pointer-events-none" />
+
                     {isSubmittingUtr ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Verifying & Syncing to GSheet...</span>
+                        <Loader2 className="w-4 h-4 animate-spin relative z-10" />
+                        <span className="relative z-10">Verifying & Syncing to GSheet...</span>
                       </>
                     ) : (
                       <>
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Submit UTR & Claim Pass</span>
+                        <CheckCircle className="w-4 h-4 relative z-10 group-hover:scale-110 transition-transform" />
+                        <span className="relative z-10">Submit UTR & Claim Pass</span>
                       </>
                     )}
                   </button>
@@ -408,7 +439,7 @@ function PaymentContent() {
                     type="button"
                     onClick={() => handleUpiVerification(undefined, true)}
                     disabled={isSubmittingUtr}
-                    className="py-4 px-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-center shrink-0"
+                    className="py-4 px-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 cursor-pointer text-center shrink-0"
                     title="Organizer instant pass generation"
                   >
                     Instant Test Verify
