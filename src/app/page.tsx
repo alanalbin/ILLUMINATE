@@ -10,7 +10,8 @@ import EventDetailsSection from '@/components/home/EventDetailsSection';
 import FaqSection from '@/components/home/FaqSection';
 import CtaBanner from '@/components/home/CtaBanner';
 
-export const dynamic = 'force-dynamic';
+// Statically pre-render on CDN with background revalidation
+export const revalidate = 60;
 
 export default async function HomePage() {
   let event = DEFAULT_EVENT_CONFIG;

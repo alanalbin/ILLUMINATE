@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { DataStore } from '@/lib/storage/data-store';
+import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 
 export async function GET() {
   try {
@@ -9,10 +10,10 @@ export async function GET() {
       event,
     });
   } catch (error: any) {
-    console.error('Fetch event config error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Server error retrieving event details' },
-      { status: 500 }
-    );
+    console.error('Fetch event config error, returning defaults:', error);
+    return NextResponse.json({
+      success: true,
+      event: DEFAULT_EVENT_CONFIG,
+    });
   }
 }

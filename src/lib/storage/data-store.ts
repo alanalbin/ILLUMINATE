@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase/admin';
+import { getAdminDb, isFirebaseAdminConfigured } from '@/lib/firebase/admin';
 import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 import {
   EventConfig,
@@ -47,7 +47,7 @@ function readLocalDb(): LocalDatabase {
       try {
         fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
       } catch {
-        // Ignored in read-only serverless environment
+        // Ignored on read-only serverless filesystems
       }
       inMemoryDb = initial;
       return initial;
@@ -79,17 +79,20 @@ function writeLocalDb(db: LocalDatabase): void {
 // Data Store Repository
 export const DataStore = {
   async getEventConfig(): Promise<EventConfig> {
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        const doc = await adminDb.collection('events').doc('illuminate-kmct-2026').get();
-        if (doc.exists && doc.data()) {
-          return {
-            ...DEFAULT_EVENT_CONFIG,
-            ...doc.data(),
-          } as EventConfig;
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          const doc = await adminDb.collection('events').doc('illuminate-kmct-2026').get();
+          if (doc.exists && doc.data()) {
+            return {
+              ...DEFAULT_EVENT_CONFIG,
+              ...doc.data(),
+            } as EventConfig;
+          }
+          await adminDb.collection('events').doc('illuminate-kmct-2026').set(DEFAULT_EVENT_CONFIG);
+          return DEFAULT_EVENT_CONFIG;
         }
-        await adminDb.collection('events').doc('illuminate-kmct-2026').set(DEFAULT_EVENT_CONFIG);
-        return DEFAULT_EVENT_CONFIG;
       } catch (e) {
         console.warn('Firestore getEventConfig failed, falling back:', e);
       }
@@ -113,9 +116,12 @@ export const DataStore = {
       updatedAt: new Date().toISOString(),
     };
 
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        await adminDb.collection('events').doc('illuminate-kmct-2026').set(updated, { merge: true });
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          await adminDb.collection('events').doc('illuminate-kmct-2026').set(updated, { merge: true });
+        }
       } catch (e) {
         console.warn('Firestore updateEventConfig failed:', e);
       }
@@ -147,9 +153,12 @@ export const DataStore = {
       updatedAt: new Date().toISOString(),
     };
 
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        await adminDb.collection('registrations').doc(id).set(newRegistration);
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          await adminDb.collection('registrations').doc(id).set(newRegistration);
+        }
       } catch (e) {
         console.warn('Firestore createRegistration failed:', e);
       }
@@ -161,11 +170,14 @@ export const DataStore = {
   },
 
   async getRegistrationById(id: string): Promise<Registration | null> {
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        const doc = await adminDb.collection('registrations').doc(id).get();
-        if (doc.exists) {
-          return doc.data() as Registration;
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          const doc = await adminDb.collection('registrations').doc(id).get();
+          if (doc.exists) {
+            return doc.data() as Registration;
+          }
         }
       } catch (e) {
         console.warn('Firestore getRegistrationById failed:', e);
@@ -177,15 +189,18 @@ export const DataStore = {
 
   async getRegistrationByEmail(email: string): Promise<Registration | null> {
     const normalized = email.toLowerCase().trim();
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        const snapshot = await adminDb
-          .collection('registrations')
-          .where('normalizedEmail', '==', normalized)
-          .limit(1)
-          .get();
-        if (!snapshot.empty) {
-          return snapshot.docs[0].data() as Registration;
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          const snapshot = await adminDb
+            .collection('registrations')
+            .where('normalizedEmail', '==', normalized)
+            .limit(1)
+            .get();
+          if (!snapshot.empty) {
+            return snapshot.docs[0].data() as Registration;
+          }
         }
       } catch (e) {
         console.warn('Firestore getRegistrationByEmail failed:', e);
@@ -205,12 +220,15 @@ export const DataStore = {
       updatedAt: new Date().toISOString(),
     };
 
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        await adminDb.collection('registrations').doc(id).update({
-          ...updates,
-          updatedAt: updated.updatedAt,
-        });
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          await adminDb.collection('registrations').doc(id).update({
+            ...updates,
+            updatedAt: updated.updatedAt,
+          });
+        }
       } catch (e) {
         console.warn('Firestore updateRegistration failed:', e);
       }
@@ -232,10 +250,15 @@ export const DataStore = {
   }): Promise<Registration[]> {
     let list: Registration[] = [];
 
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        const snapshot = await adminDb.collection('registrations').orderBy('createdAt', 'desc').get();
-        list = snapshot.docs.map((doc: any) => doc.data() as Registration);
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          const snapshot = await adminDb.collection('registrations').orderBy('createdAt', 'desc').get();
+          list = snapshot.docs.map((doc: any) => doc.data() as Registration);
+        } else {
+          list = readLocalDb().registrations;
+        }
       } catch (e) {
         console.warn('Firestore listRegistrations failed:', e);
         list = readLocalDb().registrations;
@@ -274,9 +297,12 @@ export const DataStore = {
       updatedAt: new Date().toISOString(),
     };
 
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        await adminDb.collection('payments').doc(id).set(record);
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          await adminDb.collection('payments').doc(id).set(record);
+        }
       } catch (e) {
         console.warn('Firestore recordPayment failed:', e);
       }
@@ -308,9 +334,12 @@ export const DataStore = {
       timestamp: new Date().toISOString(),
     };
 
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        await adminDb.collection('auditLogs').doc(id).set(log);
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          await adminDb.collection('auditLogs').doc(id).set(log);
+        }
       } catch (e) {
         console.warn('Firestore recordAuditLog failed:', e);
       }
@@ -323,10 +352,13 @@ export const DataStore = {
   },
 
   async getAuditLogs(limitCount = 50): Promise<AuditLog[]> {
-    if (isFirebaseAdminConfigured() && adminDb) {
+    if (isFirebaseAdminConfigured()) {
       try {
-        const snapshot = await adminDb.collection('auditLogs').orderBy('timestamp', 'desc').limit(limitCount).get();
-        return snapshot.docs.map((d: any) => d.data() as AuditLog);
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          const snapshot = await adminDb.collection('auditLogs').orderBy('timestamp', 'desc').limit(limitCount).get();
+          return snapshot.docs.map((d: any) => d.data() as AuditLog);
+        }
       } catch (e) {
         console.warn('Firestore getAuditLogs failed:', e);
       }
