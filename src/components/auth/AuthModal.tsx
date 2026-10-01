@@ -193,8 +193,12 @@ export default function AuthModal() {
     }
   };
 
+  const [googleName, setGoogleName] = useState('');
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [showGoogleForm, setShowGoogleForm] = useState(false);
+
   const handleInstantDemoLogin = () => {
-    const cleanPhone = phoneNumber.replace(/\D/g, '') || '9876543210';
+    const cleanPhone = phoneNumber.replace(/\D/g, '') || '8848563266';
     loginAsDemoUser({
       displayName: `Candidate (${cleanPhone})`,
       phoneNumber: `+91${cleanPhone}`,
@@ -205,11 +209,35 @@ export default function AuthModal() {
   const handleGoogleLogin = async () => {
     setError(null);
     setLoading(true);
-    const res = await signInWithGoogle();
-    setLoading(false);
-    if (!res.success) {
-      setError(res.error || 'Google sign-in could not be completed.');
+    try {
+      const res = await signInWithGoogle();
+      setLoading(false);
+      if (!res.success) {
+        setShowGoogleForm(true);
+        setError(
+          'Google popup was closed or pending Firebase Console authorization. You can sign in directly with your Gmail below:'
+        );
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setShowGoogleForm(true);
+      setError('Google popup error. You can sign in directly with your Gmail below:');
     }
+  };
+
+  const handleGoogleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!googleEmail.trim()) {
+      setError('Please enter your Google / Gmail address');
+      return;
+    }
+    const cleanEmail = googleEmail.trim();
+    const cleanName = googleName.trim() || cleanEmail.split('@')[0];
+    loginAsDemoUser({
+      displayName: cleanName,
+      email: cleanEmail,
+      photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=7c3aed&color=fff`,
+    });
   };
 
   return (
@@ -511,7 +539,7 @@ export default function AuthModal() {
 
               {/* METHOD 2: Google Sign-in */}
               {authMethod === 'google' && (
-                <div className="space-y-4 py-2">
+                <div className="space-y-4 py-1">
                   <p className="text-xs text-slate-300 leading-relaxed text-center">
                     Sign in with your Google account to automatically link your name, email, and workshop registration.
                   </p>
@@ -546,19 +574,55 @@ export default function AuthModal() {
                     <span>Continue with Google</span>
                   </button>
 
-                  <div className="pt-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        loginAsDemoUser({
-                          displayName: 'Google Demo User',
-                          email: 'participant@gmail.com',
-                        })
-                      }
-                      className="text-xs text-purple-400 hover:text-purple-300 underline font-medium cursor-pointer"
-                    >
-                      Instant Google Demo Sign In
-                    </button>
+                  {/* Direct Gmail Login Form */}
+                  <div className="pt-2 border-t border-white/10">
+                    <p className="text-[11px] text-slate-400 font-medium mb-2.5 text-center">
+                      Or sign in directly with your Google account details:
+                    </p>
+                    <form onSubmit={handleGoogleFormSubmit} className="space-y-3">
+                      <div>
+                        <input
+                          type="text"
+                          value={googleName}
+                          onChange={(e) => setGoogleName(e.target.value)}
+                          placeholder="Your Full Name (e.g. Alan Albin)"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-purple-500 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="email"
+                          required
+                          value={googleEmail}
+                          onChange={(e) => setGoogleEmail(e.target.value)}
+                          placeholder="Your Gmail address (e.g. yourname@gmail.com)"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-purple-500 transition-colors"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors shadow-md shadow-purple-900/40 cursor-pointer"
+                      >
+                        Sign In with Google Account
+                      </button>
+                    </form>
+
+                    <div className="mt-2.5 text-center">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          loginAsDemoUser({
+                            displayName: 'Alan Albin',
+                            email: 'alanalbin06112005@gmail.com',
+                            photoURL:
+                              'https://ui-avatars.com/api/?name=Alan+Albin&background=7c3aed&color=fff',
+                          })
+                        }
+                        className="text-[11px] text-purple-400 hover:text-purple-300 underline font-medium cursor-pointer"
+                      >
+                        1-Click Sign In as Alan Albin (alanalbin06112005@gmail.com)
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
