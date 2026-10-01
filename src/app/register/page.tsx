@@ -131,6 +131,10 @@ export default function RegisterPage() {
       }
 
       // Success or existing pending registration -> proceed to payment page
+      if (typeof window !== 'undefined' && data.registrationId) {
+        sessionStorage.setItem('illuminate_registration_id', data.registrationId);
+        localStorage.setItem('illuminate_last_registration_id', data.registrationId);
+      }
       router.push(`/payment?registrationId=${data.registrationId}`);
     } catch (err: any) {
       console.error('Registration submission error:', err);

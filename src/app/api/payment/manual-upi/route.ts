@@ -19,12 +19,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { registrationId, utrNumber, payerUpiId } = parseResult.data;
+    const { registrationId, utrNumber, payerUpiId, ticketId, email, phone } = parseResult.data;
 
-    const registration = await DataStore.getRegistrationById(registrationId);
+    let registration = await DataStore.getRegistrationById(registrationId);
+    if (!registration && ticketId) {
+      registration = await DataStore.getRegistrationById(ticketId);
+    }
+    if (!registration && email) {
+      registration = await DataStore.getRegistrationByEmail(email);
+    }
+    if (!registration && phone) {
+      const all = await DataStore.listRegistrations();
+      registration = all.find((r) => r.phone === phone) || null;
+    }
+
     if (!registration) {
       return NextResponse.json(
-        { success: false, message: 'Registration record not found' },
+        { success: false, message: 'Registration record not found. Please refresh or verify your registration reference.' },
         { status: 404 }
       );
     }
@@ -38,12 +49,12 @@ export async function POST(req: NextRequest) {
 
     // Update registration to verified state upon UPI submission
     const eventConfig = await DataStore.getEventConfig();
-    const updated = await DataStore.updateRegistration(registrationId, {
+    const updated = await DataStore.updateRegistration(registration.id, {
       paymentStatus: 'verified',
       paymentMethod: 'manual_upi',
       amountPaid: registration.amountPaise || 69900,
       manualUtr: utrNumber,
-      adminNotes: `UPI Gateway Payment confirmed. UTR: ${utrNumber}${
+      adminNotes: `UPI Payment confirmed. UTR: ${utrNumber}${
         payerUpiId ? ` | Payer UPI: ${payerUpiId}` : ''
       }`,
     });
@@ -54,7 +65,7 @@ export async function POST(req: NextRequest) {
       registration.email,
       'UPI_PAYMENT_VERIFIED',
       'payment',
-      registrationId,
+      registration.id,
       { utrNumber, payerUpiId, amountINR: 699 }
     );
 

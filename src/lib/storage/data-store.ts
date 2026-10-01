@@ -13,9 +13,12 @@ import {
   RegistrationStatus,
 } from '@/types';
 
-const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NEXT_RUNTIME);
-const DATA_DIR = isServerless ? path.join('/tmp', '.data') : path.join(process.cwd(), '.data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
+const isCloudServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const PRIMARY_DATA_DIR = isCloudServerless ? path.join('/tmp', '.data') : path.join(process.cwd(), '.data');
+const PRIMARY_DB_FILE = path.join(PRIMARY_DATA_DIR, 'db.json');
+const SECONDARY_DB_FILE = isCloudServerless
+  ? path.join(process.cwd(), '.data', 'db.json')
+  : path.join('/tmp', '.data', 'db.json');
 
 interface LocalDatabase {
   eventConfig: EventConfig;
@@ -36,44 +39,76 @@ function getInitialLocalDb(): LocalDatabase {
 }
 
 function readLocalDb(): LocalDatabase {
+  let parsedFromDisk: LocalDatabase | null = null;
+
+  // Try reading primary database file on disk
+  try {
+    if (fs.existsSync(PRIMARY_DB_FILE)) {
+      const content = fs.readFileSync(PRIMARY_DB_FILE, 'utf-8');
+      parsedFromDisk = JSON.parse(content) as LocalDatabase;
+    }
+  } catch (err) {
+    console.warn('Error reading primary db file:', err);
+  }
+
+  // Cross-check secondary location if primary is missing or empty
+  try {
+    if (fs.existsSync(SECONDARY_DB_FILE)) {
+      const altContent = fs.readFileSync(SECONDARY_DB_FILE, 'utf-8');
+      const altParsed = JSON.parse(altContent) as LocalDatabase;
+      if (altParsed && Array.isArray(altParsed.registrations) && altParsed.registrations.length > 0) {
+        if (!parsedFromDisk) {
+          parsedFromDisk = altParsed;
+        } else {
+          const existingIds = new Set(parsedFromDisk.registrations.map((r) => r.id));
+          for (const reg of altParsed.registrations) {
+            if (!existingIds.has(reg.id)) {
+              parsedFromDisk.registrations.push(reg);
+              existingIds.add(reg.id);
+            }
+          }
+        }
+      }
+    }
+  } catch {
+    // Secondary fallback ignored
+  }
+
+  if (parsedFromDisk) {
+    inMemoryDb = parsedFromDisk;
+    return parsedFromDisk;
+  }
+
   if (inMemoryDb) {
     return inMemoryDb;
   }
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(DB_FILE)) {
-      const initial = getInitialLocalDb();
-      try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
-      } catch {
-        // Ignored on read-only serverless filesystems
-      }
-      inMemoryDb = initial;
-      return initial;
-    }
-    const content = fs.readFileSync(DB_FILE, 'utf-8');
-    const parsed = JSON.parse(content) as LocalDatabase;
-    inMemoryDb = parsed;
-    return parsed;
-  } catch (err) {
-    console.warn('Error reading local db fallback:', err);
-    const fallback = getInitialLocalDb();
-    inMemoryDb = fallback;
-    return fallback;
-  }
+
+  const fallback = getInitialLocalDb();
+  inMemoryDb = fallback;
+  return fallback;
 }
 
 function writeLocalDb(db: LocalDatabase): void {
   inMemoryDb = db;
+  // Write to primary database path
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(PRIMARY_DATA_DIR)) {
+      fs.mkdirSync(PRIMARY_DATA_DIR, { recursive: true });
     }
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+    fs.writeFileSync(PRIMARY_DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
   } catch (err) {
-    console.warn('File write bypassed (serverless ephemeral environment):', err);
+    console.warn('Primary file write bypassed:', err);
+  }
+
+  // Mirror write to secondary database path for multi-worker/process consistency
+  try {
+    const secDir = path.dirname(SECONDARY_DB_FILE);
+    if (!fs.existsSync(secDir)) {
+      fs.mkdirSync(secDir, { recursive: true });
+    }
+    fs.writeFileSync(SECONDARY_DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+  } catch {
+    // Secondary mirror ignored in restricted environments
   }
 }
 
@@ -172,24 +207,56 @@ export const DataStore = {
   },
 
   async getRegistrationById(id: string): Promise<Registration | null> {
+    if (!id) return null;
+    const cleanId = String(id).trim();
+
     if (isFirebaseAdminConfigured()) {
       try {
         const adminDb = await getAdminDb();
         if (adminDb) {
-          const doc = await adminDb.collection('registrations').doc(id).get();
+          const doc = await adminDb.collection('registrations').doc(cleanId).get();
           if (doc.exists) {
             return doc.data() as Registration;
+          }
+          // Query by ticket registrationNumber
+          const numSnap = await adminDb
+            .collection('registrations')
+            .where('registrationNumber', '==', cleanId)
+            .limit(1)
+            .get();
+          if (!numSnap.empty) {
+            return numSnap.docs[0].data() as Registration;
+          }
+          // Query by normalized email
+          const emailSnap = await adminDb
+            .collection('registrations')
+            .where('normalizedEmail', '==', cleanId.toLowerCase())
+            .limit(1)
+            .get();
+          if (!emailSnap.empty) {
+            return emailSnap.docs[0].data() as Registration;
           }
         }
       } catch (e) {
         console.warn('Firestore getRegistrationById failed:', e);
       }
     }
+
     const local = readLocalDb();
-    return local.registrations.find((r) => r.id === id) || null;
+    const cleanLower = cleanId.toLowerCase();
+    return (
+      local.registrations.find(
+        (r) =>
+          r.id === cleanId ||
+          r.registrationNumber?.toLowerCase() === cleanLower ||
+          r.email?.toLowerCase() === cleanLower ||
+          r.phone === cleanId
+      ) || null
+    );
   },
 
   async getRegistrationByEmail(email: string): Promise<Registration | null> {
+    if (!email) return null;
     const normalized = email.toLowerCase().trim();
     if (isFirebaseAdminConfigured()) {
       try {
@@ -209,7 +276,7 @@ export const DataStore = {
       }
     }
     const local = readLocalDb();
-    return local.registrations.find((r) => r.normalizedEmail === normalized) || null;
+    return local.registrations.find((r) => r.normalizedEmail === normalized || r.email.toLowerCase() === normalized) || null;
   },
 
   async updateRegistration(id: string, updates: Partial<Registration>): Promise<Registration | null> {
@@ -226,7 +293,7 @@ export const DataStore = {
       try {
         const adminDb = await getAdminDb();
         if (adminDb) {
-          await adminDb.collection('registrations').doc(id).update({
+          await adminDb.collection('registrations').doc(current.id).update({
             ...updates,
             updatedAt: updated.updatedAt,
           });
@@ -237,7 +304,9 @@ export const DataStore = {
     }
 
     const local = readLocalDb();
-    const idx = local.registrations.findIndex((r) => r.id === id);
+    const idx = local.registrations.findIndex(
+      (r) => r.id === current.id || r.registrationNumber === current.registrationNumber
+    );
     if (idx !== -1) {
       local.registrations[idx] = updated;
       writeLocalDb(local);

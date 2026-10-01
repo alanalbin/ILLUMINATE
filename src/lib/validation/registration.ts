@@ -56,6 +56,9 @@ export const manualUpiSubmissionSchema = z.object({
     .max(30, 'UTR / Transaction Reference must be under 30 characters')
     .regex(/^[a-zA-Z0-9]+$/, 'UTR must only contain letters and numbers'),
   payerUpiId: z.string().trim().optional(),
+  ticketId: z.string().trim().optional(),
+  email: z.string().trim().optional(),
+  phone: z.string().trim().optional(),
 });
 
 export type ManualUpiSubmissionData = z.infer<typeof manualUpiSubmissionSchema>;

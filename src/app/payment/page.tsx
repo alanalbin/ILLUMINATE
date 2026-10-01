@@ -41,7 +41,14 @@ function PaymentContent() {
   const coordinatorName = 'Alan Albin';
 
   useEffect(() => {
-    if (!registrationId) {
+    const targetRegId =
+      registrationId ||
+      (typeof window !== 'undefined'
+        ? sessionStorage.getItem('illuminate_registration_id') ||
+          localStorage.getItem('illuminate_last_registration_id')
+        : null);
+
+    if (!targetRegId) {
       setServerError('No registration reference found. Please complete the registration form first.');
       setLoading(false);
       return;
@@ -50,7 +57,7 @@ function PaymentContent() {
     async function fetchData() {
       try {
         const [regRes, eventRes] = await Promise.all([
-          fetch(`/api/registrations/${registrationId}`),
+          fetch(`/api/registrations/${targetRegId}`),
           fetch('/api/event'),
         ]);
 
@@ -64,8 +71,13 @@ function PaymentContent() {
         setRegistration(regData.registration);
         setEventConfig(eventData.event);
 
+        if (typeof window !== 'undefined' && regData.registration) {
+          sessionStorage.setItem('illuminate_registration_id', regData.registration.id);
+          localStorage.setItem('illuminate_last_registration_id', regData.registration.id);
+        }
+
         if (regData.registration.paymentStatus === 'verified') {
-          router.push(`/success?registrationId=${registrationId}`);
+          router.push(`/success?registrationId=${regData.registration.id}`);
         }
       } catch (err: any) {
         console.error('Error fetching registration:', err);
@@ -109,6 +121,9 @@ function PaymentContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           registrationId: registration.id,
+          ticketId: registration.registrationNumber,
+          email: registration.email,
+          phone: registration.phone,
           utrNumber: refCode,
           payerUpiId: payerUpiId.trim() || undefined,
         }),
