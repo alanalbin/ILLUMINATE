@@ -196,19 +196,30 @@ export default function RegisterPage() {
 
             {/* Auth Sign-in Banner / Verified Pill */}
             {user ? (
-              <div className="mb-6 p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between text-xs text-emerald-200">
+              <div className="mb-6 p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between text-xs text-emerald-200 shadow-md">
                 <div className="flex items-center gap-2.5">
-                  <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || 'Google User'}
+                      className="w-7 h-7 rounded-full border border-emerald-400/50 object-cover"
+                    />
+                  ) : (
+                    <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  )}
                   <span>
-                    Verified as <strong>{user.displayName || user.email || user.phoneNumber}</strong> (Auto-filled)
+                    Google Verified: <strong>{user.displayName || user.email}</strong> (Pre-filled below)
                   </span>
                 </div>
+                <span className="text-[10px] bg-emerald-900/60 text-emerald-300 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  Ready
+                </span>
               </div>
             ) : (
-              <div className="mb-6 p-3.5 rounded-xl bg-purple-950/40 border border-purple-800/40 flex items-center justify-between text-xs text-purple-200">
+              <div className="mb-6 p-3.5 rounded-2xl bg-purple-950/40 border border-purple-800/40 flex items-center justify-between text-xs text-purple-200">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
-                  <span>Sign in with Mobile OTP or Google for instant auto-fill</span>
+                  <span>Sign in with Google to pre-fill your pass details</span>
                 </div>
                 <Link
                   href="/login?redirect=/register"

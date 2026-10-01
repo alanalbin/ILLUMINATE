@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut as fbSignOut,
   onAuthStateChanged,
@@ -64,6 +66,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Check if user is returning from a Google redirect
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        const fbUser = result.user;
+        const mappedUser: AppUser = {
+          uid: fbUser.uid,
+          displayName: fbUser.displayName,
+          email: fbUser.email,
+          phoneNumber: fbUser.phoneNumber,
+          photoURL: fbUser.photoURL,
+        };
+        setUser(mappedUser);
+        try {
+          localStorage.setItem('illuminate_user', JSON.stringify(mappedUser));
+        } catch (_) {}
+      }
+    }).catch((e) => {
+      console.warn('Redirect sign-in notice:', e);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (fbUser: FirebaseUser | null) => {
       if (fbUser) {
         const mappedUser: AppUser = {
@@ -100,19 +122,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      const result = await signInWithPopup(auth, provider);
-      const fbUser = result.user;
-      const mappedUser: AppUser = {
-        uid: fbUser.uid,
-        displayName: fbUser.displayName,
-        email: fbUser.email,
-        phoneNumber: fbUser.phoneNumber,
-        photoURL: fbUser.photoURL,
-      };
-      setUser(mappedUser);
-      localStorage.setItem('illuminate_user', JSON.stringify(mappedUser));
-      closeAuthModal();
-      return { success: true };
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const fbUser = result.user;
+        const mappedUser: AppUser = {
+          uid: fbUser.uid,
+          displayName: fbUser.displayName,
+          email: fbUser.email,
+          phoneNumber: fbUser.phoneNumber,
+          photoURL: fbUser.photoURL,
+        };
+        setUser(mappedUser);
+        localStorage.setItem('illuminate_user', JSON.stringify(mappedUser));
+        closeAuthModal();
+        return { success: true };
+      } catch (popupErr: any) {
+        if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/cancelled-popup-request') {
+          await signInWithRedirect(auth, provider);
+          return { success: true };
+        }
+        throw popupErr;
+      }
     } catch (error: any) {
       console.error('Google Sign In Error:', error);
       return {

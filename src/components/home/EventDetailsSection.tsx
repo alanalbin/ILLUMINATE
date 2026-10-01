@@ -131,7 +131,7 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
 
               <div className="pt-2">
                 <Link
-                  href="/register"
+                  href="/login?redirect=/register"
                   className="block w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-center text-white text-xs font-bold uppercase tracking-wider shadow-md shadow-purple-950 transition-all"
                 >
                   Reserve Your Seat

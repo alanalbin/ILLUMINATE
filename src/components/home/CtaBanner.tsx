@@ -30,7 +30,7 @@ export default function CtaBanner({ fee }: CtaBannerProps) {
 
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="/register"
+            href="/login?redirect=/register"
             className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-base shadow-xl shadow-purple-950/60 transition-all flex items-center justify-center gap-2"
           >
             <span>Register Now (₹{fee})</span>
