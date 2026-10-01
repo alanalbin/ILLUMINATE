@@ -51,6 +51,10 @@ export function formatCandidateForSheet(
   };
 }
 
+export const GOOGLE_SHEET_DEPLOYMENT_ID =
+  'AKfycbxjXc24ovEYwjPYPWT5cQQwLE3Q2qkO7_sp1krEWDH65_5RhuCAhpR2kKlwBbiRJXeBJQ';
+export const DEFAULT_WEBHOOK_URL = `https://script.google.com/macros/s/${GOOGLE_SHEET_DEPLOYMENT_ID}/exec`;
+
 /**
  * Sends candidate record to the connected Google Sheet via Google Apps Script Webhook
  */
@@ -58,11 +62,7 @@ export async function syncCandidateToGoogleSheet(
   registration: Registration,
   payment?: PaymentRecord | null
 ): Promise<{ success: boolean; error?: string }> {
-  const webhookUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL;
-  if (!webhookUrl) {
-    // If webhook URL is not set yet, log informative note without failing user registration
-    return { success: false, error: 'GOOGLE_SHEET_WEBHOOK_URL not configured' };
-  }
+  const webhookUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL || DEFAULT_WEBHOOK_URL;
 
   const payload = formatCandidateForSheet(registration, payment);
 
