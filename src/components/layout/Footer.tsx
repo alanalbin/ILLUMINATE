@@ -78,7 +78,7 @@ export default function Footer() {
             <ul className="space-y-1.5">
               <li>
                 <a
-                  href="https://nxtbyteksd.netlify.app/#cta"
+                  href="https://nxtbyteksd.netlify.app/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"

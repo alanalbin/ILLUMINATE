@@ -55,7 +55,7 @@ export default function Navbar() {
             FAQ
           </a>
           <a
-            href="https://nxtbyteksd.netlify.app/#cta"
+            href="https://nxtbyteksd.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs uppercase font-semibold tracking-wider text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/30 hover:border-emerald-400/50 shadow-sm shadow-emerald-950/40"
@@ -208,7 +208,7 @@ export default function Navbar() {
             FAQ
           </a>
           <a
-            href="https://nxtbyteksd.netlify.app/#cta"
+            href="https://nxtbyteksd.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setMobileMenuOpen(false)}

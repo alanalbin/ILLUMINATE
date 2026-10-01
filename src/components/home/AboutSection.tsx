@@ -116,7 +116,7 @@ export default function AboutSection() {
 
                 <div className="flex flex-col sm:flex-row lg:flex-col gap-3.5 shrink-0">
                   <a
-                    href="https://nxtbyteksd.netlify.app/#cta"
+                    href="https://nxtbyteksd.netlify.app/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-black uppercase tracking-wider transition-all shadow-xl shadow-emerald-950/70 text-center flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"

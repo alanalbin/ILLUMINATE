@@ -84,7 +84,7 @@ export default function HeroSection({ event }: HeroSectionProps) {
               </div>
 
               <a
-                href="https://nxtbyteksd.netlify.app/#cta"
+                href="https://nxtbyteksd.netlify.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-xs font-bold text-emerald-300 hover:text-emerald-200 hover:border-emerald-400 transition-all shadow-sm backdrop-blur-md group"
