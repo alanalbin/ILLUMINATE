@@ -46,8 +46,10 @@ export function formatCandidateForSheet(
       payment?.provider === 'manual_upi' || registration.manualUtr
         ? 'Direct UPI'
         : registration.paymentMethod || 'None',
-    transactionOrUtr: payment?.providerPaymentId || registration.paymentId || registration.manualUtr || 'N/A',
-    amountINR: registration.amountPaid ? registration.amountPaid / 100 : 699,
+    transactionOrUtr: registration.manualUtr || payment?.providerPaymentId || registration.paymentId || 'N/A',
+    amountINR: registration.amountPaid
+      ? (registration.amountPaid > 1000 ? Math.round(registration.amountPaid / 100) : registration.amountPaid)
+      : 699,
   };
 }
 
@@ -64,7 +66,28 @@ export async function syncCandidateToGoogleSheet(
 ): Promise<{ success: boolean; error?: string }> {
   const webhookUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL || DEFAULT_WEBHOOK_URL;
 
-  const payload = formatCandidateForSheet(registration, payment);
+  const formatted = formatCandidateForSheet(registration, payment);
+  const utrVal = registration.manualUtr || formatted.transactionOrUtr;
+
+  const payload = {
+    ...formatted,
+    utr: utrVal,
+    utrNumber: utrVal,
+    UTR: utrVal,
+    transactionId: utrVal,
+    transactionOrUtr: utrVal,
+    'Transaction / UTR Number': utrVal,
+    'Registration Number': formatted.registrationNumber,
+    'Full Name': formatted.fullName,
+    'Email Address': formatted.email,
+    'Phone Number': formatted.phone,
+    'Institution / College': formatted.institution,
+    'Course / Department': formatted.course,
+    'Year of Study': formatted.yearOfStudy,
+    'Payment Status': formatted.paymentStatus,
+    'Payment Method': formatted.paymentMethod,
+    'Amount (INR)': formatted.amountINR,
+  };
 
   try {
     const res = await fetch(webhookUrl, {
