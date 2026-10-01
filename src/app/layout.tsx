@@ -5,6 +5,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
+import ScrollProgressBar from '@/components/ui/ScrollProgressBar';
 
 export const metadata: Metadata = {
   title: 'ILLUMINATE | 6-Hour Entrepreneurship Workshop | KMCT Kasaragod & E-Cell IIT Bombay',
@@ -59,6 +60,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-[#05030a] text-slate-100 font-sans selection:bg-purple-600 selection:text-white antialiased">
+        <ScrollProgressBar />
         <AuthProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
