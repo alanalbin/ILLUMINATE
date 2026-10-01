@@ -14,20 +14,41 @@ import {
   Smartphone,
   Zap,
   CheckCircle,
-  ArrowRight,
   FileSpreadsheet,
+  Search,
+  User,
+  Mail,
+  Phone,
+  School,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { Registration, EventConfig } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registrationId = searchParams.get('registrationId');
+  const { user } = useAuth();
 
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setServerError] = useState<string | null>(null);
+  const [serverNotice, setServerNotice] = useState<string | null>(null);
+
+  // Quick Registration State (used when entering /payment without prior registration)
+  const [quickFullName, setQuickFullName] = useState('');
+  const [quickEmail, setQuickEmail] = useState('');
+  const [quickPhone, setQuickPhone] = useState('');
+  const [quickInstitution, setQuickInstitution] = useState('KMCT College of Engineering');
+  const [quickCourse, setQuickCourse] = useState('Computer Science & Engineering');
+
+  // Lookup existing registration state
+  const [lookupQuery, setLookupQuery] = useState('');
+  const [isSearchingLookup, setIsSearchingLookup] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [showLookupBox, setShowLookupBox] = useState(false);
 
   // UPI and UTR state
   const [utrNumber, setUtrNumber] = useState('');
@@ -40,55 +61,116 @@ function PaymentContent() {
   const coordinatorUpiId = 'alanalbin06112005@okicici';
   const coordinatorName = 'Alan Albin';
 
+  // Pre-fill quick registration from authenticated user if available
   useEffect(() => {
-    const targetRegId =
-      registrationId ||
-      (typeof window !== 'undefined'
-        ? sessionStorage.getItem('illuminate_registration_id') ||
-          localStorage.getItem('illuminate_last_registration_id')
-        : null);
-
-    if (!targetRegId) {
-      setServerError('No registration reference found. Please complete the registration form first.');
-      setLoading(false);
-      return;
+    if (user) {
+      if (user.displayName && !quickFullName) setQuickFullName(user.displayName);
+      if (user.email && !quickEmail) setQuickEmail(user.email);
+      if (user.phoneNumber && !quickPhone) setQuickPhone(user.phoneNumber.replace(/\D/g, '').slice(-10));
     }
+  }, [user]);
+
+  // Main data resolution effect
+  useEffect(() => {
+    let isMounted = true;
 
     async function fetchData() {
       try {
-        const [regRes, eventRes] = await Promise.all([
-          fetch(`/api/registrations/${targetRegId}`),
-          fetch('/api/event'),
-        ]);
-
-        if (!regRes.ok) {
-          throw new Error('Registration record could not be found.');
+        // Fetch event configuration
+        const eventRes = await fetch('/api/event');
+        if (eventRes.ok) {
+          const eventData = await eventRes.json();
+          if (isMounted) setEventConfig(eventData.event);
         }
 
-        const regData = await regRes.json();
-        const eventData = await eventRes.json();
-
-        setRegistration(regData.registration);
-        setEventConfig(eventData.event);
-
-        if (typeof window !== 'undefined' && regData.registration) {
-          sessionStorage.setItem('illuminate_registration_id', regData.registration.id);
-          localStorage.setItem('illuminate_last_registration_id', regData.registration.id);
+        // 1. Determine candidate identifier from URL, Storage, or Auth
+        let targetId = registrationId?.trim();
+        if (!targetId || targetId === 'undefined' || targetId === 'null') {
+          targetId = undefined;
+          if (typeof window !== 'undefined') {
+            const stored =
+              sessionStorage.getItem('illuminate_registration_id') ||
+              localStorage.getItem('illuminate_last_registration_id');
+            if (stored && stored !== 'undefined' && stored !== 'null') {
+              targetId = stored.trim();
+            }
+          }
         }
 
-        if (regData.registration.paymentStatus === 'verified') {
-          router.push(`/success?registrationId=${regData.registration.id}`);
+        // Fallback: check logged in Google user email
+        if (!targetId && user?.email) {
+          targetId = user.email;
+        }
+
+        // Fallback: check latest registration
+        if (!targetId) {
+          targetId = 'latest';
+        }
+
+        // Attempt fetch
+        const regRes = await fetch(`/api/registrations/${encodeURIComponent(targetId)}`);
+        if (regRes.ok) {
+          const regData = await regRes.json();
+          if (regData.registration && isMounted) {
+            setRegistration(regData.registration);
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('illuminate_registration_id', regData.registration.id);
+              localStorage.setItem('illuminate_last_registration_id', regData.registration.id);
+            }
+            if (regData.registration.paymentStatus === 'verified') {
+              router.push(`/success?registrationId=${regData.registration.id}`);
+              return;
+            }
+          }
         }
       } catch (err: any) {
-        console.error('Error fetching registration:', err);
-        setServerError(err.message || 'Unable to load registration details.');
+        console.warn('Auto-registration resolution note:', err.message);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
     fetchData();
-  }, [registrationId, router]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [registrationId, user, router]);
+
+  // Handle manual lookup of existing pass by Ticket ID or Email
+  const handleLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lookupQuery.trim()) return;
+
+    setIsSearchingLookup(true);
+    setLookupError(null);
+
+    try {
+      const res = await fetch(`/api/registrations/${encodeURIComponent(lookupQuery.trim())}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.registration) {
+        setLookupError('No pass found for that Ticket ID or Email. You can enter details below to generate a new pass.');
+        setIsSearchingLookup(false);
+        return;
+      }
+
+      setRegistration(data.registration);
+      setShowLookupBox(false);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('illuminate_registration_id', data.registration.id);
+        localStorage.setItem('illuminate_last_registration_id', data.registration.id);
+      }
+
+      if (data.registration.paymentStatus === 'verified') {
+        router.push(`/success?registrationId=${data.registration.id}`);
+      }
+    } catch {
+      setLookupError('Network error while searching. Please try again.');
+    } finally {
+      setIsSearchingLookup(false);
+    }
+  };
 
   const handleCopyUpi = (upi: string) => {
     navigator.clipboard.writeText(upi);
@@ -103,7 +185,6 @@ function PaymentContent() {
   // Handle UPI UTR / Reference submission
   const handleUpiVerification = async (e?: React.FormEvent, isInstantPass = false) => {
     if (e) e.preventDefault();
-    if (!registration) return;
     setUtrError(null);
 
     const refCode = isInstantPass ? `UPI-${Date.now().toString(36).toUpperCase()}` : utrNumber.trim();
@@ -116,14 +197,73 @@ function PaymentContent() {
     setIsSubmittingUtr(true);
 
     try {
+      let activeReg = registration;
+
+      // If candidate has not registered yet, create registration on the fly!
+      if (!activeReg) {
+        if (!quickFullName.trim()) {
+          setUtrError('Please enter your full name above.');
+          setIsSubmittingUtr(false);
+          return;
+        }
+        if (!quickEmail.trim() || !quickEmail.includes('@')) {
+          setUtrError('Please enter a valid email address above.');
+          setIsSubmittingUtr(false);
+          return;
+        }
+        const cleanedPhone = quickPhone.replace(/\D/g, '');
+        if (cleanedPhone.length < 10) {
+          setUtrError('Please enter a valid 10-digit mobile number above.');
+          setIsSubmittingUtr(false);
+          return;
+        }
+
+        const regRes = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: quickFullName.trim(),
+            email: quickEmail.trim().toLowerCase(),
+            phone: cleanedPhone.slice(-10),
+            institution: quickInstitution.trim() || 'KMCT College of Engineering',
+            course: quickCourse.trim() || 'Engineering & Technology',
+            yearOfStudy: '3rd Year',
+            privacyConsent: true,
+          }),
+        });
+
+        const regData = await regRes.json();
+        if (!regRes.ok || !regData.success) {
+          setUtrError(regData.message || 'Failed to initialize registration.');
+          setIsSubmittingUtr(false);
+          return;
+        }
+
+        const getRes = await fetch(`/api/registrations/${regData.registrationId}`);
+        const getData = await getRes.json();
+        activeReg = getData.registration;
+        setRegistration(activeReg);
+        if (typeof window !== 'undefined' && activeReg) {
+          sessionStorage.setItem('illuminate_registration_id', activeReg.id);
+          localStorage.setItem('illuminate_last_registration_id', activeReg.id);
+        }
+      }
+
+      if (!activeReg) {
+        setUtrError('Could not link registration. Please try again.');
+        setIsSubmittingUtr(false);
+        return;
+      }
+
+      // Submit UPI UTR
       const res = await fetch('/api/payment/manual-upi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          registrationId: registration.id,
-          ticketId: registration.registrationNumber,
-          email: registration.email,
-          phone: registration.phone,
+          registrationId: activeReg.id,
+          ticketId: activeReg.registrationNumber,
+          email: activeReg.email,
+          phone: activeReg.phone,
           utrNumber: refCode,
           payerUpiId: payerUpiId.trim() || undefined,
         }),
@@ -137,7 +277,7 @@ function PaymentContent() {
       }
 
       // Success: redirect to verified pass
-      router.push(`/success?registrationId=${registration.id}`);
+      router.push(`/success?registrationId=${activeReg.id}`);
     } catch (err: any) {
       console.error('UPI submission error:', err);
       setUtrError('Network error while verifying transaction. Please try again.');
@@ -149,25 +289,7 @@ function PaymentContent() {
     return (
       <div className="min-h-screen bg-[#05030a] flex flex-col items-center justify-center p-6 text-slate-300">
         <Loader2 className="w-10 h-10 text-purple-400 animate-spin mb-4" />
-        <p className="text-sm font-medium">Loading your registration & payment pass...</p>
-      </div>
-    );
-  }
-
-  if (error || !registration) {
-    return (
-      <div className="min-h-screen bg-[#05030a] flex flex-col items-center justify-center p-6 text-center">
-        <div className="glass-card max-w-md w-full p-8 rounded-2xl border border-red-900/50">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Registration Not Found</h2>
-          <p className="text-sm text-slate-300 mb-6">{error || 'Please register first to continue.'}</p>
-          <Link
-            href="/register"
-            className="inline-block w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all"
-          >
-            Go to Registration Form
-          </Link>
-        </div>
+        <p className="text-sm font-medium">Securing UPI payment session...</p>
       </div>
     );
   }
@@ -186,38 +308,150 @@ function PaymentContent() {
             UPI QR Payment
           </h1>
           <p className="mt-2 text-slate-300 text-sm">
-            Scan the official QR code below or tap your preferred UPI app to pay ₹{fee}, then enter your transaction UTR number to instantly receive your verified ticket.
+            Scan the official Google Pay QR code below or tap your preferred UPI app to pay ₹{fee}, then enter your transaction UTR number to instantly receive your verified pass.
           </p>
         </div>
 
-        {/* Pricing & Unique Ticket ID Overview Card */}
-        <div className="glass-card rounded-3xl p-6 sm:p-7 border border-purple-800/40 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute right-0 bottom-0 translate-x-6 translate-y-6 pointer-events-none opacity-[0.05] w-56 h-56 overflow-hidden" aria-hidden="true">
-            <img src="/logo-icon.png" alt="" className="w-full h-full object-contain" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase font-extrabold text-purple-400 tracking-wider">
-                Candidate Pass
-              </span>
-              <span className="text-[11px] font-mono font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-2.5 py-0.5 rounded-full">
-                Ticket ID: {registration.registrationNumber}
-              </span>
+        {/* Existing Passholder Overview OR Quick Participant Registration Card */}
+        {registration ? (
+          <div className="glass-card rounded-3xl p-6 sm:p-7 border border-purple-800/40 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute right-0 bottom-0 translate-x-6 translate-y-6 pointer-events-none opacity-[0.05] w-56 h-56 overflow-hidden" aria-hidden="true">
+              <img src="/logo-icon.png" alt="" className="w-full h-full object-contain" />
             </div>
-            <h3 className="text-xl font-black text-white mt-1">{registration.fullName}</h3>
-            <p className="text-xs text-slate-300 mt-0.5">{registration.course} • {registration.institution}</p>
-          </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase font-extrabold text-purple-400 tracking-wider">
+                  Candidate Pass
+                </span>
+                <span className="text-[11px] font-mono font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-2.5 py-0.5 rounded-full">
+                  Ticket ID: {registration.registrationNumber}
+                </span>
+              </div>
+              <h3 className="text-xl font-black text-white mt-1">{registration.fullName}</h3>
+              <p className="text-xs text-slate-300 mt-0.5">{registration.course} • {registration.institution}</p>
+            </div>
 
-          <div className="flex items-center gap-6 text-right sm:text-right w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-4 sm:pt-0 border-purple-950/60">
-            <div>
-              <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Total Amount</span>
-              <p className="text-3xl font-black text-gradient-vibrant">₹{fee}</p>
-            </div>
-            <div className="px-3 py-1 rounded-full bg-amber-950/60 border border-amber-800/50 text-amber-300 text-xs font-bold">
-              Payment Pending
+            <div className="flex items-center gap-6 text-right sm:text-right w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-4 sm:pt-0 border-purple-950/60">
+              <div>
+                <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Total Amount</span>
+                <p className="text-3xl font-black text-gradient-vibrant">₹{fee}</p>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-amber-950/60 border border-amber-800/50 text-amber-300 text-xs font-bold">
+                Payment Pending
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="glass-card rounded-3xl p-6 sm:p-7 border border-purple-800/40 mb-8 shadow-2xl backdrop-blur-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-900/40 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <User className="w-4 h-4 text-purple-400" />
+                  <span>Enter Participant Details for Ticket ID</span>
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Provide your name and contact details to generate your pass upon UPI payment.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLookupBox(!showLookupBox)}
+                className="text-xs text-purple-300 hover:text-white flex items-center gap-1.5 underline decoration-purple-500/50 cursor-pointer self-start sm:self-auto"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span>{showLookupBox ? 'Hide lookup' : 'Already registered? Search your pass'}</span>
+              </button>
+            </div>
+
+            {/* Quick Lookup Bar */}
+            {showLookupBox && (
+              <form onSubmit={handleLookup} className="p-3.5 rounded-2xl bg-purple-950/40 border border-purple-800/40 space-y-2">
+                <span className="text-xs font-semibold text-slate-300 block">
+                  Search by Ticket ID (ILM-KMCT-...) or Email:
+                </span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. ILM-KMCT-... or your@email.com"
+                    value={lookupQuery}
+                    onChange={(e) => setLookupQuery(e.target.value)}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-black/60 border border-purple-800/50 text-white text-xs font-mono focus:border-purple-400 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSearchingLookup}
+                    className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isSearchingLookup ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                    <span>Find Pass</span>
+                  </button>
+                </div>
+                {lookupError && (
+                  <p className="text-[11px] text-red-300">{lookupError}</p>
+                )}
+              </form>
+            )}
+
+            {/* Quick Participant Input Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  Full Name <span className="text-purple-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahul Sharma"
+                  value={quickFullName}
+                  onChange={(e) => setQuickFullName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-purple-900/50 text-white text-xs focus:border-purple-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  Email Address <span className="text-purple-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. rahul@example.com"
+                  value={quickEmail}
+                  onChange={(e) => setQuickEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-purple-900/50 text-white text-xs focus:border-purple-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  Mobile Number <span className="text-purple-400">*</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  maxLength={10}
+                  placeholder="e.g. 9876543210"
+                  value={quickPhone}
+                  onChange={(e) => setQuickPhone(e.target.value.replace(/\D/g, ''))}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-purple-900/50 text-white text-xs font-mono focus:border-purple-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  College / Institution
+                </label>
+                <input
+                  type="text"
+                  placeholder="KMCT College of Engineering"
+                  value={quickInstitution}
+                  onChange={(e) => setQuickInstitution(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-purple-900/50 text-white text-xs focus:border-purple-400 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* MAIN PAYMENT WORKFLOW: EXCLUSIVELY QR & UTR */}
         <div className="glass-card rounded-3xl p-6 sm:p-9 border border-purple-800/40 shadow-2xl space-y-8 backdrop-blur-xl">

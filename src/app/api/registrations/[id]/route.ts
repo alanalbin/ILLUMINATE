@@ -7,7 +7,23 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const registration = await DataStore.getRegistrationById(id);
+    const cleanId = decodeURIComponent(id || '').trim();
+
+    let registration = await DataStore.getRegistrationById(cleanId);
+    
+    if (!registration && cleanId.includes('@')) {
+      registration = await DataStore.getRegistrationByEmail(cleanId);
+    }
+
+    if (!registration && cleanId === 'latest') {
+      const all = await DataStore.listRegistrations();
+      registration = all.find((r) => r.paymentStatus !== 'verified') || all[0] || null;
+    }
+
+    const emailQuery = req.nextUrl.searchParams.get('email');
+    if (!registration && emailQuery) {
+      registration = await DataStore.getRegistrationByEmail(emailQuery.trim());
+    }
 
     if (!registration) {
       return NextResponse.json(
