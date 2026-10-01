@@ -9,7 +9,8 @@ interface FaqSectionProps {
 }
 
 export default function FaqSection({ faq }: FaqSectionProps) {
-  const [openId, setOpenId] = useState<string | null>(faq[0]?.id || null);
+  const list = faq || [];
+  const [openId, setOpenId] = useState<string | null>(list[0]?.id || null);
 
   const toggle = (id: string) => {
     setOpenId((prev) => (prev === id ? null : id));
@@ -34,7 +35,7 @@ export default function FaqSection({ faq }: FaqSectionProps) {
 
         {/* Accordions */}
         <div className="space-y-4">
-          {faq.map((item) => {
+          {list.map((item) => {
             const isOpen = openId === item.id;
             return (
               <div

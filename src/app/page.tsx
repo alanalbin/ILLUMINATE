@@ -1,5 +1,6 @@
 import React from 'react';
 import { DataStore } from '@/lib/storage/data-store';
+import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 import HeroSection from '@/components/home/HeroSection';
 import BackgroundCanvas3D from '@/components/background-3d/BackgroundCanvas3D';
 import AboutSection from '@/components/home/AboutSection';
@@ -12,7 +13,12 @@ import CtaBanner from '@/components/home/CtaBanner';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const event = await DataStore.getEventConfig();
+  let event = DEFAULT_EVENT_CONFIG;
+  try {
+    event = await DataStore.getEventConfig();
+  } catch (err) {
+    console.warn('Failed to load event config, falling back to defaults:', err);
+  }
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#05030a]">

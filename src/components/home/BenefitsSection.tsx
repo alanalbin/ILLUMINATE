@@ -15,6 +15,8 @@ export default function BenefitsSection({ benefits }: BenefitsSectionProps) {
     Trophy: <Trophy className="w-6 h-6 text-purple-400" />,
   };
 
+  const list = benefits || [];
+
   return (
     <section id="benefits" className="py-24 bg-[#080413] border-t border-purple-950/30 relative">
       <div className="max-w-7xl mx-auto px-6">
@@ -34,7 +36,7 @@ export default function BenefitsSection({ benefits }: BenefitsSectionProps) {
 
         {/* Benefits Grid */}
         <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {benefits.map((b) => (
+          {list.map((b) => (
             <div
               key={b.id}
               className="glass-card glass-card-hover rounded-2xl p-7 border border-purple-900/30 flex flex-col justify-between"

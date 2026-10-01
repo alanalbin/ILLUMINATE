@@ -12,7 +12,8 @@ import {
   RegistrationStatus,
 } from '@/types';
 
-const DATA_DIR = path.join(process.cwd(), '.data');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NEXT_RUNTIME);
+const DATA_DIR = isServerless ? path.join('/tmp', '.data') : path.join(process.cwd(), '.data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 interface LocalDatabase {
@@ -21,6 +22,8 @@ interface LocalDatabase {
   payments: PaymentRecord[];
   auditLogs: AuditLog[];
 }
+
+let inMemoryDb: LocalDatabase | null = null;
 
 function getInitialLocalDb(): LocalDatabase {
   return {
@@ -32,31 +35,44 @@ function getInitialLocalDb(): LocalDatabase {
 }
 
 function readLocalDb(): LocalDatabase {
+  if (inMemoryDb) {
+    return inMemoryDb;
+  }
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     if (!fs.existsSync(DB_FILE)) {
       const initial = getInitialLocalDb();
-      fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
+      try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
+      } catch {
+        // Ignored in read-only serverless environment
+      }
+      inMemoryDb = initial;
       return initial;
     }
     const content = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(content) as LocalDatabase;
+    const parsed = JSON.parse(content) as LocalDatabase;
+    inMemoryDb = parsed;
+    return parsed;
   } catch (err) {
     console.warn('Error reading local db fallback:', err);
-    return getInitialLocalDb();
+    const fallback = getInitialLocalDb();
+    inMemoryDb = fallback;
+    return fallback;
   }
 }
 
 function writeLocalDb(db: LocalDatabase): void {
+  inMemoryDb = db;
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
   } catch (err) {
-    console.error('Error writing local db fallback:', err);
+    console.warn('File write bypassed (serverless ephemeral environment):', err);
   }
 }
 
@@ -66,8 +82,11 @@ export const DataStore = {
     if (isFirebaseAdminConfigured() && adminDb) {
       try {
         const doc = await adminDb.collection('events').doc('illuminate-kmct-2026').get();
-        if (doc.exists) {
-          return doc.data() as EventConfig;
+        if (doc.exists && doc.data()) {
+          return {
+            ...DEFAULT_EVENT_CONFIG,
+            ...doc.data(),
+          } as EventConfig;
         }
         await adminDb.collection('events').doc('illuminate-kmct-2026').set(DEFAULT_EVENT_CONFIG);
         return DEFAULT_EVENT_CONFIG;
@@ -75,8 +94,15 @@ export const DataStore = {
         console.warn('Firestore getEventConfig failed, falling back:', e);
       }
     }
-    const local = readLocalDb();
-    return local.eventConfig || DEFAULT_EVENT_CONFIG;
+    try {
+      const local = readLocalDb();
+      return {
+        ...DEFAULT_EVENT_CONFIG,
+        ...(local?.eventConfig || {}),
+      };
+    } catch {
+      return DEFAULT_EVENT_CONFIG;
+    }
   },
 
   async updateEventConfig(updates: Partial<EventConfig>): Promise<EventConfig> {
