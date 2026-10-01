@@ -325,13 +325,13 @@ function SuccessContent() {
             </li>
           </ul>
 
-          <div className="pt-4 border-t border-purple-950/60 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+          <div className="pt-4 border-t border-white/[0.08] flex flex-wrap items-center justify-between text-xs text-zinc-400 gap-2">
             <div>
-              <span className="font-semibold text-slate-300">Contact Person:</span> Alan Albin (Local Coordinator)
+              <span className="font-medium text-white">Contact Person:</span> Alan Albin (Local Coordinator)
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">Mobile:</span>
-              <a href="tel:8848563266" className="text-purple-400 font-bold hover:underline">
+              <span className="text-zinc-500 font-mono">Mobile:</span>
+              <a href="tel:8848563266" className="text-zinc-200 hover:text-white font-mono font-medium hover:underline">
                 8848563266
               </a>
             </div>

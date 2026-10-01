@@ -463,13 +463,13 @@ export default function RegisterPage() {
             </div>
 
             {/* Registration Contact Box */}
-            <div className="p-5 rounded-2xl bg-purple-950/30 border border-purple-900/40 text-xs text-slate-300 space-y-2">
-              <p className="text-[11px] uppercase font-bold text-purple-400">Contact Person</p>
-              <p className="text-white font-bold text-sm">Alan Albin</p>
-              <div className="pt-1 border-t border-purple-950/60">
-                <p className="text-[11px] uppercase font-bold text-purple-400">Mobile</p>
-                <a href="tel:8848563266" className="text-purple-300 hover:text-purple-200 font-bold text-sm inline-flex items-center gap-1.5 mt-0.5">
-                  <Phone className="w-3.5 h-3.5 text-purple-400" />
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08] text-xs text-zinc-300 space-y-2">
+              <p className="text-[10px] uppercase font-mono tracking-wider text-zinc-400">Contact Person</p>
+              <p className="text-white font-medium text-sm">Alan Albin</p>
+              <div className="pt-2 border-t border-white/[0.08]">
+                <p className="text-[10px] uppercase font-mono tracking-wider text-zinc-400">Mobile</p>
+                <a href="tel:8848563266" className="text-zinc-300 hover:text-white font-mono text-xs inline-flex items-center gap-1.5 mt-0.5 transition-colors">
+                  <Phone className="w-3.5 h-3.5 text-zinc-400" />
                   <span>8848563266</span>
                 </a>
               </div>

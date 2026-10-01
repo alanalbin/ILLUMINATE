@@ -113,7 +113,7 @@ function LoginContent() {
             <span>Back to Home</span>
           </Link>
 
-          <span className="text-[11px] font-medium text-purple-400/80 bg-purple-950/60 border border-purple-800/40 px-3 py-1 rounded-full">
+          <span className="text-xs font-mono text-zinc-400 bg-white/[0.03] border border-white/[0.08] px-2.5 py-1 rounded-md">
             E-Cell IIT Bombay • KMCT Kasaragod
           </span>
         </div>
@@ -356,10 +356,11 @@ function LoginContent() {
             href="https://nxtbyteksd.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition-colors bg-emerald-950/40 border border-emerald-500/30 px-3.5 py-1.5 rounded-full"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-300 hover:text-white transition-colors bg-white/[0.03] border border-white/[0.08] hover:border-white/20 px-3 py-1.5 rounded-md"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>KMCT E-Cell (Nxt Byte)</span>
+            <span className="text-[10px] text-zinc-500">↗</span>
           </a>
         </div>
 

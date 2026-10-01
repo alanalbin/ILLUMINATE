@@ -50,10 +50,10 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
             transition={{ duration: 0.5, delay: 0.05 }}
           >
             <TouchInteractiveTilt maxTilt={7} glareOpacity={0.2} className="h-full">
-              <div className="glass-card rounded-3xl p-7 sm:p-8 border border-purple-900/40 hover:border-purple-500/50 space-y-6 shadow-xl shadow-black/40 h-full flex flex-col justify-between">
+              <div className="glass-card rounded-2xl p-7 sm:p-8 border border-white/[0.08] hover:border-white/20 bg-white/[0.02] space-y-6 shadow-lg shadow-black/40 h-full flex flex-col justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2.5 mb-5">
-                    <div className="w-9 h-9 rounded-xl bg-purple-950/80 border border-purple-700/40 flex items-center justify-center text-purple-300">
+                    <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-zinc-200">
                       <Calendar className="w-5 h-5" />
                     </div>
                     <span>Date & Schedule</span>
@@ -90,7 +90,7 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-purple-950/60 text-xs text-slate-400 flex items-center gap-2">
+                <div className="pt-4 border-t border-white/[0.08] text-xs text-slate-400 flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-purple-400 shrink-0" />
                   <span>Kasaragod, Kerala</span>
                 </div>
@@ -106,10 +106,10 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
             transition={{ duration: 0.5, delay: 0.15 }}
           >
             <TouchInteractiveTilt maxTilt={7} glareOpacity={0.2} className="h-full">
-              <div className="glass-card rounded-3xl p-7 sm:p-8 border border-purple-900/40 hover:border-purple-500/50 space-y-6 shadow-xl shadow-black/40 h-full flex flex-col justify-between">
+              <div className="glass-card rounded-2xl p-7 sm:p-8 border border-white/[0.08] hover:border-white/20 bg-white/[0.02] space-y-6 shadow-lg shadow-black/40 h-full flex flex-col justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2.5 mb-5">
-                    <div className="w-9 h-9 rounded-xl bg-purple-950/80 border border-purple-700/40 flex items-center justify-center text-purple-300">
+                    <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-zinc-200">
                       <IndianRupee className="w-5 h-5" />
                     </div>
                     <span>Investment & Cohort</span>
@@ -139,7 +139,7 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-purple-950/60 text-xs text-slate-400 flex items-center gap-2">
+                <div className="pt-4 border-t border-white/[0.08] text-xs text-slate-400 flex items-center gap-2">
                   <Users className="w-4 h-4 text-purple-400 shrink-0" />
                   <span>College-wide participation open</span>
                 </div>
@@ -155,10 +155,10 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
             transition={{ duration: 0.5, delay: 0.25 }}
           >
             <TouchInteractiveTilt maxTilt={7} glareOpacity={0.2} className="h-full">
-              <div className="glass-card rounded-3xl p-7 sm:p-8 border border-purple-900/40 hover:border-purple-500/50 space-y-6 shadow-xl shadow-black/40 h-full flex flex-col justify-between">
+              <div className="glass-card rounded-2xl p-7 sm:p-8 border border-white/[0.08] hover:border-white/20 bg-white/[0.02] space-y-6 shadow-lg shadow-black/40 h-full flex flex-col justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2.5 mb-5">
-                    <div className="w-9 h-9 rounded-xl bg-purple-950/80 border border-purple-700/40 flex items-center justify-center text-purple-300">
+                    <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-zinc-200">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <span>Coordinator & Inquiries</span>
@@ -195,7 +195,7 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-purple-950/60">
+                <div className="pt-4 border-t border-white/[0.08]">
                   <Link
                     href="/login?redirect=/register"
                     className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-center text-white text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-950/80 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"

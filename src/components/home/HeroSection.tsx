@@ -77,9 +77,9 @@ export default function HeroSection({ event }: HeroSectionProps) {
           <div className="lg:col-span-7 flex flex-col justify-center">
             
             {/* Event Association Badges */}
-            <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2.5 mb-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/70 border border-purple-500/30 text-xs font-semibold text-purple-300 shadow-sm backdrop-blur-md">
-                <img src="/logo-icon.png" alt="" className="w-4 h-4 object-contain" />
+            <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-xs font-medium text-zinc-300">
+                <img src="/logo-icon.png" alt="" className="w-3.5 h-3.5 object-contain" />
                 <span>E-Cell, IIT Bombay Initiative</span>
               </div>
 
@@ -87,12 +87,12 @@ export default function HeroSection({ event }: HeroSectionProps) {
                 href="https://nxtbyteksd.netlify.app/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-xs font-bold text-emerald-300 hover:text-emerald-200 hover:border-emerald-400 transition-all shadow-sm backdrop-blur-md group"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] hover:border-white/20 text-xs font-medium text-zinc-300 hover:text-white transition-all group"
                 title="Visit KMCT College E-Cell (Nxt Byte)"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span>Organized by Nxt Byte (KMCT E-Cell)</span>
-                <span className="text-[10px] group-hover:translate-x-0.5 transition-transform">↗</span>
+                <span className="text-[10px] text-zinc-500 group-hover:translate-x-0.5 transition-transform">↗</span>
               </a>
             </motion.div>
 
@@ -114,49 +114,49 @@ export default function HeroSection({ event }: HeroSectionProps) {
             </motion.p>
 
             {/* Key Logistics Micro-Tags */}
-            <motion.div variants={itemVariants} className="mt-6 flex flex-wrap items-center gap-2.5 text-xs text-slate-200">
-              <span className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-purple-500/20 flex items-center gap-1.5 backdrop-blur-md hover:border-purple-400/50 transition-colors">
-                <Clock className="w-3.5 h-3.5 text-purple-400" />
+            <motion.div variants={itemVariants} className="mt-6 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
+              <span className="px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-zinc-400" />
                 <span>6 Hours Offline</span>
               </span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-purple-950/70 border border-purple-500/40 font-bold text-white flex items-center gap-1.5 backdrop-blur-md shadow-sm">
-                <IndianRupee className="w-3.5 h-3.5 text-purple-400" />
+              <span className="px-3 py-1.5 rounded-md bg-white/[0.06] border border-white/20 font-semibold text-white flex items-center gap-1.5">
+                <IndianRupee className="w-3.5 h-3.5 text-zinc-300" />
                 <span>₹{fee}/- All-Inclusive Pass</span>
               </span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-purple-500/20 flex items-center gap-1.5 backdrop-blur-md hover:border-purple-400/50 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-purple-400" />
+              <span className="px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-zinc-400" />
                 <span>KMCT Campus, Kasaragod</span>
               </span>
             </motion.div>
 
             {/* Live Registration Countdown */}
-            <motion.div variants={itemVariants} className="mt-7 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-950/50 via-indigo-950/30 to-purple-950/40 border border-purple-800/40 backdrop-blur-xl max-w-lg shadow-lg">
+            <motion.div variants={itemVariants} className="mt-7 p-4 sm:p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] max-w-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-400 flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-yellow-400" />
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-amber-400" />
                     Seats Filling Fast
                   </span>
-                  <p className="text-xs text-slate-300 font-medium mt-0.5">Registration Closes Soon</p>
+                  <p className="text-xs text-zinc-300 font-medium mt-0.5">Registration Closes Soon</p>
                 </div>
                 <EventCountdown />
               </div>
             </motion.div>
 
-            {/* Contact Person Details */}
-            <motion.div variants={itemVariants} className="mt-5 p-4 rounded-xl bg-purple-950/30 border border-purple-800/30 backdrop-blur-md max-w-lg">
+            {/* Contact Person Details (Alan Albin) */}
+            <motion.div variants={itemVariants} className="mt-4 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] max-w-lg">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-purple-400">Contact Person</p>
-                  <p className="text-sm font-bold text-white mt-0.5">{coordinatorName}</p>
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Contact Person</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">{coordinatorName}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-purple-400">Direct Phone</p>
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Direct Phone</p>
                   <a
                     href={`tel:${coordinatorPhone}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-bold text-purple-300 hover:text-purple-200 transition-colors mt-0.5"
+                    className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-zinc-300 hover:text-white transition-colors mt-0.5"
                   >
-                    <Phone className="w-3.5 h-3.5 text-purple-400" />
+                    <Phone className="w-3 h-3 text-zinc-400" />
                     <span>+91 {coordinatorPhone}</span>
                   </a>
                 </div>
@@ -214,57 +214,57 @@ export default function HeroSection({ event }: HeroSectionProps) {
                       </h3>
                     </div>
                   </div>
-                  <div className="px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-600/40 text-[11px] font-bold text-emerald-300 flex items-center gap-1.5 shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <div className="px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] text-[11px] font-medium text-zinc-300 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                     <span>IIT Bombay Certified</span>
                   </div>
                 </div>
 
                 {/* 4 Core Pillars */}
-                <div className="space-y-3.5">
-                  <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-purple-950/30 border border-purple-900/30 hover:border-purple-600/40 hover:bg-purple-900/20 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-700/50 flex items-center justify-center shrink-0 text-purple-300 shadow-md">
-                      <Award className="w-5 h-5" />
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-white/20 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-200">
+                      <Award className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">E-Cell IIT Bombay Certification</h4>
-                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                      <h4 className="text-sm font-semibold text-white">E-Cell IIT Bombay Certification</h4>
+                      <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
                         Official verified certificate issued directly by E-Cell IIT Bombay.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-purple-950/30 border border-purple-900/30 hover:border-purple-600/40 hover:bg-purple-900/20 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-700/50 flex items-center justify-center shrink-0 text-purple-300 shadow-md">
-                      <Package className="w-5 h-5" />
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-white/20 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-200">
+                      <Package className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">Physical Illuminate Startup Kit</h4>
-                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                      <h4 className="text-sm font-semibold text-white">Physical Illuminate Startup Kit</h4>
+                      <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
                         Comprehensive workbooks, ideation frameworks & founder resources.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-purple-950/30 border border-purple-900/30 hover:border-purple-600/40 hover:bg-purple-900/20 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-700/50 flex items-center justify-center shrink-0 text-purple-300 shadow-md">
-                      <Sparkles className="w-5 h-5" />
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-white/20 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-200">
+                      <img src="/logo-icon.png" alt="" className="w-4 h-4 object-contain" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">6-Hour Hands-on Venture Lab</h4>
-                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                      <h4 className="text-sm font-semibold text-white">6-Hour Hands-on Venture Lab</h4>
+                      <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
                         Problem validation, lean business modeling, prototyping & pitch sprint.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-purple-950/30 border border-purple-900/30 hover:border-purple-600/40 hover:bg-purple-900/20 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-700/50 flex items-center justify-center shrink-0 text-purple-300 shadow-md">
-                      <Compass className="w-5 h-5" />
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-white/20 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-200">
+                      <Compass className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">E-Summit & NEC Privileges</h4>
-                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                      <h4 className="text-sm font-semibold text-white">E-Summit & NEC Privileges</h4>
+                      <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
                         Exclusive access & discounts to Asia&apos;s largest entrepreneurship festival at IIT Bombay.
                       </p>
                     </div>

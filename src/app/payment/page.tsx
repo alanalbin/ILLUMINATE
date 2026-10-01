@@ -412,19 +412,19 @@ function PaymentContent() {
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                       Or send directly to Coordinator UPI ID:
                     </span>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black/60 border border-purple-800/40">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.08]">
                       <div>
-                        <span className="text-sm font-mono font-bold text-purple-300 block">
+                        <span className="text-sm font-mono font-semibold text-white block">
                           {selectedUpiId}
                         </span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-zinc-400">
                           Lead Coordinator: Alan Albin (KMCT E-Cell)
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleCopyUpi(selectedUpiId)}
-                        className="px-3 py-1.5 rounded-lg bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-200 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
                         {copiedUpi ? (
                           <>

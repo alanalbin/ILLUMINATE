@@ -60,21 +60,21 @@ export default function Navbar() {
             href="https://nxtbyteksd.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs uppercase font-semibold tracking-wider text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/30 hover:border-emerald-400/50 shadow-sm shadow-emerald-950/40"
+            className="text-xs font-medium tracking-tight text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] hover:border-white/20"
             title="Nxt Byte — KMCTCEEM College E-Cell"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>College E-Cell (Nxt Byte)</span>
-            <ArrowUpRight className="w-3 h-3" />
+            <ArrowUpRight className="w-3 h-3 text-zinc-500" />
           </a>
           <a
             href="https://www.ecell.in/illuminate/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs uppercase font-medium tracking-wider text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+            className="text-xs font-medium tracking-tight text-zinc-400 hover:text-white flex items-center gap-1 transition-colors px-2.5 py-1 rounded-md hover:bg-white/[0.04]"
           >
             <span>IIT Bombay E-Cell</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500" />
           </a>
         </nav>
 
@@ -214,10 +214,13 @@ export default function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center justify-between text-sm font-semibold text-emerald-400 p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30"
+            className="flex items-center justify-between text-sm font-medium text-zinc-200 p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] hover:border-white/20"
           >
-            <span>College E-Cell (Nxt Byte)</span>
-            <ArrowUpRight className="w-4 h-4" />
+            <span className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>College E-Cell (Nxt Byte)</span>
+            </span>
+            <ArrowUpRight className="w-4 h-4 text-zinc-400" />
           </a>
           <div className="pt-2">
             <Link

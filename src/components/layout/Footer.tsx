@@ -50,25 +50,25 @@ export default function Footer() {
               Event Contact
             </h4>
             <div>
-              <p className="text-[10px] uppercase font-bold text-purple-400">Contact Person</p>
-              <p className="text-slate-200 font-semibold text-sm mt-0.5">Alan Albin</p>
-              <p className="text-[11px] text-slate-400">Registration Details & Local Coordinator</p>
+              <p className="text-[10px] uppercase font-mono tracking-wider text-zinc-400">Contact Person</p>
+              <p className="text-white font-medium text-xs mt-0.5">Alan Albin</p>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Registration Details & Local Coordinator</p>
             </div>
 
-            <div className="pt-2 border-t border-purple-950/60">
-              <p className="text-[10px] uppercase font-bold text-purple-400">Mobile</p>
+            <div className="pt-2 border-t border-white/[0.08]">
+              <p className="text-[10px] uppercase font-mono tracking-wider text-zinc-400">Mobile</p>
               <a
                 href="tel:8848563266"
-                className="inline-flex items-center gap-1.5 text-slate-200 hover:text-purple-300 font-bold text-sm transition-colors mt-0.5"
+                className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white font-mono text-xs transition-colors mt-0.5"
               >
-                <Phone className="w-3.5 h-3.5 text-purple-400" />
+                <Phone className="w-3.5 h-3.5 text-zinc-400" />
                 <span>8848563266</span>
               </a>
             </div>
 
             <div className="pt-1">
-              <p className="text-[11px] text-slate-400">E-Cell, IIT Bombay Initiative</p>
-              <p className="text-[10px] text-purple-400/80">KMCT College of Engineering, Kasaragod</p>
+              <p className="text-[11px] text-zinc-400">E-Cell, IIT Bombay Initiative</p>
+              <p className="text-[10px] text-zinc-500">KMCT College of Engineering, Kasaragod</p>
             </div>
           </div>
 
