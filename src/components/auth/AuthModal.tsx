@@ -70,23 +70,22 @@ export default function AuthModal() {
 
   const initRecaptcha = () => {
     const auth = getClientAuth();
-    if (!auth) return null;
+    if (!auth) throw new Error('Authentication is not initialized');
 
-    if (!recaptchaVerifierRef.current) {
+    if (recaptchaVerifierRef.current) {
       try {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {
-            // reCAPTCHA solved
-          },
-          'expired-callback': () => {
-            setError('reCAPTCHA expired. Please try sending OTP again.');
-          },
-        });
-      } catch (e: any) {
-        console.warn('Recaptcha init notice:', e);
-      }
+        recaptchaVerifierRef.current.clear();
+      } catch (_) {}
     }
+
+    recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+      callback: () => {},
+      'expired-callback': () => {
+        setError('reCAPTCHA security check expired. Please try sending OTP again.');
+      },
+    });
+
     return recaptchaVerifierRef.current;
   };
 
@@ -105,44 +104,24 @@ export default function AuthModal() {
     const fullPhone = `+91${cleanPhone}`;
 
     try {
-      let appVerifier = null;
-      try {
-        appVerifier = initRecaptcha();
-      } catch (rcErr) {
-        console.warn('Recaptcha init failed, using simulated OTP fallback:', rcErr);
+      const appVerifier = initRecaptcha();
+      if (!appVerifier) {
+        throw new Error('reCAPTCHA security check could not be loaded. Please refresh the page.');
       }
 
-      if (appVerifier) {
-        const res = await sendMobileOtp(fullPhone, appVerifier);
-        if (res.success && res.confirmationResult) {
-          confirmationResultRef.current = res.confirmationResult;
-          setSimulatedOtp(null);
-          setStep('otp');
-          setTimer(60);
-          setSuccessMsg(`OTP sent successfully to +91 ${cleanPhone}`);
-          setLoading(false);
-          return;
-        }
+      const res = await sendMobileOtp(fullPhone, appVerifier);
+      if (res.success && res.confirmationResult) {
+        confirmationResultRef.current = res.confirmationResult;
+        setStep('otp');
+        setTimer(60);
+        setOtpCode('');
+        setSuccessMsg(`SMS OTP dispatched to +91 ${cleanPhone}. Please enter the 6-digit code received on your phone.`);
+      } else {
+        setError(res.error || 'Failed to dispatch SMS OTP. Please check your number or try again.');
       }
-
-      // If Firebase Phone Auth is not yet enabled in Firebase Console (e.g. auth/configuration-not-found)
-      // Provide an instant test OTP so the user is never stuck
-      const generatedCode = '123456';
-      confirmationResultRef.current = null;
-      setSimulatedOtp(generatedCode);
-      setOtpCode(generatedCode);
-      setStep('otp');
-      setTimer(60);
-      setSuccessMsg(`Verification code generated: ${generatedCode}`);
     } catch (err: any) {
-      console.warn('Falling back to direct OTP verification:', err);
-      const generatedCode = '123456';
-      confirmationResultRef.current = null;
-      setSimulatedOtp(generatedCode);
-      setOtpCode(generatedCode);
-      setStep('otp');
-      setTimer(60);
-      setSuccessMsg(`Verification code generated: ${generatedCode}`);
+      console.error('Send OTP error:', err);
+      setError(err?.message || 'Error sending SMS to phone.');
     } finally {
       setLoading(false);
     }
@@ -152,8 +131,9 @@ export default function AuthModal() {
     e.preventDefault();
     setError(null);
 
-    if (otpCode.trim().length < 6) {
-      setError('Please enter the 6-digit verification code');
+    const cleanCode = otpCode.trim();
+    if (cleanCode.length !== 6) {
+      setError('Please enter the complete 6-digit code from your SMS.');
       return;
     }
 
@@ -161,34 +141,24 @@ export default function AuthModal() {
 
     try {
       if (confirmationResultRef.current) {
-        const res = await verifyOtp(confirmationResultRef.current, otpCode.trim());
+        const res = await verifyOtp(confirmationResultRef.current, cleanCode);
         if (res.success) {
-          setSuccessMsg('Logged in successfully!');
+          setSuccessMsg('Phone verified successfully! Opening registration...');
           setTimeout(() => {
             closeAuthModal();
-          }, 800);
+          }, 600);
           return;
         } else {
-          setError(res.error || 'Invalid OTP code. Please try again.');
+          setError(res.error || 'Invalid OTP code. Please enter the correct code from the SMS.');
           setLoading(false);
           return;
         }
+      } else {
+        setError('No active SMS verification session found. Please click "Change Number" and request a new code.');
+        setLoading(false);
       }
-
-      // Fallback verification for test code (supports simulated code or 123456)
-      const cleanPhone = phoneNumber.replace(/\D/g, '') || '9876543210';
-      loginAsDemoUser({
-        displayName: `Student (+91 ${cleanPhone})`,
-        phoneNumber: `+91${cleanPhone}`,
-        email: `student.${cleanPhone}@kmct.edu.in`,
-      });
-      setSuccessMsg('Logged in successfully!');
-      setTimeout(() => {
-        closeAuthModal();
-      }, 800);
     } catch (err: any) {
       setError(err.message || 'OTP verification failed');
-    } finally {
       setLoading(false);
     }
   };
@@ -242,10 +212,8 @@ export default function AuthModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div
-        id="recaptcha-container"
-        className="invisible absolute pointer-events-none"
-      ></div>
+      {/* reCAPTCHA verification container */}
+      <div id="recaptcha-container"></div>
 
       <div className="relative w-full max-w-md bg-[#0a0618] border border-purple-800/40 rounded-3xl shadow-2xl shadow-purple-950/60 overflow-hidden text-slate-100">
         {/* Glow Header Accent */}
@@ -446,23 +414,6 @@ export default function AuthModal() {
                     </form>
                   ) : (
                     <form onSubmit={handleVerifyOtp} className="space-y-4">
-                      {simulatedOtp && (
-                        <div className="p-3 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 text-xs flex items-center justify-between shadow-md">
-                          <div>
-                            <span className="text-slate-400">Test Code:</span>{' '}
-                            <strong className="tracking-widest font-mono text-emerald-300 text-sm ml-1 bg-purple-900/60 px-2 py-0.5 rounded">
-                              {simulatedOtp}
-                            </strong>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setOtpCode(simulatedOtp)}
-                            className="text-purple-300 hover:text-white underline text-[11px] font-semibold cursor-pointer"
-                          >
-                            Auto-Fill
-                          </button>
-                        </div>
-                      )}
 
                       <div>
                         <div className="flex justify-between items-center mb-1.5">

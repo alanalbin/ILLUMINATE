@@ -73,21 +73,22 @@ function LoginContent() {
 
   const initRecaptcha = () => {
     const auth = getClientAuth();
-    if (!auth) return null;
+    if (!auth) throw new Error('Authentication is not initialized');
 
-    if (!recaptchaVerifierRef.current) {
+    if (recaptchaVerifierRef.current) {
       try {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'login-recaptcha-container', {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            setError('reCAPTCHA expired. Please try sending OTP again.');
-          },
-        });
-      } catch (e: any) {
-        console.warn('Recaptcha init notice:', e);
-      }
+        recaptchaVerifierRef.current.clear();
+      } catch (_) {}
     }
+
+    recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'login-recaptcha-container', {
+      size: 'invisible',
+      callback: () => {},
+      'expired-callback': () => {
+        setError('reCAPTCHA security check expired. Please try sending OTP again.');
+      },
+    });
+
     return recaptchaVerifierRef.current;
   };
 
@@ -106,43 +107,24 @@ function LoginContent() {
     const fullPhone = `+91${cleanPhone}`;
 
     try {
-      let appVerifier = null;
-      try {
-        appVerifier = initRecaptcha();
-      } catch (rcErr) {
-        console.warn('reCAPTCHA init notice:', rcErr);
+      const appVerifier = initRecaptcha();
+      if (!appVerifier) {
+        throw new Error('reCAPTCHA security check could not be loaded. Please refresh the page.');
       }
 
-      if (appVerifier) {
-        const res = await sendMobileOtp(fullPhone, appVerifier);
-        if (res.success && res.confirmationResult) {
-          confirmationResultRef.current = res.confirmationResult;
-          setSimulatedOtp(null);
-          setStep('otp');
-          setTimer(60);
-          setSuccessMsg(`OTP sent via SMS to +91 ${cleanPhone}`);
-          setLoading(false);
-          return;
-        }
+      const res = await sendMobileOtp(fullPhone, appVerifier);
+      if (res.success && res.confirmationResult) {
+        confirmationResultRef.current = res.confirmationResult;
+        setStep('otp');
+        setTimer(60);
+        setOtpCode(''); // Wait for real user SMS code
+        setSuccessMsg(`SMS OTP dispatched to +91 ${cleanPhone}. Please enter the 6-digit code received on your phone.`);
+      } else {
+        setError(res.error || 'Failed to dispatch SMS OTP. Please check your number or try again.');
       }
-
-      // Fallback verification code
-      const generatedCode = '123456';
-      confirmationResultRef.current = null;
-      setSimulatedOtp(generatedCode);
-      setOtpCode(generatedCode);
-      setStep('otp');
-      setTimer(60);
-      setSuccessMsg(`Verification code generated: ${generatedCode}`);
     } catch (err: any) {
-      console.warn('Falling back to local OTP verification:', err);
-      const generatedCode = '123456';
-      confirmationResultRef.current = null;
-      setSimulatedOtp(generatedCode);
-      setOtpCode(generatedCode);
-      setStep('otp');
-      setTimer(60);
-      setSuccessMsg(`Verification code generated: ${generatedCode}`);
+      console.error('Send OTP error:', err);
+      setError(err?.message || 'Error sending SMS to phone.');
     } finally {
       setLoading(false);
     }
@@ -152,8 +134,9 @@ function LoginContent() {
     e.preventDefault();
     setError(null);
 
-    if (otpCode.trim().length < 6) {
-      setError('Please enter the 6-digit verification code');
+    const cleanCode = otpCode.trim();
+    if (cleanCode.length !== 6) {
+      setError('Please enter the complete 6-digit code from your SMS.');
       return;
     }
 
@@ -161,34 +144,24 @@ function LoginContent() {
 
     try {
       if (confirmationResultRef.current) {
-        const res = await verifyOtp(confirmationResultRef.current, otpCode.trim());
+        const res = await verifyOtp(confirmationResultRef.current, cleanCode);
         if (res.success) {
-          setSuccessMsg('Logged in successfully! Redirecting to registration...');
+          setSuccessMsg('Phone verified successfully! Opening registration...');
           setTimeout(() => {
             router.push(redirectPath);
-          }, 800);
+          }, 600);
           return;
         } else {
-          setError(res.error || 'Invalid OTP code. Please try again.');
+          setError(res.error || 'Invalid OTP code. Please enter the correct code from the SMS.');
           setLoading(false);
           return;
         }
+      } else {
+        setError('No active SMS verification session found. Please click "Change Number" and request a new code.');
+        setLoading(false);
       }
-
-      // Local OTP verification
-      const cleanPhone = phoneNumber.replace(/\D/g, '') || '8848563266';
-      loginAsDemoUser({
-        displayName: `Student (+91 ${cleanPhone})`,
-        phoneNumber: `+91${cleanPhone}`,
-        email: `student.${cleanPhone}@kmct.edu.in`,
-      });
-      setSuccessMsg('Logged in successfully! Opening registration...');
-      setTimeout(() => {
-        router.push(redirectPath);
-      }, 800);
     } catch (err: any) {
       setError(err.message || 'OTP verification failed');
-    } finally {
       setLoading(false);
     }
   };
@@ -236,11 +209,8 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen bg-[#05030a] py-24 sm:py-28 relative flex items-center justify-center px-4">
-      {/* Invisible container for phone reCAPTCHA */}
-      <div
-        id="login-recaptcha-container"
-        className="invisible absolute pointer-events-none"
-      ></div>
+      {/* reCAPTCHA verification container */}
+      <div id="login-recaptcha-container"></div>
 
       {/* Background Glows */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-purple-900/20 rounded-full blur-[130px] pointer-events-none" />
@@ -457,23 +427,6 @@ function LoginContent() {
                     </form>
                   ) : (
                     <form onSubmit={handleVerifyOtp} className="space-y-4">
-                      {simulatedOtp && (
-                        <div className="p-3 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 text-xs flex items-center justify-between shadow-md">
-                          <div>
-                            <span className="text-slate-400">Test Code:</span>{' '}
-                            <strong className="tracking-widest font-mono text-emerald-300 text-sm ml-1 bg-purple-900/60 px-2 py-0.5 rounded">
-                              {simulatedOtp}
-                            </strong>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setOtpCode(simulatedOtp)}
-                            className="text-purple-300 hover:text-white underline text-[11px] font-semibold cursor-pointer"
-                          >
-                            Auto-Fill
-                          </button>
-                        </div>
-                      )}
 
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
