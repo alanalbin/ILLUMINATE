@@ -16,12 +16,14 @@ import {
   Users,
 } from 'lucide-react';
 import { EventConfig } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 interface HeroSectionProps {
   event: EventConfig;
 }
 
 export default function HeroSection({ event }: HeroSectionProps) {
+  const { user } = useAuth();
   const fee = event.registrationFee || 699;
   const coordinatorName = event.localCoordinator?.name || 'Alan Albin';
   const coordinatorPhone = event.localCoordinator?.phone || '8848563266';
@@ -109,7 +111,7 @@ export default function HeroSection({ event }: HeroSectionProps) {
             {/* Action Buttons */}
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
-                href="/register"
+                href={user ? "/register" : "/login?redirect=/register"}
                 className="px-7 py-4 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base transition-all shadow-xl shadow-purple-950/70 flex items-center gap-2 group hover:scale-[1.02]"
               >
                 <span>Register Now (₹{fee})</span>

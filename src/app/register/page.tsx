@@ -21,7 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { user, openAuthModal } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -32,6 +32,13 @@ export default function RegisterPage() {
     yearOfStudy: '3rd Year',
     privacyConsent: false,
   });
+
+  // Enforce login first: redirect unauthenticated visitors to /login
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/register');
+    }
+  }, [user, authLoading, router]);
 
   // Pre-fill form details if user is signed in
   useEffect(() => {
@@ -132,6 +139,26 @@ export default function RegisterPage() {
     }
   };
 
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[#05030a] py-36 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-purple-900/50 border border-purple-700/50 flex items-center justify-center text-purple-300 mb-4 animate-pulse">
+          <Sparkles className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">Sign In Required to Register</h2>
+        <p className="text-sm text-slate-400 max-w-sm mb-6">
+          Please sign in with your mobile OTP or Google account to reserve your workshop seat.
+        </p>
+        <Link
+          href="/login?redirect=/register"
+          className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-lg shadow-purple-900/40"
+        >
+          Proceed to Sign In
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#05030a] py-28 relative">
       
@@ -183,13 +210,12 @@ export default function RegisterPage() {
                   <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
                   <span>Sign in with Mobile OTP or Google for instant auto-fill</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={openAuthModal}
-                  className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[11px] transition-colors cursor-pointer"
+                <Link
+                  href="/login?redirect=/register"
+                  className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[11px] transition-colors"
                 >
                   Sign In
-                </button>
+                </Link>
               </div>
             )}
 

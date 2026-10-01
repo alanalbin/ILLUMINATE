@@ -130,11 +130,6 @@ export default function Footer() {
                   Terms of Participation
                 </Link>
               </li>
-              <li>
-                <Link href="/admin" className="text-slate-400 hover:text-purple-300 transition-colors">
-                  Admin Coordinator Access
-                </Link>
-              </li>
             </ul>
           </div>
 

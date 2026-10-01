@@ -74,14 +74,6 @@ export default function Navbar() {
             <span>IIT Bombay E-Cell</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
-          <Link
-            href="/admin"
-            className="text-xs uppercase font-medium tracking-wider text-slate-400 hover:text-slate-200 flex items-center gap-1 transition-colors"
-            title="Coordinator Admin Dashboard"
-          >
-            <Shield className="w-3 h-3 text-purple-400" />
-            <span>Admin</span>
-          </Link>
         </nav>
 
         {/* Action Buttons */}
@@ -111,17 +103,17 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <button
-              onClick={openAuthModal}
+            <Link
+              href="/login"
               className="px-3.5 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5 text-purple-400" />
               <span>Sign In</span>
-            </button>
+            </Link>
           )}
 
           <Link
-            href="/register"
+            href={user ? "/register" : "/login?redirect=/register"}
             className="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-purple-950/60 hover:shadow-purple-700/40"
           >
             Register (₹699)
@@ -225,17 +217,9 @@ export default function Navbar() {
             <span>College E-Cell (Nxt Byte)</span>
             <ArrowUpRight className="w-4 h-4" />
           </a>
-          <Link
-            href="/admin"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-300 hover:text-purple-400"
-          >
-            <Shield className="w-3.5 h-3.5 text-purple-400" />
-            <span>Admin Portal</span>
-          </Link>
           <div className="pt-2">
             <Link
-              href="/register"
+              href={user ? "/register" : "/login?redirect=/register"}
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full py-3 rounded-xl text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-purple-950"
             >
