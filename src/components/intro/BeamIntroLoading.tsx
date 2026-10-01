@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Sparkles, ArrowRight, Zap, X } from 'lucide-react';
+import { Sparkles, X, ChevronRight } from 'lucide-react';
 
 interface BeamIntroLoadingProps {
   onComplete?: () => void;
@@ -16,14 +16,13 @@ export default function BeamIntroLoading({
 }: BeamIntroLoadingProps) {
   const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [phaseText, setPhaseText] = useState('Initializing Quantum Core...');
-  const [isBlastingOut, setIsBlastingOut] = useState(false);
+  const [phaseText, setPhaseText] = useState('Aligning Prismatic Core');
+  const [isWipingOut, setIsWipingOut] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number | null>(null);
 
-  // Check if already viewed in this session
+  // Check session storage so users aren't interrupted on back/forward unless forcePlay is true
   useEffect(() => {
     if (typeof window !== 'undefined' && !forcePlay) {
       const seen = sessionStorage.getItem('illuminate_intro_seen');
@@ -34,7 +33,7 @@ export default function BeamIntroLoading({
     }
   }, [forcePlay, onComplete]);
 
-  // Three.js 3D Beam Animation Scene
+  // Three.js 3D Prismatic Genesis & Light Beam Scene
   useEffect(() => {
     if (!visible) return;
 
@@ -44,15 +43,13 @@ export default function BeamIntroLoading({
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // 1. Scene & Camera
+    // 1. Scene & Camera Setup
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x05030a, 0.0025);
+    scene.fog = new THREE.FogExp2(0x040209, 0.003);
 
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-    camera.position.set(0, 5, 45);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(0, 0, 36);
 
-    // 2. WebGL Renderer
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -64,134 +61,158 @@ export default function BeamIntroLoading({
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.4;
-    } catch (e) {
-      console.warn('WebGL init fallback in intro:', e);
+      renderer.toneMappingExposure = 1.3;
+    } catch {
       return;
     }
 
-    // 3. Central Vertical 3D Energy Beam
-    const beamGroup = new THREE.Group();
-    scene.add(beamGroup);
+    // 2. Volumetric Lights
+    const ambient = new THREE.AmbientLight(0x180b30, 1.2);
+    scene.add(ambient);
 
-    // Core Solid Bright Pillar
-    const coreGeo = new THREE.CylinderGeometry(0.8, 0.8, 120, 32, 1, true);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+    const corePointLight = new THREE.PointLight(0xa855f7, 5, 60);
+    corePointLight.position.set(0, 0, 0);
+    scene.add(corePointLight);
+
+    const cyanRimLight = new THREE.PointLight(0x38bdf8, 3.5, 50);
+    cyanRimLight.position.set(-15, -10, 15);
+    scene.add(cyanRimLight);
+
+    // 3. Central Monolith Group
+    const centerGroup = new THREE.Group();
+    scene.add(centerGroup);
+
+    // Primary Faceted Crystal (Slender double-pyramid octahedron)
+    const crystalGeo = new THREE.OctahedronGeometry(4.2, 0);
+    // Elongate vertically to resemble a floating obelisk prism
+    crystalGeo.scale(1, 1.7, 1);
+
+    const crystalMat = new THREE.MeshPhongMaterial({
+      color: 0x9333ea,
+      emissive: 0x2e1065,
+      specular: 0xffffff,
+      shininess: 120,
       transparent: true,
-      opacity: 0.95,
+      opacity: 0.78,
+      flatShading: true,
+    });
+    const crystalMesh = new THREE.Mesh(crystalGeo, crystalMat);
+    centerGroup.add(crystalMesh);
+
+    // Sleek Wireframe Cage highlighting geometric facets
+    const wireGeo = new THREE.OctahedronGeometry(4.26, 0);
+    wireGeo.scale(1, 1.7, 1);
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0xc084fc,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+    centerGroup.add(wireMesh);
+
+    // Inner Luminous Core (Glowing miniature diamond)
+    const innerGeo = new THREE.IcosahedronGeometry(1.6, 0);
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+    centerGroup.add(innerMesh);
+
+    // 4. Vertical Coherent Light Beam striking from above
+    const beamGeo = new THREE.CylinderGeometry(0.35, 1.8, 80, 32, 1, true);
+    beamGeo.translate(0, 40, 0); // Position beam extending upward from crystal
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0xe0e7ff,
+      transparent: true,
+      opacity: 0.8,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
     });
-    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    beamGroup.add(coreMesh);
+    const beamMesh = new THREE.Mesh(beamGeo, beamMat);
+    centerGroup.add(beamMesh);
 
-    // Outer Neon Violet Corona Glow Cylinder
-    const coronaGeo = new THREE.CylinderGeometry(2.8, 3.8, 120, 32, 1, true);
-    const coronaMat = new THREE.MeshBasicMaterial({
-      color: 0x9333ea,
+    // Beam Outer Halo
+    const beamHaloGeo = new THREE.CylinderGeometry(1.5, 4.5, 80, 32, 1, true);
+    beamHaloGeo.translate(0, 40, 0);
+    const beamHaloMat = new THREE.MeshBasicMaterial({
+      color: 0xa855f7,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const beamHaloMesh = new THREE.Mesh(beamHaloGeo, beamHaloMat);
+    centerGroup.add(beamHaloMesh);
+
+    // 5. Refracted Equatorial Orbiting Light Rings
+    const ring1Geo = new THREE.TorusGeometry(6.5, 0.08, 16, 100);
+    const ring1Mat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+    });
+    const ring1Mesh = new THREE.Mesh(ring1Geo, ring1Mat);
+    ring1Mesh.rotation.x = Math.PI / 2.2;
+    centerGroup.add(ring1Mesh);
+
+    const ring2Geo = new THREE.TorusGeometry(8.2, 0.06, 16, 100);
+    const ring2Mat = new THREE.MeshBasicMaterial({
+      color: 0xc084fc,
       transparent: true,
       opacity: 0.45,
       blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
     });
-    const coronaMesh = new THREE.Mesh(coronaGeo, coronaMat);
-    beamGroup.add(coronaMesh);
+    const ring2Mesh = new THREE.Mesh(ring2Geo, ring2Mat);
+    ring2Mesh.rotation.x = -Math.PI / 2.5;
+    centerGroup.add(ring2Mesh);
 
-    // Wide Atmospheric Aura Cylinder (Cyan / Indigo edge)
-    const auraGeo = new THREE.CylinderGeometry(6.5, 9.0, 120, 32, 1, true);
-    const auraMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.18,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    });
-    const auraMesh = new THREE.Mesh(auraGeo, auraMat);
-    beamGroup.add(auraMesh);
-
-    // 4. Ground Impact Expanding Shockwave Rings
-    const ringCount = 4;
-    const rings: THREE.Mesh[] = [];
-    for (let i = 0; i < ringCount; i++) {
-      const ringGeo = new THREE.RingGeometry(1, 1.6, 64);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: i % 2 === 0 ? 0xc084fc : 0x38bdf8,
-        transparent: true,
-        opacity: 0.7,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide,
+    // 6. Floating Prismatic Light Shards (Floating around the crystal)
+    const shardCount = 14;
+    const shards: { mesh: THREE.Mesh; speed: number; orbitRadius: number; phase: number }[] = [];
+    for (let i = 0; i < shardCount; i++) {
+      const sGeo = new THREE.TetrahedronGeometry(0.35 + Math.random() * 0.4, 0);
+      const sMat = new THREE.MeshPhongMaterial({
+        color: i % 2 === 0 ? 0x38bdf8 : 0xc084fc,
+        emissive: 0x1e1b4b,
+        specular: 0xffffff,
+        flatShading: true,
       });
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.rotation.x = -Math.PI / 2;
-      ringMesh.position.y = -10;
-      scene.add(ringMesh);
-      rings.push(ringMesh);
+      const sMesh = new THREE.Mesh(sGeo, sMat);
+      scene.add(sMesh);
+      shards.push({
+        mesh: sMesh,
+        speed: 0.4 + Math.random() * 0.6,
+        orbitRadius: 7 + Math.random() * 6,
+        phase: (i * Math.PI * 2) / shardCount,
+      });
     }
 
-    // 5. Helical Swirling Vortex Particles
-    const particleCount = 450;
-    const pGeo = new THREE.BufferGeometry();
-    const pPositions = new Float32Array(particleCount * 3);
-    const pSpeeds = new Float32Array(particleCount);
-    const pAngles = new Float32Array(particleCount);
-    const pRadii = new Float32Array(particleCount);
-
-    for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 2 + Math.random() * 8;
-      const y = (Math.random() - 0.5) * 60;
-
-      pPositions[i3] = Math.cos(angle) * radius;
-      pPositions[i3 + 1] = y;
-      pPositions[i3 + 2] = Math.sin(angle) * radius;
-
-      pSpeeds[i] = 0.8 + Math.random() * 1.5;
-      pAngles[i] = angle;
-      pRadii[i] = radius;
+    // 7. Ambient Floating Stardust (Sparse, slow, gentle)
+    const stardustCount = 80;
+    const stardustGeo = new THREE.BufferGeometry();
+    const stardustPositions = new Float32Array(stardustCount * 3);
+    for (let i = 0; i < stardustCount; i++) {
+      stardustPositions[i * 3] = (Math.random() - 0.5) * 60;
+      stardustPositions[i * 3 + 1] = (Math.random() - 0.5) * 50;
+      stardustPositions[i * 3 + 2] = (Math.random() - 0.5) * 40;
     }
-
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-
-    // Particle Texture
-    const ptCanvas = document.createElement('canvas');
-    ptCanvas.width = 32;
-    ptCanvas.height = 32;
-    const ptCtx = ptCanvas.getContext('2d');
-    if (ptCtx) {
-      const grad = ptCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
-      grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.3, '#c084fc');
-      grad.addColorStop(0.7, '#6366f1');
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      ptCtx.fillStyle = grad;
-      ptCtx.fillRect(0, 0, 32, 32);
-    }
-    const ptTexture = new THREE.CanvasTexture(ptCanvas);
-
-    const pMat = new THREE.PointsMaterial({
-      size: 1.2,
-      map: ptTexture,
+    stardustGeo.setAttribute('position', new THREE.BufferAttribute(stardustPositions, 3));
+    const stardustMat = new THREE.PointsMaterial({
+      size: 0.8,
+      color: 0xc084fc,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.5,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
     });
+    const stardustPoints = new THREE.Points(stardustGeo, stardustMat);
+    scene.add(stardustPoints);
 
-    const particles = new THREE.Points(pGeo, pMat);
-    scene.add(particles);
-
-    // 6. Dynamic Point Lights
-    const beamLight = new THREE.PointLight(0xa855f7, 5, 80);
-    beamLight.position.set(0, 0, 10);
-    scene.add(beamLight);
-
-    const groundLight = new THREE.PointLight(0x38bdf8, 4, 60);
-    groundLight.position.set(0, -9, 0);
-    scene.add(groundLight);
-
-    // 7. Responsive Resize
+    // Resize Handler
     const handleResize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -203,51 +224,43 @@ export default function BeamIntroLoading({
 
     // 8. Animation Loop
     const clock = new THREE.Clock();
-    let startTime = performance.now();
 
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate);
 
-      const elapsedTime = clock.getElapsedTime();
-      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
 
-      // Beam Breathing / Laser Energy Pulse
-      const pulse = 1 + Math.sin(elapsedTime * 8) * 0.12;
-      coreMesh.scale.set(pulse, 1, pulse);
-      coronaMesh.scale.set(pulse * 1.05, 1, pulse * 1.05);
-      coronaMesh.rotation.y = elapsedTime * 0.5;
-      auraMesh.rotation.y = -elapsedTime * 0.3;
+      // Graceful, steady prism rotation
+      centerGroup.rotation.y = time * 0.45;
+      centerGroup.position.y = Math.sin(time * 1.4) * 0.5;
 
-      // Rotate whole beam slightly
-      beamGroup.rotation.y = elapsedTime * 0.2;
+      // Inner diamond counter-rotation
+      innerMesh.rotation.y = -time * 1.2;
+      innerMesh.rotation.z = time * 0.8;
 
-      // Expand Shockwave Rings at base
-      rings.forEach((ring, idx) => {
-        const ringTime = (elapsedTime * 1.8 + (idx * 0.6)) % 2.5;
-        const scale = 1 + ringTime * 8;
-        ring.scale.set(scale, scale, scale);
-        (ring.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - ringTime / 2.5) * 0.7;
+      // Beam dynamic breathing pulse
+      const beamScale = 1 + Math.sin(time * 6) * 0.15;
+      beamMesh.scale.set(beamScale, 1, beamScale);
+      beamHaloMesh.scale.set(beamScale * 1.1, 1, beamScale * 1.1);
+
+      // Rings differential precession
+      ring1Mesh.rotation.z = time * 0.6;
+      ring2Mesh.rotation.z = -time * 0.4;
+
+      // Orbiting light shards
+      shards.forEach((item) => {
+        const angle = time * item.speed + item.phase;
+        item.mesh.position.set(
+          Math.cos(angle) * item.orbitRadius,
+          Math.sin(angle * 1.5) * 2.5 + Math.sin(time + item.phase) * 1.5,
+          Math.sin(angle) * item.orbitRadius
+        );
+        item.mesh.rotation.x = time * 1.5;
+        item.mesh.rotation.y = time * 2;
       });
 
-      // Swirl Particles Upward in Spiral
-      const posArray = pGeo.attributes.position.array as Float32Array;
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        pAngles[i] += 0.04 * pSpeeds[i];
-        posArray[i3] = Math.cos(pAngles[i]) * pRadii[i];
-        posArray[i3 + 2] = Math.sin(pAngles[i]) * pRadii[i];
-
-        // Move upward
-        posArray[i3 + 1] += pSpeeds[i] * 0.4;
-        if (posArray[i3 + 1] > 30) {
-          posArray[i3 + 1] = -25;
-        }
-      }
-      pGeo.attributes.position.needsUpdate = true;
-
-      // Camera micro float
-      camera.position.x = Math.sin(elapsedTime * 0.6) * 2;
-      camera.position.y = 5 + Math.cos(elapsedTime * 0.5) * 1.5;
+      // Camera slow cinematic push-in
+      camera.position.z = 36 - Math.min(progressRef.current * 0.08, 8);
       camera.lookAt(0, 0, 0);
 
       renderer.render(scene, camera);
@@ -259,23 +272,33 @@ export default function BeamIntroLoading({
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
-      coreGeo.dispose();
-      coreMat.dispose();
-      coronaGeo.dispose();
-      coronaMat.dispose();
-      auraGeo.dispose();
-      auraMat.dispose();
-      pGeo.dispose();
-      pMat.dispose();
-      ptTexture.dispose();
-      rings.forEach((r) => {
-        r.geometry.dispose();
-        (r.material as THREE.Material).dispose();
+      crystalGeo.dispose();
+      crystalMat.dispose();
+      wireGeo.dispose();
+      wireMat.dispose();
+      innerGeo.dispose();
+      innerMat.dispose();
+      beamGeo.dispose();
+      beamMat.dispose();
+      beamHaloGeo.dispose();
+      beamHaloMat.dispose();
+      ring1Geo.dispose();
+      ring1Mat.dispose();
+      ring2Geo.dispose();
+      ring2Mat.dispose();
+      stardustGeo.dispose();
+      stardustMat.dispose();
+      shards.forEach((s) => {
+        s.mesh.geometry.dispose();
+        (s.mesh.material as THREE.Material).dispose();
       });
     };
   }, [visible]);
 
-  // Loading Progress Timer (Smooth 0 -> 100% in 2.3 seconds)
+  // Synchronized progress tracking
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+
   useEffect(() => {
     if (!visible) return;
 
@@ -285,44 +308,42 @@ export default function BeamIntroLoading({
           clearInterval(interval);
           return 100;
         }
-        const increment = Math.floor(Math.random() * 8) + 4;
-        const next = Math.min(100, prev + increment);
+        const delta = Math.floor(Math.random() * 6) + 4;
+        const next = Math.min(100, prev + delta);
 
-        // Update narrative status
-        if (next < 25) {
-          setPhaseText('Focusing 3D Particle Beam...');
-        } else if (next < 55) {
-          setPhaseText('Synchronizing E-Cell IIT Bombay Frameworks...');
-        } else if (next < 85) {
-          setPhaseText('Illuminating KMCT Campus Grid...');
+        if (next < 30) {
+          setPhaseText('Gathering Light Spectrum...');
+        } else if (next < 65) {
+          setPhaseText('Focusing Coherent Venture Beam...');
+        } else if (next < 90) {
+          setPhaseText('Synchronizing KMCT & IIT Bombay Portal...');
         } else {
-          setPhaseText('Beam Coherence Maxima: Igniting Workshop Portal!');
+          setPhaseText('Prism Resonance 100% • Igniting Workspace');
         }
 
         return next;
       });
-    }, 70);
+    }, 60);
 
     return () => clearInterval(interval);
   }, [visible]);
 
-  // Trigger Flash Dissolution & Exit when Progress = 100%
+  // Trigger flash and exit when 100% reached
   useEffect(() => {
-    if (progress >= 100 && !isBlastingOut) {
+    if (progress >= 100 && !isWipingOut) {
       const timer = setTimeout(() => {
-        setIsBlastingOut(true);
-        // Fade out completely after blast
+        setIsWipingOut(true);
         const exitTimer = setTimeout(() => {
           handleDismiss();
-        }, 750);
+        }, 650);
         return () => clearTimeout(exitTimer);
-      }, 400);
+      }, 350);
 
       return () => clearTimeout(timer);
     }
-  }, [progress, isBlastingOut]);
+  }, [progress, isWipingOut]);
 
-  // Keyboard shortcut: Escape to skip
+  // Escape key handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -346,41 +367,40 @@ export default function BeamIntroLoading({
   return (
     <AnimatePresence>
       <motion.div
-        ref={containerRef}
         initial={{ opacity: 1 }}
-        animate={{ opacity: isBlastingOut ? 0 : 1 }}
-        exit={{ opacity: 0, scale: 1.08 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-[#040208] text-white select-none overflow-hidden"
+        animate={{ opacity: isWipingOut ? 0 : 1 }}
+        exit={{ opacity: 0, scale: 1.05 }}
+        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-[#040209] text-white select-none overflow-hidden"
       >
-        {/* 3D WebGL Beam Canvas */}
+        {/* Fullscreen 3D Prism WebGL Canvas */}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full pointer-events-none z-0"
         />
 
-        {/* Cinematic Ambient Flash on Exit */}
-        {isBlastingOut && (
+        {/* Cinematic White/Purple Light Burst on Completion */}
+        {isWipingOut && (
           <motion.div
-            initial={{ opacity: 0, scaleY: 0 }}
-            animate={{ opacity: 1, scaleY: 1 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 2 }}
             transition={{ duration: 0.45, ease: 'easeOut' }}
-            className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-white to-purple-500/30 z-30 pointer-events-none mix-blend-screen"
+            className="absolute inset-0 bg-radial from-white via-purple-500/40 to-transparent z-30 pointer-events-none mix-blend-screen"
           />
         )}
 
-        {/* Top Header: Affiliation & Skip Button */}
-        <div className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-20">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
-            <span className="text-[11px] font-mono tracking-widest text-purple-300 uppercase">
-              ILLUMINATE 2026 • SYSTEM INITIALIZATION
+        {/* Top Header: Initiative Badge & Skip Pill */}
+        <div className="w-full max-w-6xl mx-auto px-6 pt-6 flex items-center justify-between relative z-20">
+          <div className="flex items-center gap-3">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span className="text-[11px] font-mono tracking-widest text-purple-300 uppercase font-semibold">
+              ILLUMINATE • 3D AWAKENING
             </span>
           </div>
 
           <button
             onClick={handleDismiss}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer backdrop-blur-md active:scale-95 group"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 hover:border-purple-400/40 text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer backdrop-blur-md active:scale-95 group"
             title="Skip Intro"
           >
             <span>Skip [Esc]</span>
@@ -388,79 +408,80 @@ export default function BeamIntroLoading({
           </button>
         </div>
 
-        {/* Center Illuminated Emblem & Beam Core */}
-        <div className="relative z-20 flex flex-col items-center text-center px-6 max-w-xl">
+        {/* Center Illuminated Monolith Overlay */}
+        <div className="relative z-20 flex flex-col items-center text-center px-6 pointer-events-none -mt-4">
           
-          {/* Glowing Aura Ring around Emblem */}
-          <div className="relative mb-6">
-            <motion.div
-              animate={{
-                scale: [1, 1.25, 1],
-                opacity: [0.4, 0.9, 0.4],
-                rotate: 360,
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
-              className="absolute -inset-6 rounded-full bg-gradient-to-tr from-purple-600/30 via-cyan-400/20 to-purple-600/30 blur-xl pointer-events-none"
-            />
-            
-            {/* Illuminated Center Badge */}
-            <div className="w-24 h-24 rounded-3xl bg-black/70 border-2 border-purple-400/60 flex items-center justify-center p-4 backdrop-blur-2xl shadow-[0_0_50px_rgba(168,85,247,0.8)] relative z-10">
-              <img
-                src="/logos/illuminate-torch.png"
-                alt="ILLUMINATE"
-                className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(192,132,252,0.9)]"
-              />
-            </div>
-          </div>
+          {/* Subtle Ambient Halo */}
+          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600/30 to-cyan-400/20 blur-2xl pointer-events-none" />
 
-          {/* Title & Tagline */}
+          {/* Typography */}
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mt-2"
           >
-            <h1 className="text-3xl sm:text-5xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-white uppercase">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-100 uppercase">
               ILLUMINATE
             </h1>
-            <p className="text-xs sm:text-sm font-medium text-purple-300/90 mt-1 tracking-wider uppercase">
+            <p className="text-xs sm:text-sm font-semibold text-purple-300/80 mt-1 tracking-wider uppercase">
               KMCT Kasaragod • E-Cell IIT Bombay
             </p>
           </motion.div>
 
         </div>
 
-        {/* Bottom Loading Progress & Status Ticker */}
-        <div className="w-full max-w-md mx-auto px-6 pb-12 relative z-20 flex flex-col items-center">
+        {/* Bottom Circular Radial Progress & State Bar */}
+        <div className="w-full max-w-md mx-auto px-6 pb-10 relative z-20 flex flex-col items-center">
           
-          {/* Status Message */}
-          <div className="flex items-center justify-between w-full text-xs font-mono text-zinc-400 mb-2.5">
-            <span className="truncate pr-2 text-purple-300 font-medium flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>{phaseText}</span>
+          {/* Circular Gauge / Modern Radial Indicator */}
+          <div className="relative w-16 h-16 mb-4 flex items-center justify-center">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 60 60">
+              {/* Background Track */}
+              <circle
+                cx="30"
+                cy="30"
+                r="26"
+                stroke="rgba(255, 255, 255, 0.08)"
+                strokeWidth="3"
+                fill="none"
+              />
+              {/* Animated Progress Arc */}
+              <circle
+                cx="30"
+                cy="30"
+                r="26"
+                stroke="url(#beamGrad)"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray={163.36}
+                strokeDashoffset={163.36 - (163.36 * progress) / 100}
+                className="transition-all duration-100 ease-out"
+              />
+              <defs>
+                <linearGradient id="beamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#38bdf8" />
+                  <stop offset="50%" stopColor="#c084fc" />
+                  <stop offset="100%" stopColor="#9333ea" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* Inner Percentage Display */}
+            <span className="absolute text-xs font-mono font-bold text-white tracking-wider">
+              {progress}%
             </span>
-            <span className="font-bold text-white tracking-widest">{progress}%</span>
           </div>
 
-          {/* Glowing Energy Bar */}
-          <div className="w-full h-2 rounded-full bg-white/[0.08] border border-white/10 overflow-hidden relative p-[1px]">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-purple-500 via-indigo-400 to-cyan-400 shadow-[0_0_15px_rgba(168,85,247,0.9)]"
-              initial={{ width: '0%' }}
-              animate={{ width: `${progress}%` }}
-              transition={{ ease: 'easeOut', duration: 0.1 }}
-            />
-          </div>
+          {/* Phase Narrative */}
+          <p className="text-xs font-mono text-purple-200/90 tracking-wide text-center">
+            {phaseText}
+          </p>
 
-          {/* Quick Enter Prompt once finished */}
-          <div className="mt-4 flex items-center justify-center gap-4 text-slate-400 text-xs">
-            <span>Offline Entrepreneurship Masterclass</span>
-            <span>•</span>
-            <span>6 Hours</span>
-          </div>
+          <p className="text-[11px] text-zinc-500 mt-2 font-mono">
+            6-Hour Offline Masterclass • National Entrepreneurship Challenge
+          </p>
 
         </div>
 
