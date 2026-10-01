@@ -18,12 +18,12 @@ export const metadata: Metadata = {
     'NEC E-Cell',
   ],
   authors: [{ name: 'KMCT E-Cell & E-Cell IIT Bombay' }],
-  metadataBase: new URL('https://illuminate-kmct.web.app'),
+  metadataBase: new URL('https://illuminate-kmct-117e5.web.app'),
   openGraph: {
     title: 'ILLUMINATE Workshop | KMCT College Kasaragod & E-Cell IIT Bombay',
     description:
       'Intensive 6-hour offline entrepreneurship workshop. Hands-on learning, official IIT Bombay certificate, and physical startup kit.',
-    url: 'https://illuminate-kmct.web.app',
+    url: 'https://illuminate-kmct-117e5.web.app',
     siteName: 'ILLUMINATE KMCT',
     locale: 'en_IN',
     type: 'website',
