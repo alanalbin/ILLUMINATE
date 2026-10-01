@@ -2,9 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, ShieldCheck, ArrowUpRight, Zap } from 'lucide-react';
-import TouchInteractiveTilt from '@/components/ui/TouchInteractiveTilt';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 
 interface CtaBannerProps {
   fee: number;
@@ -12,63 +10,43 @@ interface CtaBannerProps {
 
 export default function CtaBanner({ fee }: CtaBannerProps) {
   return (
-    <section className="py-24 bg-[#05030a] relative overflow-hidden border-t border-purple-950/40 z-10">
-      
-      {/* Background glow */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-950/20 via-transparent to-transparent pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-purple-900/15 rounded-full blur-[140px] pointer-events-none" />
-
-      <div className="max-w-5xl mx-auto px-6 sm:px-10 relative z-20">
+    <section className="py-24 md:py-32 bg-[#07060b] relative">
+      <div className="max-w-4xl mx-auto px-6 sm:px-10 text-center">
         
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.6 }}
-        >
-          <TouchInteractiveTilt maxTilt={5} glareOpacity={0.25}>
-            <div className="rounded-3xl bg-gradient-to-b from-purple-950/70 via-[#0d0720] to-indigo-950/50 border border-purple-600/40 p-9 sm:p-14 text-center shadow-2xl shadow-purple-950/80 backdrop-blur-2xl relative overflow-hidden">
-              
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-900/50 border border-purple-500/40 text-xs font-bold text-purple-300 mb-6 shadow-sm">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span>Offline Masterclass • Kasaragod</span>
-              </div>
+        <span className="text-xs uppercase font-mono tracking-widest text-violet-400 block mb-3">
+          Final Call for Registrations
+        </span>
 
-              <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
-                Ready to Experience the Startup Journey?
-              </h2>
+        <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+          Ready to experience the startup journey?
+        </h2>
 
-              <p className="mt-4 text-slate-300 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
-                Secure your seat for the 6-hour offline ILLUMINATE workshop at KMCT College. Receive your official E-Cell IIT Bombay certificate and startup kit.
-              </p>
+        <p className="mt-5 text-zinc-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          Reserve your seat for the 6-hour offline masterclass at KMCT College of Engineering, Kasaragod. Receive your official E-Cell IIT Bombay credential and startup kit.
+        </p>
 
-              <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/login?redirect=/register"
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-base shadow-xl shadow-purple-950/80 hover:shadow-purple-700/50 transition-all flex items-center justify-center gap-2.5 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <span>Register with Google (₹{fee})</span>
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <a
-                  href="https://www.ecell.in/illuminate/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 border border-purple-500/30 text-sm font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                >
-                  <span>Visit Official E-Cell Site</span>
-                  <ArrowUpRight className="w-4 h-4" />
-                </a>
-              </div>
+        <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/login?redirect=/register"
+            className="w-full sm:w-auto px-7 py-3.5 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-sm tracking-tight transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98]"
+          >
+            <span>Register with Google (₹{fee})</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <a
+            href="https://www.ecell.in/illuminate/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-lg border border-white/[0.12] hover:bg-white/[0.04] text-zinc-300 text-sm font-medium transition-all flex items-center justify-center gap-2"
+          >
+            <span>Official E-Cell IIT Bombay Site</span>
+            <ArrowUpRight className="w-4 h-4" />
+          </a>
+        </div>
 
-              <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-400">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Instant Google verification • Digital confirmation pass included</span>
-              </div>
-
-            </div>
-          </TouchInteractiveTilt>
-        </motion.div>
+        <p className="mt-6 text-xs text-zinc-500 font-mono">
+          SECURE ENCRYPTED REGISTRATION · OFFICIAL NEC PASS · LIMITED COHORT SEATS
+        </p>
 
       </div>
     </section>

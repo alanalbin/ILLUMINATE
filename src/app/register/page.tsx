@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Sparkles,
   ShieldCheck,
   Award,
   Package,
@@ -14,7 +13,6 @@ import {
   Building,
   CheckCircle2,
   Phone,
-  LogIn,
   UserCheck,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -78,7 +76,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setServerError(null);
 
-    // Basic frontend checks before sending
     const validationErrors: Record<string, string> = {};
     if (!formData.fullName.trim() || formData.fullName.trim().length < 2) {
       validationErrors.fullName = 'Please enter your full name (minimum 2 characters).';
@@ -130,7 +127,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Success or existing pending registration -> proceed to payment page
       router.push(`/payment?registrationId=${data.registrationId}`);
     } catch (err: any) {
       console.error('Registration submission error:', err);
@@ -141,101 +137,81 @@ export default function RegisterPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-[#05030a] py-36 flex flex-col items-center justify-center px-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-purple-900/50 border border-purple-700/50 flex items-center justify-center text-purple-300 mb-4 animate-pulse">
-          <Sparkles className="w-6 h-6" />
+      <div className="min-h-screen bg-[#07060b] py-36 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-white/10 flex items-center justify-center font-mono font-bold text-xs text-white mb-4">
+          IL
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Sign In Required to Register</h2>
-        <p className="text-sm text-slate-400 max-w-sm mb-6">
-          Please sign in with your mobile OTP or Google account to reserve your workshop seat.
+        <h2 className="text-xl font-bold text-white mb-2">Authentication Required</h2>
+        <p className="text-xs text-zinc-400 max-w-sm mb-6 leading-relaxed">
+          Please authenticate with your Google account to access the registration desk.
         </p>
         <Link
           href="/login?redirect=/register"
-          className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-lg shadow-purple-900/40"
+          className="px-6 py-2.5 rounded-lg bg-white text-zinc-950 font-semibold text-xs uppercase tracking-wider hover:bg-zinc-200 transition-colors"
         >
-          Proceed to Sign In
+          Sign In with Google
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#05030a] py-28 relative">
-      
-      {/* Background Glows */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-purple-900/15 rounded-full blur-[140px] pointer-events-none" />
-
+    <div className="min-h-screen bg-[#07060b] py-28 relative">
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-800/40 text-xs font-semibold text-purple-300 uppercase tracking-widest mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>Participant Registration</span>
+        <div className="max-w-2xl mb-12">
+          <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded mb-4">
+            <span>Pass Application</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-            Reserve Your Workshop Seat
+          <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+            Reserve Your Delegate Seat
           </h1>
-          <p className="mt-3 text-slate-300 text-sm">
-            Join the 6-hour offline entrepreneurship workshop at KMCT Kasaragod. An initiative of E-Cell, IIT Bombay.
+          <p className="mt-2 text-zinc-400 text-sm leading-relaxed">
+            Register for the 6-hour offline entrepreneurship masterclass at KMCT Kasaragod. Conducted in association with E-Cell, IIT Bombay.
           </p>
         </div>
 
-        {/* 2-Column Layout */}
+        {/* 2-Column Architectural Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
-          {/* Left Column: Registration Form */}
-          <div className="lg:col-span-7 glass-card rounded-2xl p-8 border border-purple-900/40 shadow-2xl">
+          {/* Left Column: Form Container (7 cols) */}
+          <div className="lg:col-span-7 surface-card rounded-xl p-8 sm:p-9">
             
             {serverError && (
-              <div className="mb-6 p-4 rounded-xl bg-red-950/40 border border-red-800/50 flex items-start gap-3 text-sm text-red-200">
-                <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div className="mb-6 p-4 rounded-lg bg-red-950/40 border border-red-800/40 flex items-start gap-3 text-xs text-red-200">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                 <p>{serverError}</p>
               </div>
             )}
 
-            {/* Auth Sign-in Banner / Verified Pill */}
-            {user ? (
-              <div className="mb-6 p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between text-xs text-emerald-200 shadow-md">
-                <div className="flex items-center gap-2.5">
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt={user.displayName || 'Google User'}
-                      className="w-7 h-7 rounded-full border border-emerald-400/50 object-cover"
-                    />
-                  ) : (
-                    <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  )}
-                  <span>
-                    Google Verified: <strong>{user.displayName || user.email}</strong> (Pre-filled below)
-                  </span>
-                </div>
-                <span className="text-[10px] bg-emerald-900/60 text-emerald-300 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  Ready
+            {/* Verified Google Badge */}
+            <div className="mb-6 p-3 rounded-lg bg-white/[0.02] border border-white/[0.08] flex items-center justify-between text-xs text-zinc-300">
+              <div className="flex items-center gap-2.5">
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || 'Google User'}
+                    className="w-6 h-6 rounded-full border border-white/20 object-cover"
+                  />
+                ) : (
+                  <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                )}
+                <span>
+                  Verified: <strong className="text-white">{user.displayName || user.email}</strong>
                 </span>
               </div>
-            ) : (
-              <div className="mb-6 p-3.5 rounded-2xl bg-purple-950/40 border border-purple-800/40 flex items-center justify-between text-xs text-purple-200">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
-                  <span>Sign in with Google to pre-fill your pass details</span>
-                </div>
-                <Link
-                  href="/login?redirect=/register"
-                  className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[11px] transition-colors"
-                >
-                  Sign In
-                </Link>
-              </div>
-            )}
+              <span className="font-mono text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                READY
+              </span>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               
               {/* Full Name */}
               <div>
-                <label htmlFor="fullName" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Full Name <span className="text-purple-400">*</span>
+                <label htmlFor="fullName" className="block font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5">
+                  Full Legal Name <span className="text-violet-400">*</span>
                 </label>
                 <input
                   id="fullName"
@@ -245,18 +221,21 @@ export default function RegisterPage() {
                   placeholder="e.g. Aravind Menon"
                   value={formData.fullName}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 rounded-xl bg-[#0e071c] border ${
-                    errors.fullName ? 'border-red-500' : 'border-purple-900/50'
-                  } focus:border-purple-400 focus:outline-none text-white text-sm transition-colors`}
+                  className={`w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border ${
+                    errors.fullName ? 'border-red-500' : 'border-white/10'
+                  } focus:border-violet-400 focus:outline-none text-white text-sm transition-colors`}
                 />
                 {errors.fullName && <p className="text-xs text-red-400 mt-1">{errors.fullName}</p>}
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  This exact name will be engraved on your official E-Cell IIT Bombay certificate.
+                </p>
               </div>
 
               {/* Email & Phone */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="email" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Email Address <span className="text-purple-400">*</span>
+                  <label htmlFor="email" className="block font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Email Address <span className="text-violet-400">*</span>
                   </label>
                   <input
                     id="email"
@@ -266,16 +245,16 @@ export default function RegisterPage() {
                     placeholder="name@kmct.edu.in"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 rounded-xl bg-[#0e071c] border ${
-                      errors.email ? 'border-red-500' : 'border-purple-900/50'
-                    } focus:border-purple-400 focus:outline-none text-white text-sm transition-colors`}
+                    className={`w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border ${
+                      errors.email ? 'border-red-500' : 'border-white/10'
+                    } focus:border-violet-400 focus:outline-none text-white text-sm transition-colors`}
                   />
                   {errors.email && <p className="text-xs text-red-400 mt-1">{errors.email}</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Mobile Number <span className="text-purple-400">*</span>
+                  <label htmlFor="phone" className="block font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Mobile Number <span className="text-violet-400">*</span>
                   </label>
                   <input
                     id="phone"
@@ -285,9 +264,9 @@ export default function RegisterPage() {
                     placeholder="10-digit number"
                     value={formData.phone}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 rounded-xl bg-[#0e071c] border ${
-                      errors.phone ? 'border-red-500' : 'border-purple-900/50'
-                    } focus:border-purple-400 focus:outline-none text-white text-sm transition-colors`}
+                    className={`w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border ${
+                      errors.phone ? 'border-red-500' : 'border-white/10'
+                    } focus:border-violet-400 focus:outline-none text-white text-sm transition-colors`}
                   />
                   {errors.phone && <p className="text-xs text-red-400 mt-1">{errors.phone}</p>}
                 </div>
@@ -295,8 +274,8 @@ export default function RegisterPage() {
 
               {/* Institution */}
               <div>
-                <label htmlFor="institution" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Institution / College <span className="text-purple-400">*</span>
+                <label htmlFor="institution" className="block font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5">
+                  Host Institution <span className="text-violet-400">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -306,11 +285,11 @@ export default function RegisterPage() {
                     required
                     value={formData.institution}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 rounded-xl bg-[#0e071c] border ${
-                      errors.institution ? 'border-red-500' : 'border-purple-900/50'
-                    } focus:border-purple-400 focus:outline-none text-white text-sm transition-colors`}
+                    className={`w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border ${
+                      errors.institution ? 'border-red-500' : 'border-white/10'
+                    } focus:border-violet-400 focus:outline-none text-white text-sm transition-colors pr-10`}
                   />
-                  <Building className="absolute right-3.5 top-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <Building className="absolute right-3 top-3 w-4 h-4 text-zinc-500 pointer-events-none" />
                 </div>
                 {errors.institution && <p className="text-xs text-red-400 mt-1">{errors.institution}</p>}
               </div>
@@ -318,8 +297,8 @@ export default function RegisterPage() {
               {/* Course & Year */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="course" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Course / Branch <span className="text-purple-400">*</span>
+                  <label htmlFor="course" className="block font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Course / Branch <span className="text-violet-400">*</span>
                   </label>
                   <input
                     id="course"
@@ -329,23 +308,23 @@ export default function RegisterPage() {
                     placeholder="e.g. B.Tech Computer Science"
                     value={formData.course}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 rounded-xl bg-[#0e071c] border ${
-                      errors.course ? 'border-red-500' : 'border-purple-900/50'
-                    } focus:border-purple-400 focus:outline-none text-white text-sm transition-colors`}
+                    className={`w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border ${
+                      errors.course ? 'border-red-500' : 'border-white/10'
+                    } focus:border-violet-400 focus:outline-none text-white text-sm transition-colors`}
                   />
                   {errors.course && <p className="text-xs text-red-400 mt-1">{errors.course}</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="yearOfStudy" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Year of Study <span className="text-purple-400">*</span>
+                  <label htmlFor="yearOfStudy" className="block font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Year of Study <span className="text-violet-400">*</span>
                   </label>
                   <select
                     id="yearOfStudy"
                     name="yearOfStudy"
                     value={formData.yearOfStudy}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-[#0e071c] border border-purple-900/50 focus:border-purple-400 focus:outline-none text-white text-sm transition-colors"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border border-white/10 focus:border-violet-400 focus:outline-none text-white text-sm transition-colors"
                   >
                     <option value="1st Year">1st Year</option>
                     <option value="2nd Year">2nd Year</option>
@@ -357,7 +336,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Privacy Checkbox */}
+              {/* Terms Checkbox */}
               <div className="pt-2">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
@@ -365,14 +344,14 @@ export default function RegisterPage() {
                     name="privacyConsent"
                     checked={formData.privacyConsent}
                     onChange={handleChange}
-                    className="mt-1 w-4 h-4 rounded text-purple-600 bg-[#0e071c] border-purple-800 focus:ring-purple-500 focus:ring-offset-0"
+                    className="mt-0.5 w-4 h-4 rounded text-violet-600 bg-zinc-900 border-white/20 focus:ring-0"
                   />
-                  <span className="text-xs text-slate-300 leading-normal">
+                  <span className="text-xs text-zinc-400 leading-normal">
                     I agree to the{' '}
-                    <Link href="/terms" className="text-purple-400 underline hover:text-purple-300">
+                    <Link href="/terms" className="text-zinc-200 underline hover:text-white">
                       Terms of Participation
                     </Link>{' '}
-                    and acknowledge that data collected will be used for official E-Cell IIT Bombay certificate issuance and event logistics.
+                    and confirm this registration data will be submitted to E-Cell IIT Bombay for official credential issuance.
                   </span>
                 </label>
                 {errors.privacyConsent && (
@@ -385,16 +364,16 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-purple-950 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3.5 px-6 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-semibold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Validating & Creating Registration...</span>
+                      <Loader2 className="w-4 h-4 animate-spin text-zinc-950" />
+                      <span>Validating Registration...</span>
                     </>
                   ) : (
                     <>
-                      <span>Proceed to Payment (₹699)</span>
+                      <span>Proceed to Payment — ₹699</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -404,72 +383,78 @@ export default function RegisterPage() {
             </form>
           </div>
 
-          {/* Right Column: Order Summary & Takeaways */}
+          {/* Right Column: Specification & Summary (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
             
-            {/* Pass Summary Card */}
-            <div className="glass-card rounded-2xl p-7 border border-purple-900/40">
-              <h2 className="text-base font-bold text-white uppercase tracking-wider mb-4 border-b border-purple-950/60 pb-3">
-                Registration Summary
+            {/* Specification Summary Table */}
+            <div className="surface-card rounded-xl p-7">
+              <h2 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-4 pb-3 border-b border-white/[0.08]">
+                Pass Specification
               </h2>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-300">Workshop Pass</span>
-                  <span className="font-bold text-white">₹699</span>
+              <div className="space-y-3.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Workshop Tariff</span>
+                  <span className="font-semibold text-white">₹699</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-300">Duration</span>
-                  <span className="text-purple-300 font-medium">6 Hours Offline</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Format</span>
+                  <span className="text-zinc-200">6 Hours In-Person</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-300">Target Cohort</span>
-                  <span className="text-slate-400">Min. 70 Participants</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Cohort Size</span>
+                  <span className="text-zinc-400 font-mono">Min. 70 Seats</span>
                 </div>
 
-                <div className="pt-3 border-t border-purple-950/60 flex justify-between items-baseline">
-                  <span className="text-sm font-semibold text-white">Total Amount</span>
-                  <span className="text-2xl font-black text-gradient-vibrant">₹699</span>
+                <div className="pt-3.5 border-t border-white/[0.08] flex justify-between items-baseline">
+                  <span className="font-medium text-white">Total Payable</span>
+                  <span className="font-mono text-2xl font-bold text-white">₹699</span>
                 </div>
               </div>
 
-              {/* Verified note */}
-              <div className="mt-5 p-3 rounded-xl bg-purple-950/40 border border-purple-800/30 text-xs text-purple-200 leading-relaxed">
-                <p className="font-semibold text-purple-300 mb-0.5">Official Fee Confirmed:</p>
-                The official E-Cell IIT Bombay NEC discount rate of ₹699/- is applied. Includes full 6-hour masterclass, certificate, and startup kit.
+              <div className="mt-5 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] text-[11px] text-zinc-400 leading-relaxed">
+                <span className="text-violet-400 font-mono font-medium block mb-1">
+                  NEC Institutional Rate Applied
+                </span>
+                The official E-Cell IIT Bombay discount rate is secured for KMCT students. Full masterclass, startup kit, and verified credential included.
               </div>
             </div>
 
-            {/* Guaranteed Deliverables */}
-            <div className="glass-card rounded-2xl p-7 border border-purple-900/40 space-y-3">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2">
-                What You Receive
+            {/* Inclusions */}
+            <div className="surface-card rounded-xl p-7 space-y-3">
+              <h3 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 mb-3">
+                Included Deliverables
               </h3>
 
-              <div className="flex items-start gap-3 text-xs text-slate-300">
+              <div className="flex items-start gap-3 text-xs text-zinc-300">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>Official Certificate from E-Cell IIT Bombay</strong> upon completion</span>
+                <span><strong>Official Certificate from E-Cell IIT Bombay</strong> with credential verification</span>
               </div>
 
-              <div className="flex items-start gap-3 text-xs text-slate-300">
-                <Package className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-                <span>Physical <strong>Illuminate Startup Kit</strong> provided at venue</span>
+              <div className="flex items-start gap-3 text-xs text-zinc-300">
+                <Package className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                <span>Physical <strong>Illuminate Startup Kit & Resource Deck</strong> provided at venue</span>
               </div>
 
-              <div className="flex items-start gap-3 text-xs text-slate-300">
-                <Award className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-                <span>Special discount eligibility for <strong>E-Summit passes & accommodation</strong></span>
+              <div className="flex items-start gap-3 text-xs text-zinc-300">
+                <Award className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                <span>Special student discount eligibility for <strong>IIT Bombay E-Summit Passes</strong></span>
               </div>
             </div>
 
-            {/* Registration Contact Box */}
-            <div className="p-5 rounded-2xl bg-purple-950/30 border border-purple-900/40 text-xs text-slate-300 space-y-2">
-              <p className="text-[11px] uppercase font-bold text-purple-400">Contact Person</p>
-              <p className="text-white font-bold text-sm">Alan Albin</p>
-              <div className="pt-1 border-t border-purple-950/60">
-                <p className="text-[11px] uppercase font-bold text-purple-400">Mobile</p>
-                <a href="tel:8848563266" className="text-purple-300 hover:text-purple-200 font-bold text-sm inline-flex items-center gap-1.5 mt-0.5">
-                  <Phone className="w-3.5 h-3.5 text-purple-400" />
+            {/* Coordinator Desk */}
+            <div className="surface-card rounded-xl p-6 text-xs text-zinc-400 space-y-2">
+              <span className="font-mono text-[10px] uppercase text-zinc-500 block">
+                Local Registration Desk
+              </span>
+              <p className="text-white font-medium text-sm">Alan Albin</p>
+              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
+                <span className="text-zinc-500">Helpline</span>
+                <a
+                  href="tel:8848563266"
+                  className="text-zinc-300 hover:text-white font-mono text-xs inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5 text-zinc-500" />
                   <span>8848563266</span>
                 </a>
               </div>

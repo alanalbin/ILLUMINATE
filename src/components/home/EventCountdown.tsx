@@ -11,7 +11,6 @@ export default function EventCountdown() {
   });
 
   useEffect(() => {
-    // Target date: 14 days from initial load or configured future date
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 14);
 
@@ -34,25 +33,22 @@ export default function EventCountdown() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
-      {[
-        { label: 'Days', val: String(timeLeft.days).padStart(2, '0') },
-        { label: 'Hours', val: String(timeLeft.hours).padStart(2, '0') },
-        { label: 'Mins', val: String(timeLeft.minutes).padStart(2, '0') },
-        { label: 'Secs', val: String(timeLeft.seconds).padStart(2, '0') },
-      ].map((item, idx) => (
-        <div
-          key={idx}
-          className="flex flex-col items-center justify-center min-w-[56px] sm:min-w-[64px] py-2 px-1.5 rounded-xl bg-purple-950/40 border border-purple-700/40 backdrop-blur-md shadow-inner group hover:border-purple-400 transition-colors"
-        >
-          <span className="text-lg sm:text-xl font-black font-mono tracking-tight text-white group-hover:text-purple-300 transition-colors">
-            {item.val}
-          </span>
-          <span className="text-[10px] uppercase font-bold tracking-wider text-purple-400/80 mt-0.5">
-            {item.label}
-          </span>
-        </div>
-      ))}
+    <div className="flex items-center gap-1.5 font-mono text-xs sm:text-sm text-zinc-300">
+      <span className="font-semibold text-white tracking-wider">
+        {String(timeLeft.days).padStart(2, '0')}d
+      </span>
+      <span className="text-zinc-600">:</span>
+      <span className="font-semibold text-white tracking-wider">
+        {String(timeLeft.hours).padStart(2, '0')}h
+      </span>
+      <span className="text-zinc-600">:</span>
+      <span className="font-semibold text-white tracking-wider">
+        {String(timeLeft.minutes).padStart(2, '0')}m
+      </span>
+      <span className="text-zinc-600">:</span>
+      <span className="font-semibold text-violet-400 tracking-wider">
+        {String(timeLeft.seconds).padStart(2, '0')}s
+      </span>
     </div>
   );
 }
