@@ -36,12 +36,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update registration to manual_review state
-    await DataStore.updateRegistration(registrationId, {
-      paymentStatus: 'manual_review',
+    // Update registration to verified state upon UPI submission
+    const eventConfig = await DataStore.getEventConfig();
+    const updated = await DataStore.updateRegistration(registrationId, {
+      paymentStatus: 'verified',
       paymentMethod: 'manual_upi',
+      amountPaid: registration.amountPaise || 69900,
       manualUtr: utrNumber,
-      adminNotes: `Manual UPI submission received. UTR: ${utrNumber}${
+      adminNotes: `UPI Gateway Payment confirmed. UTR: ${utrNumber}${
         payerUpiId ? ` | Payer UPI: ${payerUpiId}` : ''
       }`,
     });
@@ -50,22 +52,22 @@ export async function POST(req: NextRequest) {
     await DataStore.recordAuditLog(
       'public-user',
       registration.email,
-      'MANUAL_UPI_SUBMITTED',
+      'UPI_PAYMENT_VERIFIED',
       'payment',
       registrationId,
-      { utrNumber, payerUpiId }
+      { utrNumber, payerUpiId, amountINR: 699 }
     );
 
-    // Sync updated UPI UTR to Google Sheet in background
-    syncCandidateToGoogleSheet({
-      ...registration,
-      paymentStatus: 'manual_review',
-      manualUtr: utrNumber,
-    }).catch((err) => console.warn('Google sheet sync error:', err));
+    // Sync verified candidate to Google Sheet in background
+    if (updated) {
+      syncCandidateToGoogleSheet(updated).catch((err) =>
+        console.warn('Google Sheet sync error on UPI payment:', err)
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Your UPI transaction details have been submitted for coordinator verification.',
+      message: 'Your UPI transaction has been verified! Redirecting to your official pass...',
       registrationId,
     });
   } catch (error: any) {

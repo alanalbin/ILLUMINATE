@@ -168,21 +168,37 @@ function SuccessContent() {
               </p>
             </div>
 
-            <div className="text-left sm:text-right">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Pass ID</span>
-              <span className="text-lg font-mono font-bold text-purple-300 tracking-wide print:text-purple-900">
-                {registration.registrationNumber}
-              </span>
-              <div className="mt-1">
-                <span
-                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                    isVerified
-                      ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
-                      : 'bg-amber-950 text-amber-300 border border-amber-700'
-                  }`}
-                >
-                  {isVerified ? 'VERIFIED PASS' : 'PENDING APPROVAL'}
+            <div className="text-left sm:text-right flex items-center sm:items-start gap-4 justify-between sm:justify-end">
+              <div className="w-16 h-16 bg-white p-1.5 rounded-xl hidden sm:flex items-center justify-center shrink-0 shadow-md">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                    `ILLUMINATE-PASS:${registration.registrationNumber}:${registration.fullName}`
+                  )}`}
+                  alt="Ticket QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <div>
+                <span className="text-[10px] text-purple-400 font-extrabold uppercase tracking-wider block">
+                  Unique Ticket ID
                 </span>
+                <div className="flex items-center gap-1.5 sm:justify-end">
+                  <span className="text-base sm:text-lg font-mono font-black text-purple-300 tracking-wide print:text-purple-900 bg-purple-950/70 border border-purple-800/40 px-2 py-0.5 rounded-lg shadow-sm">
+                    {registration.registrationNumber}
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <span
+                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      isVerified
+                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                        : 'bg-amber-950 text-amber-300 border border-amber-700'
+                    }`}
+                  >
+                    {isVerified ? 'VERIFIED PASS ✓' : 'PENDING APPROVAL'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

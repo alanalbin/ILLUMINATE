@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { getAdminDb, isFirebaseAdminConfigured } from '@/lib/firebase/admin';
 import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 import {
@@ -137,10 +138,11 @@ export const DataStore = {
     regData: Omit<Registration, 'id' | 'registrationNumber' | 'status' | 'paymentStatus' | 'amountPaid' | 'createdAt' | 'updatedAt'>
   ): Promise<Registration> {
     const local = readLocalDb();
-    const count = local.registrations.length + 1;
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const regNumber = `ILL-KMCT-${1000 + count}-${randomSuffix}`;
-    const id = `reg-${Date.now()}-${randomSuffix}`;
+    // Globally unique, collision-proof Ticket ID (e.g. ILM-KMCT-M3K9A1-7F2B14)
+    const timePart = Date.now().toString(36).toUpperCase();
+    const randPart = crypto.randomBytes(3).toString('hex').toUpperCase();
+    const regNumber = `ILM-KMCT-${timePart}-${randPart}`;
+    const id = `reg_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
     const newRegistration: Registration = {
       ...regData,
