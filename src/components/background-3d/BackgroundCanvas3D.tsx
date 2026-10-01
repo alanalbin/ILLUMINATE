@@ -2,8 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Sliders, Zap, RefreshCw, Eye, EyeOff } from 'lucide-react';
 
 interface BackgroundCanvas3DProps {
   onReplayIntro?: () => void;
@@ -12,12 +10,11 @@ interface BackgroundCanvas3DProps {
 export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(true);
-  const [hubOpen, setHubOpen] = useState(false);
-  const [elementsVisible, setElementsVisible] = useState({
+  const elementsVisible = {
     floatingEmbers: true,
     geometricPrism: true,
     silkyWave: true,
-  });
+  };
 
   const elementsRef = useRef(elementsVisible);
   elementsRef.current = elementsVisible;
@@ -366,128 +363,13 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
   }
 
   return (
-    <>
-      {/* 3D Canvas Background Element */}
-      <div
-        ref={containerRef}
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
-        style={{
-          background: 'radial-gradient(ellipse at 50% 30%, #0d0722 0%, #05030a 70%, #030107 100%)',
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Discrete, Clean 3D Control Dock */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5 select-none">
-        <AnimatePresence>
-          {hubOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 10 }}
-              transition={{ duration: 0.18 }}
-              className="glass-card rounded-2xl p-4 border border-purple-500/30 shadow-2xl shadow-purple-950/80 bg-[#090518]/90 backdrop-blur-2xl w-64 text-white space-y-3"
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider">3D Ambient Space</span>
-                </div>
-                <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-800/40 px-2 py-0.5 rounded-full">
-                  CALM
-                </span>
-              </div>
-
-              {/* Shockwave Trigger */}
-              <button
-                type="button"
-                onClick={() => shockwaveTriggerRef.current?.()}
-                className="w-full py-2 px-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 hover:text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-300" />
-                <span>Send Ripple Wave</span>
-              </button>
-
-              {/* Toggles */}
-              <div className="space-y-1.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setElementsVisible((prev) => ({ ...prev, floatingEmbers: !prev.floatingEmbers }))
-                  }
-                  className={`w-full px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs font-medium border transition-all ${
-                    elementsVisible.floatingEmbers
-                      ? 'bg-purple-950/50 border-purple-500/40 text-purple-200'
-                      : 'bg-white/[0.02] border-white/[0.06] text-zinc-500'
-                  }`}
-                >
-                  <span>Soft Glowing Embers</span>
-                  {elementsVisible.floatingEmbers ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setElementsVisible((prev) => ({ ...prev, geometricPrism: !prev.geometricPrism }))
-                  }
-                  className={`w-full px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs font-medium border transition-all ${
-                    elementsVisible.geometricPrism
-                      ? 'bg-purple-950/50 border-purple-500/40 text-purple-200'
-                      : 'bg-white/[0.02] border-white/[0.06] text-zinc-500'
-                  }`}
-                >
-                  <span>Slender Celestial Prism</span>
-                  {elementsVisible.geometricPrism ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setElementsVisible((prev) => ({ ...prev, silkyWave: !prev.silkyWave }))
-                  }
-                  className={`w-full px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs font-medium border transition-all ${
-                    elementsVisible.silkyWave
-                      ? 'bg-purple-950/50 border-purple-500/40 text-purple-200'
-                      : 'bg-white/[0.02] border-white/[0.06] text-zinc-500'
-                  }`}
-                >
-                  <span>Silky Holographic Wave</span>
-                  {elementsVisible.silkyWave ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-
-              {/* Replay 3D Intro */}
-              {onReplayIntro && (
-                <div className="pt-2 border-t border-white/[0.06]">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHubOpen(false);
-                      onReplayIntro();
-                    }}
-                    className="w-full py-1.5 px-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-purple-400 text-zinc-300 hover:text-white text-xs font-medium flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <RefreshCw className="w-3 h-3 text-purple-400" />
-                    <span>Replay 3D Intro Beam</span>
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Minimalist Floating Trigger */}
-        <button
-          type="button"
-          onClick={() => setHubOpen((prev) => !prev)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-purple-950/70 hover:bg-purple-900/80 border border-purple-500/30 hover:border-purple-400 text-xs font-semibold text-purple-200 hover:text-white shadow-lg shadow-purple-950/80 backdrop-blur-xl transition-all cursor-pointer group active:scale-95"
-          title="3D Ambient Controls"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          <span>3D Space</span>
-          <Sliders className="w-3 h-3 text-purple-400 group-hover:rotate-45 transition-transform" />
-        </button>
-      </div>
-    </>
+    <div
+      ref={containerRef}
+      className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+      style={{
+        background: 'radial-gradient(ellipse at 50% 30%, #0d0722 0%, #05030a 70%, #030107 100%)',
+      }}
+      aria-hidden="true"
+    />
   );
 }

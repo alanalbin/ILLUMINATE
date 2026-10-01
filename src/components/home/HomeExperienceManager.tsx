@@ -5,7 +5,7 @@ import BackgroundCanvas3D from '@/components/background-3d/BackgroundCanvas3D';
 import BeamIntroLoading from '@/components/intro/BeamIntroLoading';
 
 export default function HomeExperienceManager() {
-  const [playIntro, setPlayIntro] = useState(false);
+  const [playIntro, setPlayIntro] = useState(true);
   const [introKey, setIntroKey] = useState(0);
 
   const handleReplayIntro = () => {
