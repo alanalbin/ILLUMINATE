@@ -102,9 +102,21 @@ export default function AboutSection() {
               
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
                 <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-xs font-bold text-emerald-300 uppercase tracking-wider mb-4 shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Host E-Cell: Nxt Byte · KMCTCEEM</span>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <img
+                      src="/logos/nxtbyte-ecell.png"
+                      alt="Nxt Byte Logo"
+                      className="h-9 w-auto object-contain bg-black/40 p-1 rounded-lg border border-emerald-500/30"
+                    />
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-xs font-bold text-emerald-300 uppercase tracking-wider shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>College E-Cell: Nxt Byte · KMCTCEEM</span>
+                    </div>
+                    <img
+                      src="/logos/nec-iitb.png"
+                      alt="NEC IIT Bombay"
+                      className="h-7 w-auto object-contain bg-black/40 px-2 py-0.5 rounded-lg border border-white/10 hidden sm:inline"
+                    />
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                     Empowering Student Builders to Launch Venture-Scale Startups.

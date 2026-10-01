@@ -77,22 +77,34 @@ export default function HeroSection({ event }: HeroSectionProps) {
           <div className="lg:col-span-7 flex flex-col justify-center">
             
             {/* Event Association Badges */}
-            <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 mb-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-xs font-medium text-zinc-300">
-                <img src="/logo-icon.png" alt="" className="w-3.5 h-3.5 object-contain" />
+            <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2.5 mb-6">
+              <a
+                href="https://www.ecell.in/illuminate/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-purple-500/40 text-xs font-medium text-zinc-300 hover:text-white transition-all group"
+              >
+                <img src="/logos/ecell-iitb.png" alt="E-Cell IIT Bombay" className="w-3.5 h-3.5 object-contain" />
                 <span>E-Cell, IIT Bombay Initiative</span>
+                <span className="text-[10px] text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all">↗</span>
+              </a>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-zinc-300">
+                <img src="/logos/kmct-college.png" alt="KMCT" className="h-3 w-auto object-contain max-w-[90px]" />
+                <span className="text-zinc-400">•</span>
+                <span>Host Campus (KMCTCEEM)</span>
               </div>
 
               <a
                 href="https://nxtbyteksd.netlify.app/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] hover:border-white/20 text-xs font-medium text-zinc-300 hover:text-white transition-all group"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-emerald-500/40 text-xs font-medium text-zinc-300 hover:text-white transition-all group"
                 title="Visit KMCT College E-Cell (Nxt Byte)"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>Organized by Nxt Byte (KMCT E-Cell)</span>
-                <span className="text-[10px] text-zinc-500 group-hover:translate-x-0.5 transition-transform">↗</span>
+                <img src="/logos/nxtbyte-ecell.png" alt="Nxt Byte" className="w-3.5 h-3.5 object-contain" />
+                <span>Organized by Nxt Byte E-Cell</span>
+                <span className="text-[10px] text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all">↗</span>
               </a>
             </motion.div>
 

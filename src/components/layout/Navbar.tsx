@@ -60,21 +60,22 @@ export default function Navbar() {
             href="https://nxtbyteksd.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium tracking-tight text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] hover:border-white/20"
+            className="text-xs font-medium tracking-tight text-zinc-300 hover:text-white flex items-center gap-2 transition-all px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-emerald-500/40 hover:bg-white/[0.08] group"
             title="Nxt Byte — KMCTCEEM College E-Cell"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <img src="/logos/nxtbyte-ecell.png" alt="Nxt Byte" className="w-3.5 h-3.5 object-contain" />
             <span>College E-Cell (Nxt Byte)</span>
-            <ArrowUpRight className="w-3 h-3 text-zinc-500" />
+            <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
           </a>
           <a
             href="https://www.ecell.in/illuminate/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium tracking-tight text-zinc-400 hover:text-white flex items-center gap-1 transition-colors px-2.5 py-1 rounded-md hover:bg-white/[0.04]"
+            className="text-xs font-medium tracking-tight text-zinc-300 hover:text-white flex items-center gap-2 transition-all px-2.5 py-1.5 rounded-lg hover:bg-white/[0.04] border border-transparent hover:border-white/[0.08] group"
           >
+            <img src="/logos/ecell-iitb.png" alt="E-Cell IIT Bombay" className="w-3.5 h-3.5 object-contain" />
             <span>IIT Bombay E-Cell</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500" />
+            <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
           </a>
         </nav>
 
@@ -216,9 +217,22 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center justify-between text-sm font-medium text-zinc-200 p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] hover:border-white/20"
           >
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="flex items-center gap-2.5">
+              <img src="/logos/nxtbyte-ecell.png" alt="Nxt Byte" className="w-4 h-4 object-contain" />
               <span>College E-Cell (Nxt Byte)</span>
+            </span>
+            <ArrowUpRight className="w-4 h-4 text-zinc-400" />
+          </a>
+          <a
+            href="https://www.ecell.in/illuminate/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center justify-between text-sm font-medium text-zinc-200 p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] hover:border-white/20"
+          >
+            <span className="flex items-center gap-2.5">
+              <img src="/logos/ecell-iitb.png" alt="IIT Bombay E-Cell" className="w-4 h-4 object-contain" />
+              <span>IIT Bombay E-Cell</span>
             </span>
             <ArrowUpRight className="w-4 h-4 text-zinc-400" />
           </a>

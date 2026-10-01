@@ -9,6 +9,85 @@ export default function Footer() {
     <footer className="bg-[#030107] border-t border-purple-950/40 text-slate-400 text-xs">
       <div className="max-w-7xl mx-auto px-6 py-14">
         
+        {/* Partner Logos Strip */}
+        <div className="mb-12 pb-10 border-b border-purple-950/40">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 text-center sm:text-left">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-purple-400 font-bold">
+                Institutional Affiliations & Official Partners
+              </p>
+              <h4 className="text-base font-bold text-white mt-0.5">
+                KMCT College of Engineering • E-Cell IIT Bombay
+              </h4>
+            </div>
+            <span className="text-[11px] text-zinc-400 font-mono">
+              National Entrepreneurship Challenge (NEC)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 items-center">
+            {/* KMCT College */}
+            <a
+              href="https://nxtbyteksd.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-blue-500/40 hover:bg-white/[0.04] transition-all flex flex-col items-center justify-center h-20 group"
+              title="KMCT College of Engineering, Kasaragod"
+            >
+              <img src="/logos/kmct-college.png" alt="KMCT College" className="h-6 w-auto max-w-[130px] object-contain group-hover:scale-105 transition-transform" />
+              <span className="text-[9px] text-zinc-400 mt-1.5 font-medium">Host Institution</span>
+            </a>
+
+            {/* E-Cell IIT Bombay */}
+            <a
+              href="https://www.ecell.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-purple-500/40 hover:bg-white/[0.04] transition-all flex flex-col items-center justify-center h-20 group"
+              title="The Entrepreneurship Cell, IIT Bombay"
+            >
+              <img src="/logos/ecell-iitb.png" alt="E-Cell IIT Bombay" className="h-9 w-auto object-contain group-hover:scale-105 transition-transform" />
+              <span className="text-[9px] text-zinc-400 mt-1 font-medium">E-Cell IIT Bombay</span>
+            </a>
+
+            {/* Nxt Byte E-Cell */}
+            <a
+              href="https://nxtbyteksd.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-emerald-500/40 hover:bg-white/[0.04] transition-all flex flex-col items-center justify-center h-20 group"
+              title="Nxt Byte College E-Cell, KMCT"
+            >
+              <img src="/logos/nxtbyte-ecell.png" alt="Nxt Byte E-Cell" className="h-9 w-auto object-contain group-hover:scale-105 transition-transform" />
+              <span className="text-[9px] text-zinc-400 mt-1 font-medium">Nxt Byte (College E-Cell)</span>
+            </a>
+
+            {/* NEC 2026 */}
+            <a
+              href="https://www.ecell.in/nec/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-indigo-500/40 hover:bg-white/[0.04] transition-all flex flex-col items-center justify-center h-20 group"
+              title="National Entrepreneurship Challenge (NEC 2026)"
+            >
+              <img src="/logos/nec-iitb.png" alt="NEC 2026" className="h-9 w-auto object-contain group-hover:scale-105 transition-transform" />
+              <span className="text-[9px] text-zinc-400 mt-1 font-medium">NEC Challenge 2026</span>
+            </a>
+
+            {/* Illuminate Torch */}
+            <a
+              href="https://www.ecell.in/illuminate/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-purple-500/40 hover:bg-white/[0.04] transition-all flex flex-col items-center justify-center h-20 group col-span-2 sm:col-span-4 lg:col-span-1"
+              title="ILLUMINATE Workshop"
+            >
+              <img src="/logos/illuminate-torch.png" alt="ILLUMINATE" className="h-8 w-auto max-w-[130px] object-contain group-hover:scale-105 transition-transform" />
+              <span className="text-[9px] text-zinc-400 mt-1 font-medium">Masterclass Track</span>
+            </a>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           
           {/* Col 1: Brand & Mission */}
@@ -33,6 +112,9 @@ export default function Footer() {
             <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">
               Host Institution
             </h4>
+            <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] mb-2">
+              <img src="/logos/kmct-college.png" alt="KMCT" className="h-5 w-auto object-contain" />
+            </div>
             <p className="text-slate-300 font-medium">
               KMCT College of Engineering for Emerging Technologies and Management
             </p>

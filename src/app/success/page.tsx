@@ -197,16 +197,28 @@ function SuccessContent() {
                 className="h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]"
               />
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-purple-400 print:text-purple-700">
-                  E-Cell, IIT Bombay Initiative
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-purple-400 print:text-purple-700">
+                    E-Cell, IIT Bombay Initiative
+                  </span>
+                  <span className="text-zinc-600 print:hidden">•</span>
+                  <span className="text-[11px] text-zinc-400 font-medium hidden sm:inline">
+                    Host: KMCTCEEM
+                  </span>
+                </div>
                 <h1 className="text-3xl font-black text-white tracking-wider mt-0.5 print:text-black">
                   ILLUMINATE PASS
                 </h1>
                 <p className="text-xs text-slate-300 mt-0.5 print:text-gray-600">
-                  KMCT College of Engineering, Kasaragod
+                  KMCT College of Engineering for Emerging Technologies and Management, Kasaragod
                 </p>
               </div>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2 p-1.5 rounded-xl bg-black/40 border border-white/10 print:border-gray-300">
+              <img src="/logos/ecell-iitb.png" alt="IIT Bombay" className="h-9 w-auto object-contain" />
+              <div className="h-6 w-px bg-white/10 print:bg-gray-300" />
+              <img src="/logos/kmct-college.png" alt="KMCT" className="h-5 w-auto max-w-[90px] object-contain" />
             </div>
 
             <div className="text-left sm:text-right flex items-center sm:items-start gap-4 justify-between sm:justify-end">

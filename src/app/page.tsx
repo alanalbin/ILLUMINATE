@@ -4,6 +4,7 @@ import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 import HeroSection from '@/components/home/HeroSection';
 import BackgroundCanvas3D from '@/components/background-3d/BackgroundCanvas3D';
 import DisplayWorkstation3D from '@/components/home/DisplayWorkstation3D';
+import PartnersShowcase from '@/components/home/PartnersShowcase';
 import AboutSection from '@/components/home/AboutSection';
 import WorkshopStructureSection from '@/components/home/WorkshopStructureSection';
 import BenefitsSection from '@/components/home/BenefitsSection';
@@ -33,6 +34,11 @@ export default async function HomePage() {
 
       {/* 3D PC Display Workstation Rectangle with Loading Sequence */}
       <DisplayWorkstation3D />
+
+      {/* Institutional & Organizing Partners Showcase */}
+      <Scroll3DPopup delay={0.05}>
+        <PartnersShowcase />
+      </Scroll3DPopup>
 
       {/* Workshop Narrative & Mission */}
       <Scroll3DPopup delay={0.05}>
