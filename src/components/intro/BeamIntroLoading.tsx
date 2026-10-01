@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 
 interface BeamIntroLoadingProps {
   onComplete?: () => void;
@@ -20,6 +20,10 @@ export default function BeamIntroLoading({
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number | null>(null);
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+
+  const pointerPosRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
 
   useEffect(() => {
     if (!visible) return;
@@ -32,7 +36,7 @@ export default function BeamIntroLoading({
 
     // 1. Scene & Perspective Camera
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x05030a, 0.003);
+    scene.fog = new THREE.FogExp2(0x05030a, 0.0025);
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     camera.position.set(0, 0, 32);
@@ -48,125 +52,172 @@ export default function BeamIntroLoading({
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.2;
+      renderer.toneMappingExposure = 1.25;
     } catch {
       return;
     }
 
     // 2. Focused Cinematic Lights
-    const ambient = new THREE.AmbientLight(0x200b3b, 1.2);
+    const ambient = new THREE.AmbientLight(0x240e44, 1.4);
     scene.add(ambient);
 
-    const primaryLight = new THREE.PointLight(0xa855f7, 4, 60);
-    primaryLight.position.set(0, 0, 10);
+    const primaryLight = new THREE.PointLight(0xa855f7, 5, 80);
+    primaryLight.position.set(0, 0, 12);
     scene.add(primaryLight);
 
-    const cyanLight = new THREE.PointLight(0x38bdf8, 3, 50);
-    cyanLight.position.set(-10, -5, 10);
+    const cyanLight = new THREE.PointLight(0x38bdf8, 4, 70);
+    cyanLight.position.set(-14, -8, 12);
     scene.add(cyanLight);
 
+    const goldLight = new THREE.PointLight(0xf59e0b, 3, 60);
+    goldLight.position.set(14, 8, 10);
+    scene.add(goldLight);
+
     // =========================================================================
-    // 3. ELEGANT, UNCLUTTERED 3D PRISMATIC MONOLITH & BEAM
+    // 3. EYE-CATCHING 3D QUANTUM GYRO-PRISM CORE
     // =========================================================================
     const centerGroup = new THREE.Group();
     scene.add(centerGroup);
 
-    // 3A. Faceted Double-Pyramid Crystal
-    const crystalGeo = new THREE.OctahedronGeometry(3.6, 0);
-    crystalGeo.scale(1, 1.6, 1);
-
+    // 3A. Faceted Refractive Icosahedron Crystal Core
+    const crystalGeo = new THREE.IcosahedronGeometry(3.2, 0);
     const crystalMat = new THREE.MeshPhongMaterial({
       color: 0x9333ea,
       emissive: 0x3b0764,
       specular: 0xffffff,
-      shininess: 90,
+      shininess: 100,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.85,
       flatShading: true,
     });
     const crystal = new THREE.Mesh(crystalGeo, crystalMat);
     centerGroup.add(crystal);
 
-    // Delicate wireframe outline
-    const wireGeo = new THREE.OctahedronGeometry(3.64, 0);
-    wireGeo.scale(1, 1.6, 1);
+    // Iridescent Wireframe Outer Shell
+    const wireGeo = new THREE.IcosahedronGeometry(3.28, 0);
     const wireMat = new THREE.MeshBasicMaterial({
       color: 0xc084fc,
       wireframe: true,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.75,
     });
     const wire = new THREE.Mesh(wireGeo, wireMat);
     centerGroup.add(wire);
 
-    // Inner Glowing Core Diamond
-    const innerGeo = new THREE.OctahedronGeometry(1.5, 0);
+    // Inner Radiant Octahedron Star
+    const innerGeo = new THREE.OctahedronGeometry(1.6, 0);
     const innerMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       wireframe: true,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
     });
-    const innerCore = new THREE.Mesh(innerGeo, innerMat);
-    centerGroup.add(innerCore);
+    const innerStar = new THREE.Mesh(innerGeo, innerMat);
+    centerGroup.add(innerStar);
 
-    // 3B. Slender Vertical Light Beam
-    const beamGeo = new THREE.CylinderGeometry(0.25, 1.2, 80, 24, 1, true);
-    beamGeo.translate(0, 35, 0);
+    // 3B. Dual Interlocking Gyroscope Gimbal Rings
+    // Ring 1 (Cyan orbital torus)
+    const ring1Geo = new THREE.TorusGeometry(5.8, 0.08, 16, 90);
+    const ring1Mat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+    });
+    const ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
+    ring1.rotation.x = Math.PI / 2.6;
+    centerGroup.add(ring1);
+
+    // Ring 2 (Magenta counter-orbital torus)
+    const ring2Geo = new THREE.TorusGeometry(6.6, 0.06, 16, 90);
+    const ring2Mat = new THREE.MeshBasicMaterial({
+      color: 0xf43f5e,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+    });
+    const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
+    ring2.rotation.y = Math.PI / 2.4;
+    ring2.rotation.z = Math.PI / 4;
+    centerGroup.add(ring2);
+
+    // Outer Thin Gold Halo
+    const haloRingGeo = new THREE.TorusGeometry(7.4, 0.04, 16, 90);
+    const haloRingMat = new THREE.MeshBasicMaterial({
+      color: 0xf59e0b,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending,
+    });
+    const haloRing = new THREE.Mesh(haloRingGeo, haloRingMat);
+    centerGroup.add(haloRing);
+
+    // 3C. Twin Vertical Coherent Laser Beams (Top and Bottom)
+    // Upward beam
+    const topBeamGeo = new THREE.CylinderGeometry(0.18, 1.2, 90, 24, 1, true);
+    topBeamGeo.translate(0, 42, 0);
     const beamMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
     });
-    const beam = new THREE.Mesh(beamGeo, beamMat);
-    centerGroup.add(beam);
+    const topBeam = new THREE.Mesh(topBeamGeo, beamMat);
+    centerGroup.add(topBeam);
 
-    // Soft Outer Violet Glow
-    const haloGeo = new THREE.CylinderGeometry(1.2, 3.2, 80, 24, 1, true);
-    haloGeo.translate(0, 35, 0);
-    const haloMat = new THREE.MeshBasicMaterial({
+    // Downward beam
+    const bottomBeamGeo = new THREE.CylinderGeometry(1.2, 0.18, 90, 24, 1, true);
+    bottomBeamGeo.translate(0, -42, 0);
+    const bottomBeam = new THREE.Mesh(bottomBeamGeo, beamMat);
+    centerGroup.add(bottomBeam);
+
+    // Soft Violet Core Halo
+    const glowCylinderGeo = new THREE.CylinderGeometry(1.1, 3.5, 90, 24, 1, true);
+    glowCylinderGeo.translate(0, 42, 0);
+    const glowMat = new THREE.MeshBasicMaterial({
       color: 0xa855f7,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.35,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
     });
-    const halo = new THREE.Mesh(haloGeo, haloMat);
-    centerGroup.add(halo);
+    const glowCylinder = new THREE.Mesh(glowCylinderGeo, glowMat);
+    centerGroup.add(glowCylinder);
 
-    // 3C. Single Concentric Orbital Light Ring (Thin, clean)
-    const ringGeo = new THREE.TorusGeometry(6.2, 0.05, 16, 80);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2.3;
-    centerGroup.add(ring);
-
-    // 3D. Sparse Floating Embers (Only 24 gentle points - NOT crowded)
-    const emberCount = 24;
+    // 3D. Dynamic Swirling Quantum Vortex Embers (36 energetic particles)
+    const emberCount = 36;
     const emberGeo = new THREE.BufferGeometry();
     const emberPositions = new Float32Array(emberCount * 3);
+    const emberPhases = new Float32Array(emberCount);
+    const emberRadii = new Float32Array(emberCount);
+
     for (let i = 0; i < emberCount; i++) {
-      emberPositions[i * 3] = (Math.random() - 0.5) * 40;
-      emberPositions[i * 3 + 1] = (Math.random() - 0.5) * 35;
-      emberPositions[i * 3 + 2] = (Math.random() - 0.5) * 25;
+      emberPhases[i] = Math.random() * Math.PI * 2;
+      emberRadii[i] = 7.0 + Math.random() * 9.0;
+      const angle = emberPhases[i];
+      emberPositions[i * 3] = Math.cos(angle) * emberRadii[i];
+      emberPositions[i * 3 + 1] = (Math.random() - 0.5) * 14;
+      emberPositions[i * 3 + 2] = Math.sin(angle) * emberRadii[i];
     }
     emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPositions, 3));
+
     const emberMat = new THREE.PointsMaterial({
-      size: 0.9,
-      color: 0xc084fc,
+      size: 0.85,
+      color: 0x38bdf8,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.85,
       blending: THREE.AdditiveBlending,
     });
     const embers = new THREE.Points(emberGeo, emberMat);
-    scene.add(embers);
+    centerGroup.add(embers);
+
+    // Pointer move listener for interactive 3D tilt
+    const handlePointerMove = (e: PointerEvent) => {
+      pointerPosRef.current.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+      pointerPosRef.current.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+    };
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
 
     // Resize Handler
     const handleResize = () => {
@@ -178,35 +229,64 @@ export default function BeamIntroLoading({
     };
     window.addEventListener('resize', handleResize);
 
-    // 4. Animation Loop
+    // 4. Animation Loop with Vortex Physics & Spool-up
     const clock = new THREE.Clock();
 
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate);
 
       const time = clock.getElapsedTime();
-      const speed = warpingRef.current ? 4.0 : 1.0;
+      const currentProg = progressRef.current;
+      const isWarp = warpingRef.current;
 
-      // Meditative smooth crystal rotation
-      centerGroup.rotation.y = time * 0.4 * speed;
-      centerGroup.position.y = Math.sin(time * 1.5) * 0.4;
+      // Exponential spool-up speed as progress approaches 100%
+      const spoolMultiplier = 1.0 + (currentProg / 100) * 1.8 + (isWarp ? 4.5 : 0);
 
-      innerCore.rotation.y = -time * 1.0 * speed;
-      innerCore.rotation.z = time * 0.6 * speed;
+      // Smooth damped pointer tilt response
+      const ptr = pointerPosRef.current;
+      ptr.x += (ptr.targetX - ptr.x) * 0.05;
+      ptr.y += (ptr.targetY - ptr.y) * 0.05;
 
-      ring.rotation.z = time * 0.5 * speed;
+      centerGroup.rotation.x = ptr.y * 0.25;
+      centerGroup.rotation.z = -ptr.x * 0.25;
 
-      // Beam gentle pulsation
-      const pulse = (1 + Math.sin(time * 5) * 0.12) * (warpingRef.current ? 3.5 : 1.0);
-      beam.scale.set(pulse, 1, pulse);
-      halo.scale.set(pulse * 1.1, 1, pulse * 1.1);
+      // Multi-axis compound rotation
+      centerGroup.rotation.y = time * 0.5 * spoolMultiplier;
+      centerGroup.position.y = Math.sin(time * 1.8) * 0.35;
 
-      // Camera gentle push in on finish
-      if (warpingRef.current) {
-        camera.position.z -= 0.5;
+      innerStar.rotation.y = -time * 1.4 * spoolMultiplier;
+      innerStar.rotation.x = time * 0.9 * spoolMultiplier;
+
+      ring1.rotation.z = time * 0.8 * spoolMultiplier;
+      ring2.rotation.z = -time * 0.9 * spoolMultiplier;
+      haloRing.rotation.x = time * 0.4 * spoolMultiplier;
+
+      // Dynamic beam pulse
+      const beamPulse = (1 + Math.sin(time * 6) * 0.14) * (isWarp ? 4.0 : 1.0);
+      topBeam.scale.set(beamPulse, 1, beamPulse);
+      bottomBeam.scale.set(beamPulse, 1, beamPulse);
+      glowCylinder.scale.set(beamPulse * 1.15, 1, beamPulse * 1.15);
+
+      // Vortex particle physics (spiral inward and orbit faster)
+      const pos = emberGeo.attributes.position.array as Float32Array;
+      const orbitSpeed = 1.5 * spoolMultiplier;
+      for (let i = 0; i < emberCount; i++) {
+        emberPhases[i] += 0.02 * orbitSpeed;
+        const currentAngle = emberPhases[i];
+        // Swirl radius contracts slightly as progress builds
+        const r = emberRadii[i] * (1.0 - (currentProg / 100) * 0.25);
+        pos[i * 3] = Math.cos(currentAngle) * r;
+        pos[i * 3 + 1] += Math.sin(time * 2 + i) * 0.04;
+        pos[i * 3 + 2] = Math.sin(currentAngle) * r;
+      }
+      emberGeo.attributes.position.needsUpdate = true;
+
+      // Camera push-in warp at completion
+      if (isWarp) {
+        camera.position.z -= 0.65;
       } else {
-        camera.position.x = Math.sin(time * 0.3) * 1.5;
-        camera.position.y = Math.cos(time * 0.25) * 1.0;
+        camera.position.x = ptr.x * 2.0;
+        camera.position.y = -ptr.y * 1.5;
         camera.lookAt(0, 0, 0);
       }
 
@@ -217,6 +297,7 @@ export default function BeamIntroLoading({
 
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
       crystalGeo.dispose();
@@ -225,12 +306,17 @@ export default function BeamIntroLoading({
       wireMat.dispose();
       innerGeo.dispose();
       innerMat.dispose();
-      beamGeo.dispose();
+      ring1Geo.dispose();
+      ring1Mat.dispose();
+      ring2Geo.dispose();
+      ring2Mat.dispose();
+      haloRingGeo.dispose();
+      haloRingMat.dispose();
+      topBeamGeo.dispose();
+      bottomBeamGeo.dispose();
       beamMat.dispose();
-      haloGeo.dispose();
-      haloMat.dispose();
-      ringGeo.dispose();
-      ringMat.dispose();
+      glowCylinderGeo.dispose();
+      glowMat.dispose();
       emberGeo.dispose();
       emberMat.dispose();
     };
@@ -310,7 +396,7 @@ export default function BeamIntroLoading({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-white/80 to-transparent z-30 pointer-events-none mix-blend-screen"
+            className="absolute inset-0 bg-gradient-to-t from-purple-900/50 via-white/85 to-cyan-500/20 z-30 pointer-events-none mix-blend-screen"
           />
         )}
 
@@ -318,25 +404,25 @@ export default function BeamIntroLoading({
         <div className="w-full max-w-5xl mx-auto px-6 pt-6 flex items-center justify-end relative z-20">
           <button
             onClick={handleDismiss}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-xs font-medium text-slate-400 hover:text-white transition-all cursor-pointer backdrop-blur-md active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-all cursor-pointer backdrop-blur-md active:scale-95 shadow-lg"
             title="Skip Intro"
           >
             <span>Skip</span>
-            <X className="w-3 h-3 text-slate-400" />
+            <X className="w-3.5 h-3.5 text-slate-400" />
           </button>
         </div>
 
         {/* Clean Center Typography */}
         <div className="relative z-20 flex flex-col items-center text-center px-6 pointer-events-none -mt-4">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h1 className="text-3xl sm:text-5xl font-black tracking-[0.25em] text-white uppercase drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-[0.28em] text-white uppercase drop-shadow-[0_0_25px_rgba(168,85,247,0.5)]">
               ILLUMINATE
             </h1>
-            <p className="text-xs text-purple-300/80 mt-1 tracking-widest uppercase font-mono">
+            <p className="text-xs text-purple-300/90 mt-1.5 tracking-widest uppercase font-mono font-medium">
               KMCT Kasaragod • E-Cell IIT Bombay
             </p>
           </motion.div>
@@ -346,9 +432,9 @@ export default function BeamIntroLoading({
         <div className="w-full max-w-xs mx-auto px-6 pb-12 relative z-20 flex flex-col items-center">
           
           {/* Slender Progress Line */}
-          <div className="w-full h-[2px] bg-white/[0.08] rounded-full overflow-hidden relative mb-2">
+          <div className="w-full h-[2px] bg-white/[0.08] rounded-full overflow-hidden relative mb-2.5">
             <motion.div
-              className="h-full bg-gradient-to-r from-purple-500 via-indigo-400 to-cyan-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]"
+              className="h-full bg-gradient-to-r from-purple-500 via-indigo-400 to-cyan-400 shadow-[0_0_10px_rgba(168,85,247,0.9)]"
               initial={{ width: '0%' }}
               animate={{ width: `${progress}%` }}
               transition={{ ease: 'easeOut', duration: 0.08 }}
@@ -356,9 +442,9 @@ export default function BeamIntroLoading({
           </div>
 
           {/* Clean Percentage Display */}
-          <div className="flex items-center justify-between w-full text-[11px] font-mono text-zinc-500">
-            <span>STARTUP MASTERCLASS</span>
-            <span className="text-purple-300 font-semibold">{progress}%</span>
+          <div className="flex items-center justify-between w-full text-[11px] font-mono text-zinc-400">
+            <span className="tracking-wider">STARTUP MASTERCLASS</span>
+            <span className="text-purple-300 font-bold">{progress}%</span>
           </div>
 
         </div>

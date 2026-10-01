@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { Sparkles, Zap, RotateCcw } from 'lucide-react';
 
 interface BackgroundCanvas3DProps {
   onReplayIntro?: () => void;
@@ -10,15 +11,7 @@ interface BackgroundCanvas3DProps {
 export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(true);
-  const elementsVisible = {
-    floatingEmbers: true,
-    geometricPrism: true,
-    silkyWave: true,
-  };
-
-  const elementsRef = useRef(elementsVisible);
-  elementsRef.current = elementsVisible;
-
+  const [isInteracting, setIsInteracting] = useState<boolean>(false);
   const shockwaveTriggerRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -68,46 +61,52 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.toneMappingExposure = 1.0;
     container.appendChild(renderer.domElement);
 
-    // 3. Gentle Ambient Lighting
-    const ambientLight = new THREE.AmbientLight(0x1a0d33, 1.0);
+    // 3. Ambient & Focused Lighting
+    const ambientLight = new THREE.AmbientLight(0x1a0d33, 1.2);
     scene.add(ambientLight);
 
-    const softPurpleGlow = new THREE.PointLight(0xa855f7, 2.0, 500);
-    softPurpleGlow.position.set(80, 50, 60);
+    const softPurpleGlow = new THREE.PointLight(0xa855f7, 2.5, 600);
+    softPurpleGlow.position.set(90, 60, 80);
     scene.add(softPurpleGlow);
 
-    const softCyanGlow = new THREE.PointLight(0x38bdf8, 1.5, 500);
-    softCyanGlow.position.set(-80, -40, 50);
+    const softCyanGlow = new THREE.PointLight(0x38bdf8, 2.0, 600);
+    softCyanGlow.position.set(-90, -50, 70);
     scene.add(softCyanGlow);
 
     // =========================================================================
-    // 1. SPARSE, FLOATING LUMINESCENT EMBERS (Not crowded: only 36 gentle points)
+    // 1. FLOATING INTERACTIVE QUANTUM PARTICLES
     // =========================================================================
-    const emberCount = isMobile ? 22 : 36;
+    const emberCount = isMobile ? 28 : 48;
     const emberGeo = new THREE.BufferGeometry();
     const emberPositions = new Float32Array(emberCount * 3);
+    const emberOriginal = new Float32Array(emberCount * 3);
     const emberSpeeds = new Float32Array(emberCount);
 
     for (let i = 0; i < emberCount; i++) {
       const i3 = i * 3;
-      emberPositions[i3] = (Math.random() - 0.5) * 450;
-      emberPositions[i3 + 1] = (Math.random() - 0.5) * 350;
-      emberPositions[i3 + 2] = (Math.random() - 0.5) * 250;
-      emberSpeeds[i] = 0.03 + Math.random() * 0.05; // peaceful, meditative drift
+      const x = (Math.random() - 0.5) * 450;
+      const y = (Math.random() - 0.5) * 350;
+      const z = (Math.random() - 0.5) * 250;
+      emberPositions[i3] = x;
+      emberPositions[i3 + 1] = y;
+      emberPositions[i3 + 2] = z;
+      emberOriginal[i3] = x;
+      emberOriginal[i3 + 1] = y;
+      emberOriginal[i3 + 2] = z;
+      emberSpeeds[i] = 0.04 + Math.random() * 0.06;
     }
 
     emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPositions, 3));
 
-    // Soft glowing circle sprite
     const pCanvas = document.createElement('canvas');
     pCanvas.width = 64;
     pCanvas.height = 64;
     const pCtx = pCanvas.getContext('2d');
     if (pCtx) {
       const grad = pCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-      grad.addColorStop(0.25, 'rgba(192, 132, 252, 0.7)');
-      grad.addColorStop(0.65, 'rgba(126, 34, 206, 0.2)');
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      grad.addColorStop(0.2, 'rgba(192, 132, 252, 0.8)');
+      grad.addColorStop(0.55, 'rgba(126, 34, 206, 0.25)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       pCtx.fillStyle = grad;
       pCtx.fillRect(0, 0, 64, 64);
@@ -115,10 +114,10 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     const emberTexture = new THREE.CanvasTexture(pCanvas);
 
     const emberMat = new THREE.PointsMaterial({
-      size: isMobile ? 4.5 : 6.0,
+      size: isMobile ? 5.5 : 7.0,
       map: emberTexture,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -127,50 +126,63 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     scene.add(embersField);
 
     // =========================================================================
-    // 2. MINIMALIST SLENDER GEOMETRIC CELESTIAL PRISM (Spacious, elegant wireframe)
+    // 2. INTERACTIVE CELESTIAL QUANTUM PRISM SCULPTURE
     // =========================================================================
     const prismGroup = new THREE.Group();
-    prismGroup.position.set(0, 5, -50);
+    prismGroup.position.set(0, 6, -45);
     scene.add(prismGroup);
 
-    // Single refined outer icosahedron (very thin, low opacity wireframe)
-    const icoGeo = new THREE.IcosahedronGeometry(isMobile ? 26 : 36, 1);
+    // Faceted Outer Icosahedron
+    const icoGeo = new THREE.IcosahedronGeometry(isMobile ? 28 : 38, 1);
     const icoMat = new THREE.MeshBasicMaterial({
       color: 0xa855f7,
       wireframe: true,
       transparent: true,
-      opacity: 0.12, // Subtle, doesn't compete with content
+      opacity: 0.16,
     });
     const icoMesh = new THREE.Mesh(icoGeo, icoMat);
     prismGroup.add(icoMesh);
 
-    // Inner concentric octahedron diamond
-    const octGeo = new THREE.OctahedronGeometry(isMobile ? 15 : 20, 0);
+    // Inner Concentric Octahedron Core
+    const octGeo = new THREE.OctahedronGeometry(isMobile ? 16 : 22, 0);
     const octMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       wireframe: true,
       transparent: true,
-      opacity: 0.14,
+      opacity: 0.22,
     });
     const octMesh = new THREE.Mesh(octGeo, octMat);
     prismGroup.add(octMesh);
 
-    // Slender outer orbital ring (faint, slow)
-    const ringGeo = new THREE.TorusGeometry(isMobile ? 55 : 75, 0.8, 12, 60);
-    const ringMat = new THREE.MeshBasicMaterial({
+    // Gyro Orbit Ring 1
+    const ringGeo1 = new THREE.TorusGeometry(isMobile ? 55 : 75, 0.9, 12, 64);
+    const ringMat1 = new THREE.MeshBasicMaterial({
       color: 0x818cf8,
       wireframe: true,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.12,
     });
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.rotation.x = Math.PI / 3;
-    prismGroup.add(ringMesh);
+    const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
+    ringMesh1.rotation.x = Math.PI / 3;
+    prismGroup.add(ringMesh1);
+
+    // Gyro Orbit Ring 2 (Orthogonal counter-orbit)
+    const ringGeo2 = new THREE.TorusGeometry(isMobile ? 65 : 88, 0.7, 12, 64);
+    const ringMat2 = new THREE.MeshBasicMaterial({
+      color: 0xc084fc,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.1,
+    });
+    const ringMesh2 = new THREE.Mesh(ringGeo2, ringMat2);
+    ringMesh2.rotation.y = Math.PI / 2.5;
+    ringMesh2.rotation.z = Math.PI / 4;
+    prismGroup.add(ringMesh2);
 
     // =========================================================================
-    // 3. SILKY HOLOGRAPHIC WAVE RIBBON (Smooth, spacious wave - NOT a busy grid)
+    // 3. SILKY HOLOGRAPHIC WAVE RIBBON
     // =========================================================================
-    const waveGeo = new THREE.PlaneGeometry(420, 260, 20, 14); // Low polygon density for clean look
+    const waveGeo = new THREE.PlaneGeometry(420, 260, 22, 16);
     waveGeo.rotateX(-Math.PI / 2.4);
     waveGeo.translate(0, -65, -60);
 
@@ -178,19 +190,25 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       color: 0x7c3aed,
       wireframe: true,
       transparent: true,
-      opacity: 0.09, // Very subtle, silky background movement
+      opacity: 0.11,
       blending: THREE.AdditiveBlending,
     });
     const waveMesh = new THREE.Mesh(waveGeo, waveMat);
     scene.add(waveMesh);
 
     // =========================================================================
-    // INTERACTION: Smooth Mouse Parallax, Gentle Particle Repulsion & Click Ripple
+    // 4. ADVANCED 3D INTERACTION: Drag to Orbit, Deep Parallax & Particle Physics
     // =========================================================================
     let targetX = 0;
     let targetY = 0;
     let currentX = 0;
     let currentY = 0;
+
+    let isDragging = false;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+    let rotVelocityX = 0;
+    let rotVelocityY = 0;
 
     let shockwaveActive = false;
     let shockwaveRadius = 0;
@@ -198,23 +216,68 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     const triggerShockwave = () => {
       shockwaveActive = true;
       shockwaveRadius = 0;
+      setIsInteracting(true);
+      setTimeout(() => setIsInteracting(false), 1200);
     };
     shockwaveTriggerRef.current = triggerShockwave;
 
+    // Pointer Move: tracks parallax & drag
     const handlePointerMove = (e: PointerEvent) => {
       targetX = (e.clientX / window.innerWidth - 0.5) * 2;
       targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+
+      if (isDragging) {
+        const deltaX = e.clientX - lastPointerX;
+        const deltaY = e.clientY - lastPointerY;
+        rotVelocityY += deltaX * 0.0035;
+        rotVelocityX += deltaY * 0.0035;
+        lastPointerX = e.clientX;
+        lastPointerY = e.clientY;
+      }
     };
 
+    // Pointer Down: starts drag if clicking empty background
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.closest('button') ||
+        target.closest('a') ||
+        target.closest('input') ||
+        target.closest('textarea') ||
+        target.closest('select') ||
+        target.closest('[role="button"]') ||
+        target.closest('.interactive-stop')
+      ) {
+        return;
+      }
+      isDragging = true;
+      lastPointerX = e.clientX;
+      lastPointerY = e.clientY;
+      setIsInteracting(true);
+    };
+
+    const handlePointerUp = () => {
+      isDragging = false;
+    };
+
+    // Click handler for ripples on empty space
     const handleWindowClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('.glass-card')) {
+      if (
+        target.closest('button') ||
+        target.closest('a') ||
+        target.closest('input') ||
+        target.closest('textarea') ||
+        target.closest('.glass-card')
+      ) {
         return;
       }
       triggerShockwave();
     };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointerdown', handlePointerDown, { passive: true });
+    window.addEventListener('pointerup', handlePointerUp, { passive: true });
     window.addEventListener('click', handleWindowClick, { passive: true });
 
     // Resize Handler
@@ -226,14 +289,13 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     };
     window.addEventListener('resize', handleResize);
 
-    // Tab visibility handling
     let isTabVisible = !document.hidden;
     const handleVisibilityChange = () => {
       isTabVisible = !document.hidden;
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // 4. Smooth Animation Loop
+    // 5. Smooth High-Performance Animation Loop
     let animationFrameId: number;
     const clock = new THREE.Clock();
 
@@ -244,83 +306,95 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
       const delta = Math.min(clock.getDelta(), 0.05);
       const time = clock.getElapsedTime();
-      const elements = elementsRef.current;
 
-      // Visibility toggles
-      embersField.visible = elements.floatingEmbers;
-      prismGroup.visible = elements.geometricPrism;
-      waveMesh.visible = elements.silkyWave;
-
-      // Smooth damped camera tilt
+      // Smooth damped camera tilt & deep parallax
       if (!prefersReducedMotion) {
-        currentX += (targetX - currentX) * 0.02;
-        currentY += (targetY - currentY) * 0.02;
+        currentX += (targetX - currentX) * 0.035;
+        currentY += (targetY - currentY) * 0.035;
 
-        camera.position.x = currentX * 6;
-        camera.position.y = -currentY * 4;
+        camera.position.x = currentX * 14;
+        camera.position.y = -currentY * 9;
         camera.lookAt(0, 0, 0);
 
-        // Meditative, slow prism rotation
-        if (elements.geometricPrism) {
-          icoMesh.rotation.y = time * 0.025;
-          icoMesh.rotation.x = time * 0.015;
-          octMesh.rotation.y = -time * 0.03;
-          octMesh.rotation.z = time * 0.02;
-          ringMesh.rotation.z = time * 0.012;
+        // Apply interactive drag rotation with momentum damping
+        prismGroup.rotation.y += rotVelocityY;
+        prismGroup.rotation.x += rotVelocityX;
+        rotVelocityY *= 0.92;
+        rotVelocityX *= 0.92;
 
-          // Gentle vertical breathing float
-          prismGroup.position.y = 5 + Math.sin(time * 0.5) * 3;
-        }
+        // Base continuous meditative rotation
+        icoMesh.rotation.y += 0.003;
+        icoMesh.rotation.x += 0.0018;
+        octMesh.rotation.y -= 0.004;
+        octMesh.rotation.z += 0.0025;
+        ringMesh1.rotation.z += 0.002;
+        ringMesh2.rotation.z -= 0.0018;
+
+        // Gentle breathing float
+        prismGroup.position.y = 6 + Math.sin(time * 0.6) * 3.5;
       }
 
-      // Shockwave propagation
+      // Quantum shockwave propagation
       if (shockwaveActive) {
-        shockwaveRadius += delta * 280;
-        if (shockwaveRadius > 400) {
+        shockwaveRadius += delta * 320;
+        if (shockwaveRadius > 450) {
           shockwaveActive = false;
         }
       }
 
-      // Peaceful embers drift
-      if (elements.floatingEmbers) {
-        const pos = emberGeo.attributes.position.array as Float32Array;
-        for (let i = 0; i < emberCount; i++) {
-          const i3 = i * 3;
-          pos[i3 + 1] += emberSpeeds[i] * 0.7; // slow upward drift
-          if (pos[i3 + 1] > 180) {
-            pos[i3 + 1] = -180;
-            pos[i3] = (Math.random() - 0.5) * 450;
-          }
+      // Dynamic Particle Embers with Mouse Proximity Attraction
+      const pos = emberGeo.attributes.position.array as Float32Array;
+      const mouseWorldX = currentX * 120;
+      const mouseWorldY = -currentY * 80;
 
-          // Gentle shockwave ripple effect
-          if (shockwaveActive) {
-            const dist = Math.sqrt(pos[i3] * pos[i3] + pos[i3 + 1] * pos[i3 + 1]);
-            const diff = Math.abs(dist - shockwaveRadius);
-            if (diff < 30) {
-              pos[i3 + 1] += (1 - diff / 30) * 1.5;
-            }
+      for (let i = 0; i < emberCount; i++) {
+        const i3 = i * 3;
+        pos[i3 + 1] += emberSpeeds[i] * 0.75;
+        if (pos[i3 + 1] > 180) {
+          pos[i3 + 1] = -180;
+          pos[i3] = (Math.random() - 0.5) * 450;
+        }
+
+        // Mouse proximity gentle attraction
+        const dx = mouseWorldX - pos[i3];
+        const dy = mouseWorldY - pos[i3 + 1];
+        const distToMouse = Math.sqrt(dx * dx + dy * dy);
+        if (distToMouse < 80 && distToMouse > 5) {
+          pos[i3] += (dx / distToMouse) * 0.35;
+          pos[i3 + 1] += (dy / distToMouse) * 0.35;
+        }
+
+        // Shockwave ripple impulse
+        if (shockwaveActive) {
+          const dist = Math.sqrt(pos[i3] * pos[i3] + pos[i3 + 1] * pos[i3 + 1]);
+          const diff = Math.abs(dist - shockwaveRadius);
+          if (diff < 35) {
+            pos[i3 + 1] += (1 - diff / 35) * 2.2;
           }
         }
-        emberGeo.attributes.position.needsUpdate = true;
-
-        // Subtle luminosity pulse
-        emberMat.opacity = 0.45 + Math.sin(time * 0.8) * 0.08;
       }
+      emberGeo.attributes.position.needsUpdate = true;
+      emberMat.opacity = 0.5 + Math.sin(time * 0.8) * 0.1;
 
-      // Silky undulating wave motion (fluid, spacious)
-      if (elements.silkyWave) {
-        const wavePos = waveGeo.attributes.position;
-        for (let i = 0; i < wavePos.count; i++) {
-          const u = wavePos.getX(i);
-          const v = wavePos.getY(i);
-          // Very gentle harmonic wave
-          const z =
-            Math.sin(u * 0.025 + time * 0.8) * 6.0 +
-            Math.cos(v * 0.03 + time * 0.6) * 4.5;
-          wavePos.setZ(i, z);
+      // Silky undulating wave motion
+      const wavePos = waveGeo.attributes.position;
+      for (let i = 0; i < wavePos.count; i++) {
+        const u = wavePos.getX(i);
+        const v = wavePos.getY(i);
+        let z =
+          Math.sin(u * 0.025 + time * 0.85) * 6.5 +
+          Math.cos(v * 0.03 + time * 0.65) * 5.0;
+
+        if (shockwaveActive) {
+          const waveDist = Math.sqrt(u * u + v * v);
+          const diff = Math.abs(waveDist - shockwaveRadius * 0.7);
+          if (diff < 40) {
+            z += (1 - diff / 40) * 8.0;
+          }
         }
-        waveGeo.attributes.position.needsUpdate = true;
+        wavePos.setZ(i, z);
       }
+      waveGeo.attributes.position.needsUpdate = true;
 
       renderer.render(scene, camera);
     };
@@ -330,6 +404,8 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('click', handleWindowClick);
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -344,8 +420,10 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       icoMat.dispose();
       octGeo.dispose();
       octMat.dispose();
-      ringGeo.dispose();
-      ringMat.dispose();
+      ringGeo1.dispose();
+      ringMat1.dispose();
+      ringGeo2.dispose();
+      ringMat2.dispose();
       waveGeo.dispose();
       waveMat.dispose();
       emberTexture.dispose();
@@ -363,13 +441,47 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
-      style={{
-        background: 'radial-gradient(ellipse at 50% 30%, #0d0722 0%, #05030a 70%, #030107 100%)',
-      }}
-      aria-hidden="true"
-    />
+    <>
+      {/* 3D WebGL Canvas Container */}
+      <div
+        ref={containerRef}
+        className="fixed inset-0 z-0 overflow-hidden pointer-events-auto"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 30%, #0d0722 0%, #05030a 70%, #030107 100%)',
+          touchAction: 'pan-y',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Floating 3D Interaction Control Pill */}
+      <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2 pointer-events-auto select-none">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0d0720]/80 backdrop-blur-xl border border-purple-500/30 text-white shadow-xl shadow-purple-950/60 text-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="hidden sm:inline font-mono text-[10px] text-zinc-300">
+            3D Space Active • Drag to Spin
+          </span>
+          <button
+            type="button"
+            onClick={() => shockwaveTriggerRef.current?.()}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-600/30 hover:bg-purple-600/60 border border-purple-400/40 text-[10px] font-semibold text-purple-200 hover:text-white transition-all cursor-pointer active:scale-95"
+            title="Trigger 3D Quantum Shockwave"
+          >
+            <Zap className="w-3 h-3 text-yellow-400" />
+            <span>Pulse Wave</span>
+          </button>
+          {onReplayIntro && (
+            <button
+              type="button"
+              onClick={onReplayIntro}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.12] border border-white/10 text-[10px] font-medium text-slate-300 hover:text-white transition-all cursor-pointer active:scale-95"
+              title="Replay 3D Intro"
+            >
+              <RotateCcw className="w-3 h-3 text-purple-400" />
+              <span className="hidden md:inline">Intro</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
