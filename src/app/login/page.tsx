@@ -121,10 +121,19 @@ function LoginContent() {
         {/* Card Box */}
         <div className="bg-[#0a0618] border border-purple-800/40 rounded-3xl shadow-2xl shadow-purple-950/70 overflow-hidden text-slate-100 p-6 sm:p-9 relative backdrop-blur-xl">
           
+          {/* Background subtle watermark */}
+          <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 pointer-events-none opacity-[0.05] w-64 h-64 overflow-hidden" aria-hidden="true">
+            <img src="/logo-icon.png" alt="" className="w-full h-full object-contain" />
+          </div>
+
           {/* Header Badge */}
-          <div className="text-center mb-7">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-700 via-indigo-600 to-purple-500 shadow-xl shadow-purple-900/50 mb-3.5 text-white">
-              <Sparkles className="w-7 h-7" />
+          <div className="text-center mb-7 relative z-10">
+            <div className="flex justify-center mb-4">
+              <img
+                src="/logo.png"
+                alt="ILLUMINATE"
+                className="h-16 w-auto object-contain drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]"
+              />
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">

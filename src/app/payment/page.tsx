@@ -264,7 +264,7 @@ function PaymentContent() {
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-xs font-bold text-purple-300 uppercase tracking-widest mb-3 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <img src="/logo-icon.png" alt="" className="w-3.5 h-3.5 object-contain" />
             <span>Step 2: Confirm Workshop Pass</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
@@ -276,8 +276,11 @@ function PaymentContent() {
         </div>
 
         {/* Pricing & Unique Ticket ID Overview Card */}
-        <div className="glass-card rounded-3xl p-6 sm:p-7 border border-purple-800/40 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl">
-          <div>
+        <div className="glass-card rounded-3xl p-6 sm:p-7 border border-purple-800/40 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute right-0 bottom-0 translate-x-6 translate-y-6 pointer-events-none opacity-[0.05] w-56 h-56 overflow-hidden" aria-hidden="true">
+            <img src="/logo-icon.png" alt="" className="w-full h-full object-contain" />
+          </div>
+          <div className="relative z-10">
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase font-extrabold text-purple-400 tracking-wider">
                 Pass Holder

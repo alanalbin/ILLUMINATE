@@ -142,8 +142,8 @@ export default function RegisterPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-[#05030a] py-36 flex flex-col items-center justify-center px-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-purple-900/50 border border-purple-700/50 flex items-center justify-center text-purple-300 mb-4 animate-pulse">
-          <Sparkles className="w-6 h-6" />
+        <div className="flex justify-center mb-4">
+          <img src="/logo-icon.png" alt="ILLUMINATE" className="h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
         </div>
         <h2 className="text-xl font-bold text-white mb-2">Sign In Required to Register</h2>
         <p className="text-sm text-slate-400 max-w-sm mb-6">
@@ -170,7 +170,7 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-800/40 text-xs font-semibold text-purple-300 uppercase tracking-widest mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <img src="/logo-icon.png" alt="" className="w-3.5 h-3.5 object-contain" />
             <span>Participant Registration</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">

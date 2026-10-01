@@ -108,8 +108,8 @@ export default function AuthModal() {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 shadow-lg shadow-purple-900/50 mb-3 text-white">
-            <Sparkles className="w-6 h-6" />
+          <div className="flex justify-center mb-3">
+            <img src="/logo-icon.png" alt="ILLUMINATE" className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
           </div>
 
           <h2 className="text-2xl font-black tracking-tight text-white">

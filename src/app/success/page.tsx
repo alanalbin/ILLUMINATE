@@ -154,18 +154,30 @@ function SuccessContent() {
           ref={passRef}
           className="rounded-3xl bg-gradient-to-b from-[#140b2a] via-[#0d071c] to-[#080413] border-2 border-purple-500/30 p-8 shadow-2xl relative overflow-hidden print:border-black print:bg-white print:text-black"
         >
+          {/* Subtle Pass Watermark of Logo */}
+          <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 pointer-events-none opacity-[0.05] w-96 h-96 overflow-hidden print:hidden" aria-hidden="true">
+            <img src="/logo.png" alt="" className="w-full h-full object-contain" />
+          </div>
+
           {/* Top Pass Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-900/50 pb-6 print:border-gray-300">
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-purple-400 print:text-purple-700">
-                E-Cell, IIT Bombay Initiative
-              </span>
-              <h1 className="text-3xl font-black text-white tracking-wider mt-1 print:text-black">
-                ILLUMINATE PASS
-              </h1>
-              <p className="text-xs text-slate-300 mt-0.5 print:text-gray-600">
-                KMCT College of Engineering, Kasaragod
-              </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-900/50 pb-6 print:border-gray-300 relative z-10">
+            <div className="flex items-center gap-3.5">
+              <img
+                src="/logo-icon.png"
+                alt="ILLUMINATE"
+                className="h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+              />
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-purple-400 print:text-purple-700">
+                  E-Cell, IIT Bombay Initiative
+                </span>
+                <h1 className="text-3xl font-black text-white tracking-wider mt-0.5 print:text-black">
+                  ILLUMINATE PASS
+                </h1>
+                <p className="text-xs text-slate-300 mt-0.5 print:text-gray-600">
+                  KMCT College of Engineering, Kasaragod
+                </p>
+              </div>
             </div>
 
             <div className="text-left sm:text-right flex items-center sm:items-start gap-4 justify-between sm:justify-end">

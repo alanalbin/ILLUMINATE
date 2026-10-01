@@ -15,9 +15,11 @@ export default function Navbar() {
         
         {/* Brand Logo / Wordmark */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-700 to-indigo-500 flex items-center justify-center shadow-md shadow-purple-900/50 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+          <img
+            src="/logo-icon.png"
+            alt="ILLUMINATE Logo"
+            className="h-9 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]"
+          />
           <div className="flex flex-col">
             <span className="font-extrabold text-base tracking-widest text-white uppercase group-hover:text-purple-300 transition-colors">
               ILLUMINATE

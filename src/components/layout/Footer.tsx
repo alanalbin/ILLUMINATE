@@ -13,10 +13,12 @@ export default function Footer() {
           
           {/* Col 1: Brand & Mission */}
           <div className="md:col-span-1 space-y-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-md bg-purple-700 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-white" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo-icon.png"
+                alt="ILLUMINATE Logo"
+                className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+              />
               <span className="font-extrabold text-sm tracking-widest text-white uppercase">
                 ILLUMINATE
               </span>

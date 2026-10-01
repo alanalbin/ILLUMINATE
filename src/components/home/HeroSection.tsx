@@ -79,7 +79,7 @@ export default function HeroSection({ event }: HeroSectionProps) {
             {/* Event Association Badges */}
             <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2.5 mb-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/70 border border-purple-500/30 text-xs font-semibold text-purple-300 shadow-sm backdrop-blur-md">
-                <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                <img src="/logo-icon.png" alt="" className="w-4 h-4 object-contain" />
                 <span>E-Cell, IIT Bombay Initiative</span>
               </div>
 
@@ -192,16 +192,27 @@ export default function HeroSection({ event }: HeroSectionProps) {
                 {/* Glowing Corner Ambient */}
                 <div className="absolute top-0 right-0 w-36 h-36 bg-purple-600/20 rounded-full blur-2xl pointer-events-none group-hover:bg-purple-500/30 transition-all duration-500" />
 
+                {/* Background Watermark of Logo */}
+                <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 pointer-events-none opacity-[0.06] w-64 h-64 overflow-hidden" aria-hidden="true">
+                  <img src="/logo-icon.png" alt="" className="w-full h-full object-contain" />
+                </div>
+
                 {/* Card Header & Live Badge */}
-                <div className="flex items-center justify-between pb-5 border-b border-purple-950/60 mb-6">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-                      Offline Masterclass
-                    </span>
-                    <h3 className="text-xl font-black text-white mt-1">
-                      Official Workshop Pass
-                    </h3>
+                <div className="flex items-center justify-between pb-5 border-b border-purple-950/60 mb-6 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/logo-icon.png"
+                      alt="ILLUMINATE"
+                      className="h-9 w-auto object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+                    />
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 block">
+                        Offline Masterclass
+                      </span>
+                      <h3 className="text-xl font-black text-white mt-0.5">
+                        Official Workshop Pass
+                      </h3>
+                    </div>
                   </div>
                   <div className="px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-600/40 text-[11px] font-bold text-emerald-300 flex items-center gap-1.5 shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

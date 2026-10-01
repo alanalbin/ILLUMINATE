@@ -29,8 +29,13 @@ export default function CtaBanner({ fee }: CtaBannerProps) {
           <TouchInteractiveTilt maxTilt={5} glareOpacity={0.25}>
             <div className="rounded-3xl bg-gradient-to-b from-purple-950/70 via-[#0d0720] to-indigo-950/50 border border-purple-600/40 p-9 sm:p-14 text-center shadow-2xl shadow-purple-950/80 backdrop-blur-2xl relative overflow-hidden">
               
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-900/50 border border-purple-500/40 text-xs font-bold text-purple-300 mb-6 shadow-sm">
-                <Sparkles className="w-4 h-4 text-purple-400" />
+              {/* Card Watermark */}
+              <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 pointer-events-none opacity-[0.06] w-80 h-80 overflow-hidden" aria-hidden="true">
+                <img src="/logo.png" alt="" className="w-full h-full object-contain" />
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-900/50 border border-purple-500/40 text-xs font-bold text-purple-300 mb-6 shadow-sm relative z-10">
+                <img src="/logo-icon.png" alt="" className="w-4 h-4 object-contain" />
                 <span>Offline Masterclass • Kasaragod</span>
               </div>
 

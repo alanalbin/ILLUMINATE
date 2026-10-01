@@ -59,11 +59,22 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#05030a] text-slate-100 font-sans selection:bg-purple-600 selection:text-white antialiased">
+      <body className="min-h-screen flex flex-col bg-[#05030a] text-slate-100 font-sans selection:bg-purple-600 selection:text-white antialiased relative">
+        {/* Ambient Brand Logo Watermark Background (Low Opacity) */}
+        <div 
+          className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden" 
+          aria-hidden="true"
+        >
+          <img
+            src="/logo.png"
+            alt=""
+            className="w-[1050px] max-w-[95vw] h-auto object-contain opacity-[0.045] select-none filter blur-[0.4px] scale-110 sm:scale-125"
+          />
+        </div>
         <ScrollProgressBar />
         <AuthProvider>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 relative z-10">{children}</main>
           <Footer />
           <AuthModal />
         </AuthProvider>
