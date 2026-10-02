@@ -57,13 +57,12 @@ export default function DisplayWorkstation3D() {
         </div>
 
         {/* 3D Scroll Popup Container */}
-        <div className="perspective-[1400px]">
+        <div className="md:perspective-[1400px]">
           <motion.div
-            initial={{ opacity: 0, y: 70, rotateX: 18, scale: 0.92 }}
-            whileInView={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-            style={{ transformStyle: 'preserve-3d' }}
+            initial={{ opacity: 0, y: 35 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
           >
             <TouchInteractiveTilt maxTilt={6} glareOpacity={0.2} className="w-full">
               
@@ -112,11 +111,11 @@ export default function DisplayWorkstation3D() {
                   </div>
 
                   {/* Display Sub-Navigation Tabs */}
-                  <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5 bg-black/40 text-xs">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between border-b border-white/[0.06] px-3 sm:px-4 py-2 sm:py-2.5 bg-black/40 text-xs gap-2 overflow-x-auto scrollbar-none">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                       <button
                         onClick={() => setActiveTab('terminal')}
-                        className={`px-3 py-1.5 rounded-md font-mono text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-md font-mono text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap ${
                           activeTab === 'terminal'
                             ? 'bg-white/10 text-white font-semibold'
                             : 'text-zinc-500 hover:text-zinc-300'
@@ -128,7 +127,7 @@ export default function DisplayWorkstation3D() {
 
                       <button
                         onClick={() => setActiveTab('curriculum')}
-                        className={`px-3 py-1.5 rounded-md font-mono text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-md font-mono text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap ${
                           activeTab === 'curriculum'
                             ? 'bg-white/10 text-white font-semibold'
                             : 'text-zinc-500 hover:text-zinc-300'
@@ -140,7 +139,7 @@ export default function DisplayWorkstation3D() {
 
                       <button
                         onClick={() => setActiveTab('credentials')}
-                        className={`px-3 py-1.5 rounded-md font-mono text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-md font-mono text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap ${
                           activeTab === 'credentials'
                             ? 'bg-white/10 text-white font-semibold'
                             : 'text-zinc-500 hover:text-zinc-300'

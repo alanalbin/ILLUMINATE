@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 
 interface TouchInteractiveTiltProps {
   children: React.ReactNode;
@@ -16,16 +16,27 @@ export default function TouchInteractiveTilt({
   glareOpacity = 0.25,
 }: TouchInteractiveTiltProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState<string>('perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)');
+  const [transform, setTransform] = useState<string>('none');
   const [glarePosition, setGlarePosition] = useState<{ x: number; y: number; opacity: number }>({
     x: 50,
     y: 50,
     opacity: 0,
   });
   const [isHovered, setIsHovered] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const isTouch =
+      typeof window !== 'undefined' &&
+      (window.matchMedia('(pointer: coarse)').matches ||
+        window.innerWidth < 768 ||
+        'ontouchstart' in window);
+    setIsTouchDevice(isTouch);
+  }, []);
 
   const handleMove = useCallback(
     (clientX: number, clientY: number) => {
+      if (isTouchDevice) return;
       const card = cardRef.current;
       if (!card) return;
 
@@ -53,24 +64,18 @@ export default function TouchInteractiveTilt({
         opacity: glareOpacity,
       });
     },
-    [maxTilt, glareOpacity]
+    [maxTilt, glareOpacity, isTouchDevice]
   );
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isTouchDevice || e.pointerType === 'touch') return;
     setIsHovered(true);
     handleMove(e.clientX, e.clientY);
   };
 
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.touches.length > 0) {
-      setIsHovered(true);
-      handleMove(e.touches[0].clientX, e.touches[0].clientY);
-    }
-  };
-
   const handlePointerLeave = () => {
     setIsHovered(false);
-    setTransform('perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)');
+    setTransform('none');
     setGlarePosition((prev) => ({ ...prev, opacity: 0 }));
   };
 
@@ -79,12 +84,10 @@ export default function TouchInteractiveTilt({
       ref={cardRef}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handlePointerLeave}
       className={`relative transition-transform duration-200 ease-out will-change-transform ${className}`}
       style={{
-        transform,
-        transformStyle: 'preserve-3d',
+        transform: isTouchDevice ? 'none' : transform,
+        transformStyle: isTouchDevice ? 'flat' : 'preserve-3d',
       }}
     >
       {children}
