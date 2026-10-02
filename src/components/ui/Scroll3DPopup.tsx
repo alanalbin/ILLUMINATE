@@ -37,28 +37,28 @@ export default function Scroll3DPopup({
   // Dynamic 3D perspective transformations mapped to scroll entry, focus, and departure
   const scrollRotateX = useTransform(
     smoothProgress,
-    [0, 0.42, 0.58, 1],
-    [14, 0, 0, -11]
+    [0, 0.38, 0.7, 1],
+    [12, 0, 0, -3]
   );
   const scrollScale = useTransform(
     smoothProgress,
-    [0, 0.42, 0.58, 1],
-    [0.92, 1, 1, 0.94]
+    [0, 0.38, 0.7, 1],
+    [0.94, 1, 1, 0.99]
   );
   const scrollOpacity = useTransform(
     smoothProgress,
-    [0, 0.18, 0.82, 1],
-    [0.45, 1, 1, 0.5]
+    [0, 0.2, 0.8, 1],
+    [0.55, 1, 1, 0.95]
   );
   const scrollY = useTransform(
     smoothProgress,
-    [0, 0.45, 0.55, 1],
-    [40, 0, 0, -30]
+    [0, 0.38, 0.7, 1],
+    [35, 0, 0, 0]
   );
   const scrollZ = useTransform(
     smoothProgress,
-    [0, 0.42, 0.58, 1],
-    [-80, 0, 0, -70]
+    [0, 0.38, 0.7, 1],
+    [-60, 0, 0, -15]
   );
 
   return (

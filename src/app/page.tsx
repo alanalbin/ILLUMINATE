@@ -74,7 +74,9 @@ export default async function HomePage() {
       </Scroll3DPopup>
 
       {/* Final Action Banner */}
-      <CtaBanner fee={event.registrationFee} />
+      <Scroll3DPopup delay={0.05}>
+        <CtaBanner fee={event.registrationFee} />
+      </Scroll3DPopup>
     </div>
   );
 }
