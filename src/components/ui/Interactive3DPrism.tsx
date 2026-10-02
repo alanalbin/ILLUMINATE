@@ -6,108 +6,105 @@ import {
   Sparkles,
   Zap,
   Activity,
-  Layers,
-  Cpu,
   Flame,
   Radio,
   RotateCcw,
-  CheckCircle2,
+  CircleDot,
+  Orbit,
+  Compass,
 } from 'lucide-react';
 
 interface Interactive3DPrismProps {
   className?: string;
 }
 
-type TopologyType = 'knot' | 'spark' | 'lattice' | 'singularity';
-type PillarType = 'ideate' | 'validate' | 'prototype' | 'scale';
+type BlackHoleType = 'gargantua' | 'cygnus' | 'sagittarius' | 'primordial';
 
-interface PillarConfig {
+interface BlackHoleConfig {
   name: string;
-  tagline: string;
+  classification: string;
   themeColor: string;
-  hexColor: number;
-  emissiveHex: number;
+  coreHex: number;
+  plasmaHex: number;
   accentHex: number;
-  frequency: string;
-  metric: string;
-  metricLabel: string;
+  spinParam: string;
+  velocity: string;
+  description: string;
 }
 
-const PILLARS: Record<PillarType, PillarConfig> = {
-  ideate: {
-    name: 'Ideate',
-    tagline: 'Problem Validation & Market Need',
-    themeColor: 'from-violet-500 to-purple-600',
-    hexColor: 0x9333ea,
-    emissiveHex: 0x581c87,
+const BLACK_HOLE_MODES: Record<BlackHoleType, BlackHoleConfig> = {
+  gargantua: {
+    name: 'Gargantua',
+    classification: 'Supermassive Kerr Singularity',
+    themeColor: 'from-violet-500 via-purple-500 to-cyan-400',
+    coreHex: 0x9333ea,
+    plasmaHex: 0x38bdf8,
     accentHex: 0xc084fc,
-    frequency: '540 THz',
-    metric: '94%',
-    metricLabel: 'Opportunity Match',
+    spinParam: 'a* = 0.998',
+    velocity: '0.92 c',
+    description: 'Relativistic Doppler beaming with warped Einstein lensing ring',
   },
-  validate: {
-    name: 'Validate',
-    tagline: 'Unit Economics, CAC & LTV',
-    themeColor: 'from-cyan-400 to-blue-600',
-    hexColor: 0x06b6d4,
-    emissiveHex: 0x0e7490,
+  cygnus: {
+    name: 'Cygnus X-1',
+    classification: 'High-Energy Stellar Microquasar',
+    themeColor: 'from-cyan-400 via-blue-500 to-indigo-600',
+    coreHex: 0x06b6d4,
+    plasmaHex: 0x60a5fa,
     accentHex: 0x38bdf8,
-    frequency: '680 THz',
-    metric: '3.4x',
-    metricLabel: 'LTV:CAC Target',
+    spinParam: 'a* = 0.950',
+    velocity: '0.88 c',
+    description: 'Hyper-collimated relativistic X-ray polar plasma jets',
   },
-  prototype: {
-    name: 'Prototype',
-    tagline: 'Rapid MVP & Lean Architecture',
-    themeColor: 'from-emerald-400 to-teal-600',
-    hexColor: 0x10b981,
-    emissiveHex: 0x065f46,
-    accentHex: 0x34d399,
-    frequency: '590 THz',
-    metric: '< 48h',
-    metricLabel: 'Sprint Velocity',
+  sagittarius: {
+    name: 'Sagittarius A*',
+    classification: 'Milky Way Galactic Supermassive Core',
+    themeColor: 'from-amber-400 via-orange-500 to-rose-600',
+    coreHex: 0xf59e0b,
+    plasmaHex: 0xfbbf24,
+    accentHex: 0xf97316,
+    spinParam: 'a* = 0.900',
+    velocity: '0.82 c',
+    description: 'Dense turbulent thermal accretion flow with solar flare eruptions',
   },
-  scale: {
-    name: 'Scale',
-    tagline: 'Venture Pitching & Traction Loops',
-    themeColor: 'from-amber-400 to-orange-600',
-    hexColor: 0xf59e0b,
-    emissiveHex: 0x78350f,
-    accentHex: 0xfbbf24,
-    frequency: '450 THz',
-    metric: '10x',
-    metricLabel: 'Growth Potential',
+  primordial: {
+    name: 'Primordial',
+    classification: 'Quantum Micro-Singularity',
+    themeColor: 'from-fuchsia-400 via-pink-500 to-rose-500',
+    coreHex: 0xe879f9,
+    plasmaHex: 0xf472b6,
+    accentHex: 0xffffff,
+    spinParam: 'a* = 0.999',
+    velocity: '0.98 c',
+    description: 'Quantum gravitational frame dragging & Hawking radiation glow',
   },
 };
 
 export default function Interactive3DPrism({ className = '' }: Interactive3DPrismProps) {
   const mountRef = useRef<HTMLDivElement>(null);
 
-  // Interactive UI State
-  const [selectedTopology, setSelectedTopology] = useState<TopologyType>('knot');
-  const [activePillar, setActivePillar] = useState<PillarType>('ideate');
-  const [isDisrupted, setIsDisrupted] = useState(false);
-  const [disruptCooldown, setDisruptCooldown] = useState(false);
-  const [energySurges, setEnergySurges] = useState(0);
-  const [livePulse, setLivePulse] = useState(false);
+  // Component UI State
+  const [activeMode, setActiveMode] = useState<BlackHoleType>('gargantua');
+  const [massConsumed, setMassConsumed] = useState<number>(14);
+  const [isFeeding, setIsFeeding] = useState<boolean>(false);
+  const [jetOverdrive, setJetOverdrive] = useState<boolean>(false);
 
-  // Callbacks to interact with Three.js scene
-  const switchTopologyRef = useRef<((t: TopologyType) => void) | null>(null);
-  const triggerDisruptRef = useRef<(() => void) | null>(null);
-  const triggerSurgeRef = useRef<(() => void) | null>(null);
-  const updateColorsRef = useRef<((pillar: PillarConfig) => void) | null>(null);
+  // Three.js direct bridge refs
+  const feedStarRef = useRef<((customX?: number, customY?: number) => void) | null>(null);
+  const triggerJetRef = useRef<(() => void) | null>(null);
+  const updateModeRef = useRef<((config: BlackHoleConfig) => void) | null>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const width = mount.clientWidth || 480;
-    const height = mount.clientHeight || 320;
+    const width = mount.clientWidth || 540;
+    const height = mount.clientHeight || 340;
 
     // 1. Scene, Camera & WebGL Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 9.2);
+    camera.position.set(0, 1.2, 9.5);
+    camera.lookAt(0, 0, 0);
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -123,336 +120,374 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       return;
     }
 
-    // 2. Dynamic Lighting
-    const ambientLight = new THREE.AmbientLight(0x180b2c, 1.4);
+    // 2. Scene Lighting
+    const ambientLight = new THREE.AmbientLight(0x0e061c, 1.6);
     scene.add(ambientLight);
 
-    const primaryLight = new THREE.PointLight(PILLARS.ideate.hexColor, 3.8, 25);
-    primaryLight.position.set(6, 6, 6);
-    scene.add(primaryLight);
+    const accretionLight1 = new THREE.PointLight(BLACK_HOLE_MODES.gargantua.coreHex, 4.2, 30);
+    accretionLight1.position.set(4, 2, 5);
+    scene.add(accretionLight1);
 
-    const secondaryLight = new THREE.PointLight(PILLARS.ideate.accentHex, 3.0, 25);
-    secondaryLight.position.set(-6, -6, 5);
-    scene.add(secondaryLight);
+    const accretionLight2 = new THREE.PointLight(BLACK_HOLE_MODES.gargantua.plasmaHex, 3.8, 30);
+    accretionLight2.position.set(-4, -2, 4);
+    scene.add(accretionLight2);
 
-    const cursorFollowerLight = new THREE.PointLight(0xffffff, 2.5, 18);
-    cursorFollowerLight.position.set(0, 0, 7);
-    scene.add(cursorFollowerLight);
+    const jetLight = new THREE.PointLight(0xffffff, 3.5, 20);
+    jetLight.position.set(0, 5, 0);
+    scene.add(jetLight);
 
-    // 3. Levitation & Gravity Group
-    const reactorGroup = new THREE.Group();
-    scene.add(reactorGroup);
+    // 3. Black Hole Root Group (Tilts with cursor frame-dragging)
+    const blackHoleGroup = new THREE.Group();
+    // Default tilt to showcase the accretion disk and polar jets in 3D
+    blackHoleGroup.rotation.x = 0.38;
+    blackHoleGroup.rotation.z = -0.15;
+    scene.add(blackHoleGroup);
 
     // =========================================================================
-    // 4. TOPOLOGICAL MORPH GEOMETRIES (Knot, Spark, Lattice, Singularity)
+    // 4. THE EVENT HORIZON (Schwarzschild Singularity Core)
     // =========================================================================
-    // 4A. Hyperloop Knot
-    const knotGeo = new THREE.TorusKnotGeometry(1.6, 0.44, 100, 16, 2, 3);
-    const knotMat = new THREE.MeshPhongMaterial({
-      color: PILLARS.ideate.hexColor,
-      emissive: PILLARS.ideate.emissiveHex,
-      specular: 0xffffff,
-      shininess: 90,
+    // Pure black void sphere that blocks all light behind it
+    const eventHorizonRadius = 1.45;
+    const horizonGeo = new THREE.SphereGeometry(eventHorizonRadius, 40, 40);
+    const horizonMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      depthWrite: true,
+    });
+    const horizonMesh = new THREE.Mesh(horizonGeo, horizonMat);
+    blackHoleGroup.add(horizonMesh);
+
+    // Inner dark gravitational shadow gradient
+    const shadowHaloGeo = new THREE.SphereGeometry(eventHorizonRadius * 1.02, 32, 32);
+    const shadowHaloMat = new THREE.MeshBasicMaterial({
+      color: 0x05020c,
+      transparent: true,
+      opacity: 0.95,
       wireframe: false,
-      transparent: true,
-      opacity: 0.85,
-      flatShading: true,
     });
-    const knotMesh = new THREE.Mesh(knotGeo, knotMat);
-    reactorGroup.add(knotMesh);
+    const shadowHalo = new THREE.Mesh(shadowHaloGeo, shadowHaloMat);
+    blackHoleGroup.add(shadowHalo);
 
-    // Wireframe overlay for Knot
-    const knotWireGeo = knotGeo;
-    const knotWireMat = new THREE.MeshBasicMaterial({
-      color: PILLARS.ideate.accentHex,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.35,
-    });
-    const knotWireMesh = new THREE.Mesh(knotWireGeo, knotWireMat);
-    knotMesh.add(knotWireMesh);
-
-    // 4B. Quantum Spark (Faceted Icosahedron)
-    const sparkGeo = new THREE.IcosahedronGeometry(2.1, 0);
-    const sparkMat = new THREE.MeshPhongMaterial({
-      color: PILLARS.ideate.hexColor,
-      emissive: PILLARS.ideate.emissiveHex,
-      specular: 0xffffff,
-      shininess: 100,
-      wireframe: false,
-      transparent: true,
-      opacity: 0.85,
-      flatShading: true,
-    });
-    const sparkMesh = new THREE.Mesh(sparkGeo, sparkMat);
-    sparkMesh.scale.set(0.001, 0.001, 0.001);
-    sparkMesh.visible = false;
-    reactorGroup.add(sparkMesh);
-
-    const sparkWireMat = new THREE.MeshBasicMaterial({
-      color: PILLARS.ideate.accentHex,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.45,
-    });
-    const sparkWireMesh = new THREE.Mesh(sparkGeo, sparkWireMat);
-    sparkMesh.add(sparkWireMesh);
-
-    // 4C. Neural Matrix (Geodesic Dodecahedron)
-    const latticeGeo = new THREE.DodecahedronGeometry(2.1, 1);
-    const latticeMat = new THREE.MeshBasicMaterial({
-      color: PILLARS.ideate.accentHex,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.7,
-    });
-    const latticeMesh = new THREE.Mesh(latticeGeo, latticeMat);
-    latticeMesh.scale.set(0.001, 0.001, 0.001);
-    latticeMesh.visible = false;
-    reactorGroup.add(latticeMesh);
-
-    // Inner glowing core for lattice
-    const innerSphereGeo = new THREE.SphereGeometry(1.0, 16, 16);
-    const innerSphereMat = new THREE.MeshBasicMaterial({
+    // =========================================================================
+    // 5. PHOTON SPHERE & GRAVITATIONAL LENSING RINGS (Einstein Ring)
+    // =========================================================================
+    // The razor-thin glowing sphere where trapped photons circle the singularity
+    const photonRingGeo = new THREE.RingGeometry(eventHorizonRadius * 1.04, eventHorizonRadius * 1.18, 64);
+    const photonRingMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
+      side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
     });
-    const innerSphereMesh = new THREE.Mesh(innerSphereGeo, innerSphereMat);
-    latticeMesh.add(innerSphereMesh);
+    const photonRing = new THREE.Mesh(photonRingGeo, photonRingMat);
+    blackHoleGroup.add(photonRing);
 
-    // 4D. Singularity Core (Dual Octahedron)
-    const singGeo = new THREE.OctahedronGeometry(2.0, 0);
-    const singMat = new THREE.MeshPhongMaterial({
-      color: PILLARS.ideate.hexColor,
-      emissive: PILLARS.ideate.emissiveHex,
-      specular: 0xffffff,
-      shininess: 110,
-      flatShading: true,
+    // Gargantua Vertical Lensing Halo (The iconic light bent over the poles from the rear accretion disk)
+    const verticalLensingGeo = new THREE.TorusGeometry(eventHorizonRadius * 1.28, 0.16, 24, 80);
+    const verticalLensingMat = new THREE.MeshBasicMaterial({
+      color: BLACK_HOLE_MODES.gargantua.plasmaHex,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
     });
-    const singMesh = new THREE.Mesh(singGeo, singMat);
-    singMesh.scale.set(0.001, 0.001, 0.001);
-    singMesh.visible = false;
-    reactorGroup.add(singMesh);
+    const verticalLensing = new THREE.Mesh(verticalLensingGeo, verticalLensingMat);
+    verticalLensing.rotation.y = Math.PI / 2;
+    blackHoleGroup.add(verticalLensing);
 
-    const singInnerGeo = new THREE.OctahedronGeometry(1.2, 0);
-    const singInnerMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      wireframe: true,
-    });
-    const singInnerMesh = new THREE.Mesh(singInnerGeo, singInnerMat);
-    singMesh.add(singInnerMesh);
-
-    const meshes: Record<TopologyType, THREE.Mesh> = {
-      knot: knotMesh,
-      spark: sparkMesh,
-      lattice: latticeMesh,
-      singularity: singMesh,
-    };
-
-    let activeMesh: THREE.Mesh = knotMesh;
-    let targetMesh: THREE.Mesh = knotMesh;
-
-    switchTopologyRef.current = (nextTopology: TopologyType) => {
-      const nextMesh = meshes[nextTopology];
-      if (nextMesh === targetMesh) return;
-
-      targetMesh = nextMesh;
-      targetMesh.visible = true;
-      targetMesh.scale.set(0.1, 0.1, 0.1);
-
-      // Trigger transition energy flash
-      primaryLight.intensity = 8.0;
-      secondaryLight.intensity = 6.0;
-    };
-
-    // =========================================================================
-    // 5. MAGNETIC CONTAINMENT RINGS & ORBITAL SATELLITE PROBES
-    // =========================================================================
-    const ringGroup = new THREE.Group();
-    reactorGroup.add(ringGroup);
-
-    const ring1Geo = new THREE.TorusGeometry(3.1, 0.04, 12, 64);
-    const ring1Mat = new THREE.MeshBasicMaterial({
-      color: PILLARS.ideate.accentHex,
+    // Secondary concentric lensing halo
+    const secondaryLensingGeo = new THREE.TorusGeometry(eventHorizonRadius * 1.48, 0.08, 16, 80);
+    const secondaryLensingMat = new THREE.MeshBasicMaterial({
+      color: BLACK_HOLE_MODES.gargantua.coreHex,
       transparent: true,
       opacity: 0.45,
       blending: THREE.AdditiveBlending,
     });
-    const ring1Mesh = new THREE.Mesh(ring1Geo, ring1Mat);
-    ringGroup.add(ring1Mesh);
-
-    const ring2Geo = new THREE.TorusGeometry(3.5, 0.035, 12, 64);
-    const ring2Mat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.35,
-      blending: THREE.AdditiveBlending,
-    });
-    const ring2Mesh = new THREE.Mesh(ring2Geo, ring2Mat);
-    ring2Mesh.rotation.x = Math.PI / 2.5;
-    ringGroup.add(ring2Mesh);
-
-    // Orbital satellite probes
-    const satCount = 6;
-    const satellites: THREE.Mesh[] = [];
-    const satGeo = new THREE.OctahedronGeometry(0.18, 0);
-    const satMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      blending: THREE.AdditiveBlending,
-    });
-    for (let i = 0; i < satCount; i++) {
-      const sat = new THREE.Mesh(satGeo, satMat);
-      reactorGroup.add(sat);
-      satellites.push(sat);
-    }
+    const secondaryLensing = new THREE.Mesh(secondaryLensingGeo, secondaryLensingMat);
+    secondaryLensing.rotation.y = Math.PI / 2;
+    blackHoleGroup.add(secondaryLensing);
 
     // =========================================================================
-    // 6. QUANTUM DISRUPTION PARTICLES (Explode & Magnetic Recall Physics)
+    // 6. RELATIVISTIC ACCRETION DISK (Keplerian Swirling Particle Plasma)
     // =========================================================================
-    const particleCount = 140;
-    const particleGeo = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-    const particleHomePositions = new Float32Array(particleCount * 3);
-    const particleVelocities = new Float32Array(particleCount * 3);
-
-    for (let i = 0; i < particleCount; i++) {
-      // Home positions form a spherical cloud around the core
-      const phi = Math.acos(-1 + (2 * i) / particleCount);
-      const theta = Math.sqrt(particleCount * Math.PI) * phi;
-      const radius = 2.4 + Math.random() * 0.8;
-
-      const hx = Math.sin(phi) * Math.cos(theta) * radius;
-      const hy = Math.sin(phi) * Math.sin(theta) * radius;
-      const hz = Math.cos(phi) * radius;
-
-      particleHomePositions[i * 3] = hx;
-      particleHomePositions[i * 3 + 1] = hy;
-      particleHomePositions[i * 3 + 2] = hz;
-
-      particlePositions[i * 3] = hx;
-      particlePositions[i * 3 + 1] = hy;
-      particlePositions[i * 3 + 2] = hz;
-
-      particleVelocities[i * 3] = 0;
-      particleVelocities[i * 3 + 1] = 0;
-      particleVelocities[i * 3 + 2] = 0;
-    }
-
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-
-    // Glowing particle texture
-    const discCanvas = document.createElement('canvas');
-    discCanvas.width = 32;
-    discCanvas.height = 32;
-    const discCtx = discCanvas.getContext('2d');
-    if (discCtx) {
-      const grad = discCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    // Generates a soft glowing circular particle sprite
+    const spriteCanvas = document.createElement('canvas');
+    spriteCanvas.width = 64;
+    spriteCanvas.height = 64;
+    const sCtx = spriteCanvas.getContext('2d');
+    if (sCtx) {
+      const grad = sCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.3, 'rgba(192, 132, 252, 0.9)');
-      grad.addColorStop(0.7, 'rgba(56, 189, 248, 0.4)');
+      grad.addColorStop(0.2, 'rgba(255, 240, 255, 0.95)');
+      grad.addColorStop(0.5, 'rgba(56, 189, 248, 0.6)');
+      grad.addColorStop(0.8, 'rgba(147, 51, 234, 0.2)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      discCtx.fillStyle = grad;
-      discCtx.fillRect(0, 0, 32, 32);
+      sCtx.fillStyle = grad;
+      sCtx.fillRect(0, 0, 64, 64);
     }
-    const particleTex = new THREE.CanvasTexture(discCanvas);
+    const particleTexture = new THREE.CanvasTexture(spriteCanvas);
 
-    const particleMat = new THREE.PointsMaterial({
-      size: 0.35,
-      map: particleTex,
+    const accretionParticleCount = 420;
+    const accretionGeo = new THREE.BufferGeometry();
+    const accretionPositions = new Float32Array(accretionParticleCount * 3);
+    const accretionColors = new Float32Array(accretionParticleCount * 3);
+
+    interface AccretionParticle {
+      radius: number;
+      angle: number;
+      angularSpeed: number;
+      yOffset: number;
+      size: number;
+    }
+    const accretionData: AccretionParticle[] = [];
+
+    const colorCore = new THREE.Color(BLACK_HOLE_MODES.gargantua.coreHex);
+    const colorPlasma = new THREE.Color(BLACK_HOLE_MODES.gargantua.plasmaHex);
+    const colorWhite = new THREE.Color(0xffffff);
+
+    for (let i = 0; i < accretionParticleCount; i++) {
+      // Radii range from ISCO (Innermost Stable Circular Orbit: 1.7) to outer disk: 5.0
+      const normR = Math.pow(Math.random(), 0.65);
+      const radius = THREE.MathUtils.lerp(1.7, 5.0, normR);
+      const angle = Math.random() * Math.PI * 2;
+      // Keplerian velocity: inner matter orbits significantly faster (v ~ 1/sqrt(r))
+      const angularSpeed = (0.75 / Math.sqrt(radius)) * (0.85 + Math.random() * 0.3);
+      const yOffset = (Math.random() - 0.5) * 0.16 * (radius / 3.0);
+      const size = THREE.MathUtils.lerp(0.35, 0.18, normR);
+
+      accretionData.push({ radius, angle, angularSpeed, yOffset, size });
+
+      accretionPositions[i * 3] = Math.cos(angle) * radius;
+      accretionPositions[i * 3 + 1] = yOffset;
+      accretionPositions[i * 3 + 2] = Math.sin(angle) * radius;
+
+      // Color gradient: White-hot inner disk -> vibrant plasma mid-disk -> violet outer boundary
+      const tempColor = new THREE.Color();
+      if (normR < 0.25) {
+        tempColor.lerpColors(colorWhite, colorPlasma, normR / 0.25);
+      } else {
+        tempColor.lerpColors(colorPlasma, colorCore, (normR - 0.25) / 0.75);
+      }
+      accretionColors[i * 3] = tempColor.r;
+      accretionColors[i * 3 + 1] = tempColor.g;
+      accretionColors[i * 3 + 2] = tempColor.b;
+    }
+
+    accretionGeo.setAttribute('position', new THREE.BufferAttribute(accretionPositions, 3));
+    accretionGeo.setAttribute('color', new THREE.BufferAttribute(accretionColors, 3));
+
+    const accretionMat = new THREE.PointsMaterial({
+      size: 0.32,
+      map: particleTexture,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const accretionMesh = new THREE.Points(accretionGeo, accretionMat);
+    blackHoleGroup.add(accretionMesh);
+
+    // =========================================================================
+    // 7. RELATIVISTIC ASTROPHYSICAL POLAR JETS (Energetic Collimated Beams)
+    // =========================================================================
+    const jetGroup = new THREE.Group();
+    blackHoleGroup.add(jetGroup);
+
+    // Upper and lower beam core cylinders
+    const jetCoreGeo = new THREE.CylinderGeometry(0.06, 0.42, 6.5, 24, 1, true);
+    const jetCoreMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+
+    const jetNorth = new THREE.Mesh(jetCoreGeo, jetCoreMat);
+    jetNorth.position.y = 3.3;
+    jetGroup.add(jetNorth);
+
+    const jetSouth = new THREE.Mesh(jetCoreGeo, jetCoreMat);
+    jetSouth.position.y = -3.3;
+    jetSouth.rotation.x = Math.PI;
+    jetGroup.add(jetSouth);
+
+    // Outer helical magnetic plasma sheath
+    const jetParticlesCount = 70;
+    const jetGeo = new THREE.BufferGeometry();
+    const jetPositions = new Float32Array(jetParticlesCount * 3);
+    const jetParticlesData: { height: number; speed: number; angle: number; radius: number }[] = [];
+
+    for (let i = 0; i < jetParticlesCount; i++) {
+      const isNorth = i % 2 === 0;
+      const height = (1.5 + Math.random() * 5.0) * (isNorth ? 1 : -1);
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 0.12 + Math.abs(height) * 0.06;
+      const speed = (2.2 + Math.random() * 2.0) * (isNorth ? 1 : -1);
+
+      jetParticlesData.push({ height, speed, angle, radius });
+
+      jetPositions[i * 3] = Math.cos(angle) * radius;
+      jetPositions[i * 3 + 1] = height;
+      jetPositions[i * 3 + 2] = Math.sin(angle) * radius;
+    }
+
+    jetGeo.setAttribute('position', new THREE.BufferAttribute(jetPositions, 3));
+    const jetPointsMat = new THREE.PointsMaterial({
+      size: 0.28,
+      color: BLACK_HOLE_MODES.gargantua.plasmaHex,
+      map: particleTexture,
       transparent: true,
       opacity: 0.8,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const particleSystem = new THREE.Points(particleGeo, particleMat);
-    reactorGroup.add(particleSystem);
+    const jetPoints = new THREE.Points(jetGeo, jetPointsMat);
+    jetGroup.add(jetPoints);
 
-    let isExploded = false;
-    let explodeTimer = 0;
+    // =========================================================================
+    // 8. TIDAL DISRUPTION & SPAGHETTIFICATION ENGINE ("Feed the Singularity")
+    // =========================================================================
+    // Active star matter clusters spiraling into the black hole and getting stretched
+    const maxInfallingParticles = 60;
+    const infallingGeo = new THREE.BufferGeometry();
+    const infallingPositions = new Float32Array(maxInfallingParticles * 3);
+    const infallingColors = new Float32Array(maxInfallingParticles * 3);
 
-    triggerDisruptRef.current = () => {
-      isExploded = true;
-      explodeTimer = 1.0;
+    interface InfallingCluster {
+      id: number;
+      radius: number;
+      angle: number;
+      y: number;
+      speed: number;
+      spread: number;
+      color: THREE.Color;
+    }
+    const infallingClusters: InfallingCluster[] = [];
 
-      // Blast particles outward radially
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        const norm = new THREE.Vector3(
-          particleHomePositions[i3] + (Math.random() - 0.5) * 1.5,
-          particleHomePositions[i3 + 1] + (Math.random() - 0.5) * 1.5,
-          particleHomePositions[i3 + 2] + (Math.random() - 0.5) * 1.5
-        ).normalize();
+    infallingGeo.setAttribute('position', new THREE.BufferAttribute(infallingPositions, 3));
+    infallingGeo.setAttribute('color', new THREE.BufferAttribute(infallingColors, 3));
 
-        const speed = 0.25 + Math.random() * 0.35;
-        particleVelocities[i3] = norm.x * speed;
-        particleVelocities[i3 + 1] = norm.y * speed;
-        particleVelocities[i3 + 2] = norm.z * speed;
+    const infallingMat = new THREE.PointsMaterial({
+      size: 0.42,
+      map: particleTexture,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const infallingPoints = new THREE.Points(infallingGeo, infallingMat);
+    blackHoleGroup.add(infallingPoints);
+
+    // Gravitational Spacetime Ripple
+    const waveRingGeo = new THREE.RingGeometry(1.4, 1.8, 64);
+    const waveRingMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+    });
+    const waveRing = new THREE.Mesh(waveRingGeo, waveRingMat);
+    blackHoleGroup.add(waveRing);
+    let waveActive = false;
+    let waveProgress = 0;
+
+    const spawnInfallingStar = (customRadius = 5.6, customAngle = Math.random() * Math.PI * 2) => {
+      // Add a celestial star matter cluster
+      infallingClusters.push({
+        id: Math.random(),
+        radius: customRadius,
+        angle: customAngle,
+        y: (Math.random() - 0.5) * 0.4,
+        speed: 0.45 + Math.random() * 0.3,
+        spread: 0.05,
+        color: new THREE.Color(0xfde047), // Stellar gold/amber
+      });
+
+      // Pulse spacetime wave
+      waveActive = true;
+      waveProgress = 0;
+      waveRingMat.opacity = 0.9;
+
+      accretionLight1.intensity = 8.5;
+      accretionLight2.intensity = 7.5;
+    };
+
+    feedStarRef.current = () => {
+      spawnInfallingStar();
+      setMassConsumed((m) => m + 1);
+    };
+
+    triggerJetRef.current = () => {
+      jetCoreMat.opacity = 1.0;
+      jetLight.intensity = 9.0;
+      waveActive = true;
+      waveProgress = 0;
+      waveRingMat.opacity = 0.9;
+    };
+
+    updateModeRef.current = (config: BlackHoleConfig) => {
+      accretionLight1.color.setHex(config.coreHex);
+      accretionLight2.color.setHex(config.plasmaHex);
+
+      verticalLensingMat.color.setHex(config.plasmaHex);
+      secondaryLensingMat.color.setHex(config.coreHex);
+      jetPointsMat.color.setHex(config.plasmaHex);
+
+      // Recalculate accretion disk colors
+      const newCoreCol = new THREE.Color(config.coreHex);
+      const newPlasmaCol = new THREE.Color(config.plasmaHex);
+      const colorsArr = accretionGeo.attributes.color.array as Float32Array;
+
+      for (let i = 0; i < accretionParticleCount; i++) {
+        const normR = (accretionData[i].radius - 1.7) / (5.0 - 1.7);
+        const tempColor = new THREE.Color();
+        if (normR < 0.25) {
+          tempColor.lerpColors(colorWhite, newPlasmaCol, normR / 0.25);
+        } else {
+          tempColor.lerpColors(newPlasmaCol, newCoreCol, (normR - 0.25) / 0.75);
+        }
+        colorsArr[i * 3] = tempColor.r;
+        colorsArr[i * 3 + 1] = tempColor.g;
+        colorsArr[i * 3 + 2] = tempColor.b;
       }
-
-      // Flash scene light
-      primaryLight.intensity = 10.0;
-      secondaryLight.intensity = 9.0;
-    };
-
-    triggerSurgeRef.current = () => {
-      primaryLight.intensity = 8.5;
-      secondaryLight.intensity = 7.5;
-      ring1Mat.opacity = 0.9;
-      ring2Mat.opacity = 0.9;
-    };
-
-    updateColorsRef.current = (pillar: PillarConfig) => {
-      primaryLight.color.setHex(pillar.hexColor);
-      secondaryLight.color.setHex(pillar.accentHex);
-
-      knotMat.color.setHex(pillar.hexColor);
-      knotMat.emissive.setHex(pillar.emissiveHex);
-      knotWireMat.color.setHex(pillar.accentHex);
-
-      sparkMat.color.setHex(pillar.hexColor);
-      sparkMat.emissive.setHex(pillar.emissiveHex);
-      sparkWireMat.color.setHex(pillar.accentHex);
-
-      latticeMat.color.setHex(pillar.accentHex);
-
-      singMat.color.setHex(pillar.hexColor);
-      singMat.emissive.setHex(pillar.emissiveHex);
-
-      ring1Mat.color.setHex(pillar.accentHex);
+      accretionGeo.attributes.color.needsUpdate = true;
     };
 
     // =========================================================================
-    // 7. MAGNETIC CURSOR GRAVITY PHYSICS & HOVER INTERACTION
+    // 9. RELATIVISTIC FRAME DRAGGING & CURSOR GRAVITY WARP
     // =========================================================================
     let mouseX = 0;
     let mouseY = 0;
-    let targetX = 0;
-    let targetY = 0;
+    let targetRotX = 0.38;
+    let targetRotY = 0;
 
     const onPointerMove = (e: PointerEvent) => {
       const rect = mount.getBoundingClientRect();
-      const clientX = e.clientX - rect.left;
-      const clientY = e.clientY - rect.top;
+      const normX = ((e.clientX - rect.left) / width - 0.5) * 2;
+      const normY = ((e.clientY - rect.top) / height - 0.5) * 2;
 
-      targetX = (clientX / width - 0.5) * 2;
-      targetY = (clientY / height - 0.5) * 2;
-
-      // Project light to cursor
-      cursorFollowerLight.position.set(targetX * 4, -targetY * 3, 5);
+      // Mouse tilts black hole along frame-dragging axis
+      targetRotY = normX * 0.9;
+      targetRotX = 0.38 + normY * 0.6;
     };
 
     const onPointerLeave = () => {
-      targetX = 0;
-      targetY = 0;
+      targetRotX = 0.38;
+      targetRotY = 0;
     };
 
-    const onPointerDown = () => {
-      triggerSurgeRef.current?.();
-      setEnergySurges((c) => c + 1);
+    const onPointerDown = (e: PointerEvent) => {
+      const rect = mount.getBoundingClientRect();
+      const normX = ((e.clientX - rect.left) / width - 0.5) * 2;
+      const normY = ((e.clientY - rect.top) / height - 0.5) * 2;
+
+      // Spawn infalling star at pointer's angular coordinate
+      const clickAngle = Math.atan2(normY, normX);
+      spawnInfallingStar(5.2, clickAngle);
+      setMassConsumed((m) => m + 1);
     };
 
     mount.addEventListener('pointermove', onPointerMove);
@@ -460,7 +495,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     mount.addEventListener('pointerdown', onPointerDown);
 
     // =========================================================================
-    // 8. 60FPS KINETIC RENDER LOOP
+    // 10. 60FPS RELATIVISTIC PHYSICS SIMULATION LOOP
     // =========================================================================
     let animId: number;
     const clock = new THREE.Clock();
@@ -470,125 +505,149 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       const delta = Math.min(clock.getDelta(), 0.05);
       const time = clock.getElapsedTime();
 
-      // Magnetic Levitation & Cursor Gravity Tracking
-      mouseX += (targetX - mouseX) * 0.07;
-      mouseY += (targetY - mouseY) * 0.07;
+      // Smooth Frame-Dragging Interpolation
+      mouseX += (targetRotY - mouseX) * 0.06;
+      mouseY += (targetRotX - mouseY) * 0.06;
 
-      // The core levitates and leans towards the cursor with spring inertia
-      reactorGroup.rotation.y = time * 0.35 + mouseX * 0.85;
-      reactorGroup.rotation.x = mouseY * 0.65 + Math.sin(time * 0.8) * 0.12;
-      reactorGroup.position.x = mouseX * 0.6;
-      reactorGroup.position.y = -mouseY * 0.5 + Math.sin(time * 1.5) * 0.15;
+      blackHoleGroup.rotation.y = time * 0.12 + mouseX;
+      blackHoleGroup.rotation.x = mouseY;
 
-      // Smooth Morph Scaling Transition
-      Object.keys(meshes).forEach((key) => {
-        const m = meshes[key as TopologyType];
-        if (m === targetMesh) {
-          if (m.scale.x < 1.0) {
-            const nextScale = THREE.MathUtils.lerp(m.scale.x, 1.0, 0.12);
-            m.scale.set(nextScale, nextScale, nextScale);
-          }
-        } else {
-          if (m.scale.x > 0.005) {
-            const nextScale = THREE.MathUtils.lerp(m.scale.x, 0.0, 0.15);
-            m.scale.set(nextScale, nextScale, nextScale);
-          } else {
-            m.visible = false;
-          }
-        }
-      });
+      // Einstein Photon Ring Lensing Oscillation
+      const lensPulse = 1.0 + Math.sin(time * 3.5) * 0.03;
+      photonRing.scale.set(lensPulse, lensPulse, lensPulse);
+      photonRing.lookAt(camera.position);
 
-      // Internal Shape Extra Rotations
-      if (activeMesh === knotMesh) {
-        knotMesh.rotation.z = time * 0.2;
-      } else if (activeMesh === singMesh) {
-        singInnerMesh.rotation.y = -time * 1.2;
-        singInnerMesh.rotation.z = time * 0.8;
-      }
-
-      // Magnetic rings dynamic counter-rotation
-      ring1Mesh.rotation.z = time * 0.45;
-      ring2Mesh.rotation.y = -time * 0.55;
-      ringGroup.rotation.x = mouseY * 0.3;
-
-      // Orbiting satellite probes
-      satellites.forEach((sat, i) => {
-        const angle = time * 1.4 + (i * Math.PI * 2) / satCount;
-        const orbitRadius = 3.6 + Math.sin(time * 2.0 + i) * 0.25;
-        sat.position.set(
-          Math.cos(angle) * orbitRadius,
-          Math.sin(angle * 1.2) * 1.1 + mouseY * 0.4,
-          Math.sin(angle) * orbitRadius
-        );
-        sat.rotation.x = time * 3;
-        sat.rotation.y = time * 2;
-      });
+      verticalLensing.rotation.y = Math.PI / 2 + Math.sin(time * 0.6) * 0.08;
 
       // -----------------------------------------------------------------------
-      // Disruption Particle Physics (Explosion -> Spring Recall)
+      // Keplerian Accretion Disk Simulation & Relativistic Doppler Beaming
       // -----------------------------------------------------------------------
-      const posArray = particleGeo.attributes.position.array as Float32Array;
+      const posArr = accretionGeo.attributes.position.array as Float32Array;
+      const colArr = accretionGeo.attributes.color.array as Float32Array;
 
-      if (isExploded) {
-        explodeTimer -= delta * 0.65;
+      for (let i = 0; i < accretionParticleCount; i++) {
+        const p = accretionData[i];
+        p.angle += p.angularSpeed * delta * 2.2;
 
-        for (let i = 0; i < particleCount; i++) {
-          const i3 = i * 3;
+        const px = Math.cos(p.angle) * p.radius;
+        const pz = Math.sin(p.angle) * p.radius;
+        const py = p.yOffset + Math.sin(time * 2.5 + p.radius * 2.0) * 0.03;
 
-          // Apply velocity
-          posArray[i3] += particleVelocities[i3];
-          posArray[i3 + 1] += particleVelocities[i3 + 1];
-          posArray[i3 + 2] += particleVelocities[i3 + 2];
+        posArr[i * 3] = px;
+        posArr[i * 3 + 1] = py;
+        posArr[i * 3 + 2] = pz;
 
-          // Magnetic spring force pulling particles back home
-          const hx = particleHomePositions[i3];
-          const hy = particleHomePositions[i3 + 1];
-          const hz = particleHomePositions[i3 + 2];
+        // Relativistic Doppler Beaming: Matter approaching the camera glows brighter
+        const dopplerFactor = Math.sin(p.angle + blackHoleGroup.rotation.y);
+        const intensityShift = THREE.MathUtils.clamp(1.0 + dopplerFactor * 0.35, 0.6, 1.4);
+        colArr[i * 3] = Math.min(1.0, colArr[i * 3] * intensityShift);
+        colArr[i * 3 + 1] = Math.min(1.0, colArr[i * 3 + 1] * intensityShift);
+        colArr[i * 3 + 2] = Math.min(1.0, colArr[i * 3 + 2] * intensityShift);
+      }
+      accretionGeo.attributes.position.needsUpdate = true;
+      accretionGeo.attributes.color.needsUpdate = true;
 
-          const springStrength = 0.09;
-          particleVelocities[i3] += (hx - posArray[i3]) * springStrength;
-          particleVelocities[i3 + 1] += (hy - posArray[i3 + 1]) * springStrength;
-          particleVelocities[i3 + 2] += (hz - posArray[i3 + 2]) * springStrength;
+      // -----------------------------------------------------------------------
+      // Relativistic Polar Jets Animation
+      // -----------------------------------------------------------------------
+      const jPosArr = jetGeo.attributes.position.array as Float32Array;
+      for (let i = 0; i < jetParticlesCount; i++) {
+        const jp = jetParticlesData[i];
+        jp.height += jp.speed * delta;
+        jp.angle += delta * 4.0;
 
-          // Friction damping
-          particleVelocities[i3] *= 0.88;
-          particleVelocities[i3 + 1] *= 0.88;
-          particleVelocities[i3 + 2] *= 0.88;
+        // Wrap around at jet extremities
+        if (jp.height > 6.5) jp.height = 1.6;
+        if (jp.height < -6.5) jp.height = -1.6;
+
+        const currentRad = 0.08 + Math.abs(jp.height) * 0.07;
+        jPosArr[i * 3] = Math.cos(jp.angle) * currentRad;
+        jPosArr[i * 3 + 1] = jp.height;
+        jPosArr[i * 3 + 2] = Math.sin(jp.angle) * currentRad;
+      }
+      jetGeo.attributes.position.needsUpdate = true;
+
+      // -----------------------------------------------------------------------
+      // Spaghettification of Infalling Celestial Matter (Tidal Disruption)
+      // -----------------------------------------------------------------------
+      const infPosArr = infallingGeo.attributes.position.array as Float32Array;
+      const infColArr = infallingGeo.attributes.color.array as Float32Array;
+
+      // Clear infalling buffer
+      for (let k = 0; k < infPosArr.length; k++) {
+        infPosArr[k] = 0;
+        infColArr[k] = 0;
+      }
+
+      for (let cIdx = infallingClusters.length - 1; cIdx >= 0; cIdx--) {
+        const cluster = infallingClusters[cIdx];
+        // Accelerate inward as it approaches the gravitational singularity
+        cluster.speed += delta * (4.2 / (cluster.radius * cluster.radius));
+        cluster.radius -= cluster.speed * delta * 1.5;
+        cluster.angle += (1.8 / Math.sqrt(cluster.radius)) * delta * 3.5;
+        // Tidal stretching (Spaghettification): expands along orbital arc
+        cluster.spread += delta * 0.45;
+
+        // Plunge across the Event Horizon!
+        if (cluster.radius <= eventHorizonRadius) {
+          infallingClusters.splice(cIdx, 1);
+          // Hawking flash on event horizon entry
+          photonRingMat.opacity = 1.0;
+          accretionLight1.intensity = 9.0;
+          continue;
         }
 
-        particleGeo.attributes.position.needsUpdate = true;
+        // Draw stretched spaghettified plasma trail
+        const particlesPerCluster = 8;
+        const baseIdx = cIdx * particlesPerCluster;
+        if (baseIdx + particlesPerCluster <= maxInfallingParticles) {
+          for (let p = 0; p < particlesPerCluster; p++) {
+            const spreadAngle = cluster.angle - (p * cluster.spread * 0.08);
+            const spreadRad = cluster.radius + (p * 0.04);
+            const idx = (baseIdx + p) * 3;
 
-        if (explodeTimer <= 0) {
-          isExploded = false;
+            infPosArr[idx] = Math.cos(spreadAngle) * spreadRad;
+            infPosArr[idx + 1] = cluster.y + (p - 4) * 0.02;
+            infPosArr[idx + 2] = Math.sin(spreadAngle) * spreadRad;
+
+            infColArr[idx] = 1.0;
+            infColArr[idx + 1] = 0.9 - p * 0.08;
+            infColArr[idx + 2] = 0.3;
+          }
         }
-      } else {
-        // Subtle ambient harmonic pulsation
-        for (let i = 0; i < particleCount; i++) {
-          const i3 = i * 3;
-          const hx = particleHomePositions[i3];
-          const hy = particleHomePositions[i3 + 1];
-          const hz = particleHomePositions[i3 + 2];
+      }
+      infallingGeo.attributes.position.needsUpdate = true;
+      infallingGeo.attributes.color.needsUpdate = true;
 
-          const pulse = 1 + Math.sin(time * 2.0 + i) * 0.06;
-          posArray[i3] = hx * pulse;
-          posArray[i3 + 1] = hy * pulse;
-          posArray[i3 + 2] = hz * pulse;
+      // -----------------------------------------------------------------------
+      // Spacetime Gravitational Wave Ripple
+      // -----------------------------------------------------------------------
+      if (waveActive) {
+        waveProgress += delta * 2.2;
+        const waveScale = 1.0 + waveProgress * 3.8;
+        waveRing.scale.set(waveScale, waveScale, waveScale);
+        waveRingMat.opacity = Math.max(0, 0.9 * (1.0 - waveProgress));
+
+        if (waveProgress >= 1.0) {
+          waveActive = false;
         }
-        particleGeo.attributes.position.needsUpdate = true;
       }
 
-      // Lights decay
-      if (primaryLight.intensity > 3.8) {
-        primaryLight.intensity += (3.8 - primaryLight.intensity) * 0.06;
+      // Lights and Jet intensity decay back to baseline
+      if (jetCoreMat.opacity > 0.65) {
+        jetCoreMat.opacity += (0.65 - jetCoreMat.opacity) * 0.05;
       }
-      if (secondaryLight.intensity > 3.0) {
-        secondaryLight.intensity += (3.0 - secondaryLight.intensity) * 0.06;
+      if (jetLight.intensity > 3.5) {
+        jetLight.intensity += (3.5 - jetLight.intensity) * 0.06;
       }
-      if (ring1Mat.opacity > 0.45) {
-        ring1Mat.opacity += (0.45 - ring1Mat.opacity) * 0.05;
+      if (photonRingMat.opacity > 0.9) {
+        photonRingMat.opacity += (0.9 - photonRingMat.opacity) * 0.05;
       }
-      if (ring2Mat.opacity > 0.35) {
-        ring2Mat.opacity += (0.35 - ring2Mat.opacity) * 0.05;
+      if (accretionLight1.intensity > 4.2) {
+        accretionLight1.intensity += (4.2 - accretionLight1.intensity) * 0.05;
+      }
+      if (accretionLight2.intensity > 3.8) {
+        accretionLight2.intensity += (3.8 - accretionLight2.intensity) * 0.05;
       }
 
       renderer.render(scene, camera);
@@ -617,81 +676,57 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
         mount.removeChild(renderer.domElement);
       }
 
-      knotGeo.dispose();
-      knotMat.dispose();
-      knotWireMat.dispose();
-      sparkGeo.dispose();
-      sparkMat.dispose();
-      sparkWireMat.dispose();
-      latticeGeo.dispose();
-      latticeMat.dispose();
-      innerSphereGeo.dispose();
-      innerSphereMat.dispose();
-      singGeo.dispose();
-      singMat.dispose();
-      singInnerGeo.dispose();
-      singInnerMat.dispose();
-      ring1Geo.dispose();
-      ring1Mat.dispose();
-      ring2Geo.dispose();
-      ring2Mat.dispose();
-      satGeo.dispose();
-      satMat.dispose();
-      particleGeo.dispose();
-      particleMat.dispose();
-      particleTex.dispose();
+      horizonGeo.dispose();
+      horizonMat.dispose();
+      shadowHaloGeo.dispose();
+      shadowHaloMat.dispose();
+      photonRingGeo.dispose();
+      photonRingMat.dispose();
+      verticalLensingGeo.dispose();
+      verticalLensingMat.dispose();
+      secondaryLensingGeo.dispose();
+      secondaryLensingMat.dispose();
+      accretionGeo.dispose();
+      accretionMat.dispose();
+      jetCoreGeo.dispose();
+      jetCoreMat.dispose();
+      jetGeo.dispose();
+      jetPointsMat.dispose();
+      infallingGeo.dispose();
+      infallingMat.dispose();
+      waveRingGeo.dispose();
+      waveRingMat.dispose();
+      particleTexture.dispose();
       renderer.dispose();
     };
   }, []);
 
-  // Handler: Change Topology
-  const handleSelectTopology = (topo: TopologyType) => {
-    setSelectedTopology(topo);
-    switchTopologyRef.current?.(topo);
+  // Handlers
+  const handleSelectMode = (mode: BlackHoleType) => {
+    setActiveMode(mode);
+    const config = BLACK_HOLE_MODES[mode];
+    updateModeRef.current?.(config);
   };
 
-  // Handler: Change Pillar Frequency
-  const handleSelectPillar = (pillarKey: PillarType) => {
-    setActivePillar(pillarKey);
-    const config = PILLARS[pillarKey];
-    updateColorsRef.current?.(config);
-    triggerSurgeRef.current?.();
+  const handleFeed = () => {
+    setIsFeeding(true);
+    feedStarRef.current?.();
+    setTimeout(() => setIsFeeding(false), 600);
   };
 
-  // Handler: Trigger Disruption / Quantum Explode
-  const handleDisrupt = () => {
-    if (disruptCooldown) return;
-    setIsDisrupted(true);
-    setDisruptCooldown(true);
-    setLivePulse(true);
-    triggerDisruptRef.current?.();
-    setEnergySurges((c) => c + 1);
-
-    setTimeout(() => {
-      setIsDisrupted(false);
-      setLivePulse(false);
-    }, 1200);
-
-    setTimeout(() => {
-      setDisruptCooldown(false);
-    }, 1800);
+  const handleJetSurge = () => {
+    setJetOverdrive(true);
+    triggerJetRef.current?.();
+    setTimeout(() => setJetOverdrive(false), 500);
   };
 
-  // Handler: Pulse Surge
-  const handleSurge = () => {
-    setLivePulse(true);
-    triggerSurgeRef.current?.();
-    setEnergySurges((c) => c + 1);
-    setTimeout(() => setLivePulse(false), 400);
-  };
-
-  const currentPillarConfig = PILLARS[activePillar];
+  const currentMode = BLACK_HOLE_MODES[activeMode];
 
   return (
     <div
-      className={`glass-card rounded-3xl p-6 sm:p-7 border border-purple-500/40 hover:border-purple-400/80 bg-gradient-to-b from-[#140b2a]/90 via-[#0c061a]/95 to-[#06030e]/95 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-purple-950/60 transition-all duration-300 ${className}`}
+      className={`glass-card rounded-3xl p-6 sm:p-7 border border-purple-500/40 hover:border-purple-400/80 bg-gradient-to-b from-[#120824]/95 via-[#080314]/95 to-[#04010a]/95 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-purple-950/70 transition-all duration-300 ${className}`}
     >
-      {/* 1. Header HUD Bar */}
+      {/* 1. Header Astrophysics HUD */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08] relative z-20">
         <div className="flex items-center gap-2.5">
           <div className="relative flex items-center justify-center">
@@ -699,165 +734,119 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <span className="text-[12px] font-mono uppercase tracking-wider text-purple-200 font-bold">
-                Quantum Venture Catalyst
+                Relativistic Singularity & Accretion Laboratory
               </span>
               <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                ACTIVE
+                KERR METRIC
               </span>
             </div>
             <p className="text-[11px] text-zinc-400">
-              Interactive 3D Reactor • Cursor Gravity & Morphic Physics
+              Interactive 3D Black Hole • Gravitational Lensing, Accretion Disk & Spaghettification
             </p>
           </div>
         </div>
 
-        {/* Pillar Frequency Mode Pills */}
+        {/* Black Hole Spectrum Mode Selectors */}
         <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-xl border border-white/[0.08]">
-          {(Object.keys(PILLARS) as PillarType[]).map((pKey) => {
-            const pill = PILLARS[pKey];
-            const isActive = activePillar === pKey;
+          {(Object.keys(BLACK_HOLE_MODES) as BlackHoleType[]).map((mKey) => {
+            const mode = BLACK_HOLE_MODES[mKey];
+            const isActive = activeMode === mKey;
             return (
               <button
-                key={pKey}
+                key={mKey}
                 type="button"
-                onClick={() => handleSelectPillar(pKey)}
+                onClick={() => handleSelectMode(mKey)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r text-white shadow-md font-semibold ' + pill.themeColor
+                    ? 'bg-gradient-to-r text-white shadow-md font-semibold ' + mode.themeColor
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
                 }`}
               >
-                {pill.name}
+                {mode.name}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* 2. Interactive 3D Canvas Mount */}
-      <div className="relative w-full h-64 sm:h-72 my-2 z-10 flex items-center justify-center select-none">
+      {/* 2. Interactive 3D Black Hole Canvas */}
+      <div className="relative w-full h-72 sm:h-80 my-2 z-10 flex items-center justify-center select-none">
         <div
           ref={mountRef}
           className="w-full h-full cursor-crosshair relative z-10"
-          title="Move cursor to tilt magnetic field • Tap to surge energy"
+          title="Move cursor to warp gravitational frame • Click canvas to drop stellar matter"
         />
 
-        {/* Live Magnetic Attraction Hint Overlay */}
-        <div className="absolute top-3 left-3 pointer-events-none z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/10 backdrop-blur-md text-[10px] font-mono text-zinc-400">
-          <Activity className="w-3 h-3 text-cyan-400 animate-pulse" />
-          <span>Magnetic Cursor Field: Active</span>
+        {/* Live Gravitational Lensing Indicator */}
+        <div className="absolute top-3 left-3 pointer-events-none z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-[10px] font-mono text-zinc-400">
+          <CircleDot className="w-3 h-3 text-cyan-400 animate-spin" />
+          <span>Einstein Ring: Warped</span>
         </div>
 
-        {/* Live Active Pillar HUD Overlay */}
-        <div className="absolute top-3 right-3 pointer-events-none z-20 flex flex-col items-end gap-0.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/10 backdrop-blur-md text-[10px] font-mono">
-          <span className="text-zinc-400">Resonance Freq:</span>
-          <span className="text-purple-300 font-bold">{currentPillarConfig.frequency}</span>
+        {/* Live Relativistic Telemetry */}
+        <div className="absolute top-3 right-3 pointer-events-none z-20 flex flex-col items-end gap-0.5 px-2.5 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-[10px] font-mono">
+          <span className="text-zinc-400">Spin Parameter:</span>
+          <span className="text-purple-300 font-bold">{currentMode.spinParam}</span>
         </div>
 
-        {/* Dynamic Topology Selector Pills Floating in Canvas */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1 rounded-full bg-black/60 border border-white/15 backdrop-blur-md">
-          <button
-            type="button"
-            onClick={() => handleSelectTopology('knot')}
-            className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
-              selectedTopology === 'knot'
-                ? 'bg-white/20 text-white shadow-sm border border-white/30 font-bold'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            Hyperloop Knot
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectTopology('spark')}
-            className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
-              selectedTopology === 'spark'
-                ? 'bg-white/20 text-white shadow-sm border border-white/30 font-bold'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            Quantum Spark
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectTopology('lattice')}
-            className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
-              selectedTopology === 'lattice'
-                ? 'bg-white/20 text-white shadow-sm border border-white/30 font-bold'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            Neural Matrix
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectTopology('singularity')}
-            className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
-              selectedTopology === 'singularity'
-                ? 'bg-white/20 text-white shadow-sm border border-white/30 font-bold'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            Singularity
-          </button>
+        {/* Mid-canvas Interaction Guidance Hint */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-md text-[10px] font-mono text-zinc-300">
+          <Orbit className="w-3 h-3 text-amber-300 animate-pulse" />
+          <span>Click anywhere in 3D space to feed stars into the singularity</span>
         </div>
       </div>
 
-      {/* 3. Bottom Controls & Telemetry Readout */}
+      {/* 3. Astrophysical Controls & Telemetry Dashboard */}
       <div className="pt-4 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-3 text-xs relative z-20">
         {/* Kinetic Action Triggers */}
         <div className="flex items-center gap-2">
-          {/* Quantum Disruption (Explode & Magnetic Recall) */}
+          {/* Feed Singularity (Tidal Disruption Event) */}
           <button
             type="button"
-            onClick={handleDisrupt}
-            disabled={disruptCooldown}
+            onClick={handleFeed}
             className={`px-4 py-2 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
-              isDisrupted
+              isFeeding
                 ? 'bg-gradient-to-r from-amber-500 to-rose-600 text-white border-amber-300 shadow-amber-500/50 scale-105'
-                : disruptCooldown
-                ? 'bg-white/[0.03] text-zinc-500 border-white/5 cursor-not-allowed'
                 : 'bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-500 hover:to-indigo-500 text-white border-purple-400/30 hover:border-purple-300 shadow-purple-900/40 hover:scale-[1.02]'
             }`}
           >
-            <Flame className={`w-3.5 h-3.5 ${isDisrupted ? 'animate-bounce text-amber-200' : 'text-amber-400'}`} />
-            <span>{isDisrupted ? 'Recalling Quantum Shards...' : '💥 Disrupt & Explode'}</span>
+            <Flame className={`w-3.5 h-3.5 ${isFeeding ? 'animate-bounce text-amber-200' : 'text-amber-400'}`} />
+            <span>Feed Singularity (Tidal Disruption)</span>
           </button>
 
-          {/* Instant Surge Pulse */}
+          {/* Relativistic Jet Overdrive */}
           <button
             type="button"
-            onClick={handleSurge}
+            onClick={handleJetSurge}
             className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              livePulse
+              jetOverdrive
                 ? 'bg-cyan-500 text-black border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.8)] scale-105'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-zinc-300 hover:text-white'
             }`}
           >
             <Zap className="w-3.5 h-3.5 text-amber-300" />
-            <span>Surge</span>
+            <span>Jet Overdrive</span>
           </button>
         </div>
 
-        {/* Live Telemetry Status Bar */}
+        {/* Live Astrophysical Telemetry Readout */}
         <div className="flex items-center gap-4 font-mono text-[11px] text-zinc-400">
           <div className="flex items-center gap-1.5">
-            <span className="text-zinc-500">Target:</span>
-            <span className="text-white font-semibold">{currentPillarConfig.metricLabel}</span>
-            <span className="text-emerald-400 font-bold">({currentPillarConfig.metric})</span>
+            <span className="text-zinc-500">Accretion Speed:</span>
+            <span className="text-cyan-400 font-bold">{currentMode.velocity}</span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 border-l border-white/10 pl-3">
-            <span className="text-zinc-500">Surges:</span>
-            <strong className="text-purple-300">{energySurges}</strong>
+          <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+            <span className="text-zinc-500">Solar Mass Consumed:</span>
+            <strong className="text-amber-300">{massConsumed} M☉</strong>
           </div>
         </div>
       </div>
 
-      {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-600/15 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-500/25 transition-all duration-700" />
+      {/* Ambient Cosmic Singularity Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-600/20 transition-all duration-700" />
     </div>
   );
 }

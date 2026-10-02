@@ -39,7 +39,7 @@ export default async function HomePage() {
         <DisplayWorkstation3D />
       </Scroll3DPopup>
 
-      {/* Interactive 3D Quantum Venture Catalyst Showcase (Morphic Geometries, Disruption & Pillar Telemetry) */}
+      {/* Interactive 3D Relativistic Black Hole Showcase (Singularity, Accretion Disk & Lensing) */}
       <Scroll3DPopup delay={0.05}>
         <div className="max-w-3xl mx-auto px-6 -mt-6 mb-16 relative z-20">
           <Interactive3DPrism />
