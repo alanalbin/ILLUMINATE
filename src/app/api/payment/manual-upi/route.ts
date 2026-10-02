@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { manualUpiSubmissionSchema } from '@/lib/validation/registration';
 import { DataStore } from '@/lib/storage/data-store';
 import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
+import { Registration } from '@/types';
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
         fullName?.trim() || payerUpiId?.trim() || (email ? email.split('@')[0] : 'Workshop Participant');
       const candidateEmail = email?.trim().toLowerCase() || `participant_${cleanId.slice(-6)}@illuminate.local`;
 
-      registration = {
+      const newReg: Registration = {
         id: cleanId,
         registrationNumber: regNumber,
         fullName: candidateName,
@@ -75,7 +76,8 @@ export async function POST(req: NextRequest) {
           'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod',
         course: course?.trim() || 'Engineering & Technology',
         yearOfStudy: (yearOfStudy as any) || '3rd Year',
-        privacyConsent: true,
+        eventId: 'illuminate-2026',
+        currency: 'INR',
         amountPaise: amountPaise || 69900,
         status: 'confirmed',
         paymentStatus: 'verified',
@@ -89,7 +91,15 @@ export async function POST(req: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
 
-      await DataStore.saveRegistrationDirect(registration);
+      await DataStore.saveRegistrationDirect(newReg);
+      registration = newReg;
+    }
+
+    if (!registration) {
+      return NextResponse.json(
+        { success: false, message: 'Registration record not found.' },
+        { status: 404 }
+      );
     }
 
     if (registration.paymentStatus === 'verified' && registration.manualUtr && registration.manualUtr !== utrNumber) {

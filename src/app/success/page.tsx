@@ -140,11 +140,9 @@ function SuccessContent() {
   const isManualReview = registration.paymentStatus === 'manual_review';
 
   // Normalize amount: if stored in integer paise (e.g. 69900), convert to rupees (699)
-  const displayAmount = registration.amountPaid
-    ? registration.amountPaid >= 1000
-      ? Math.round(registration.amountPaid / 100)
-      : registration.amountPaid
-    : eventConfig.registrationFee || 699;
+  const rawAmount = (registration as any).amountPaid ?? (registration as any).amountPaise ?? eventConfig?.registrationFee ?? 699;
+  const numAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount).replace(/[^0-9.]/g, ''));
+  const displayAmount = (!isNaN(numAmount) && numAmount >= 1000) ? Math.round(numAmount / 100) : (numAmount || 699);
 
   return (
     <div className="min-h-screen bg-[#05030a] py-28 relative">
