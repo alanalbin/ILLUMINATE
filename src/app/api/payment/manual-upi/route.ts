@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         status: 'confirmed',
         paymentStatus: 'verified',
         paymentMethod: 'manual_upi',
-        amountPaid: amountPaise || 69900,
+        amountPaid: 699,
         manualUtr: utrNumber,
         adminNotes: `UPI Payment confirmed. UTR: ${utrNumber}${
           payerUpiId ? ` | Payer UPI: ${payerUpiId}` : ''
@@ -104,10 +104,11 @@ export async function POST(req: NextRequest) {
 
     // Update registration to verified state upon UPI submission
     const eventConfig = await DataStore.getEventConfig();
+    const feeInRupees = eventConfig.registrationFee || 699;
     const updated = await DataStore.updateRegistration(registration.id, {
       paymentStatus: 'verified',
       paymentMethod: 'manual_upi',
-      amountPaid: registration.amountPaise || 69900,
+      amountPaid: feeInRupees,
       manualUtr: utrNumber,
       adminNotes: `UPI Payment confirmed. UTR: ${utrNumber}${
         payerUpiId ? ` | Payer UPI: ${payerUpiId}` : ''

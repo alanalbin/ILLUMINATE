@@ -139,6 +139,13 @@ function SuccessContent() {
   const isVerified = registration.paymentStatus === 'verified';
   const isManualReview = registration.paymentStatus === 'manual_review';
 
+  // Normalize amount: if stored in integer paise (e.g. 69900), convert to rupees (699)
+  const displayAmount = registration.amountPaid
+    ? registration.amountPaid >= 1000
+      ? Math.round(registration.amountPaid / 100)
+      : registration.amountPaid
+    : eventConfig.registrationFee || 699;
+
   return (
     <div className="min-h-screen bg-[#05030a] py-28 relative">
       <div className="max-w-3xl mx-auto px-6 relative z-10">
@@ -237,14 +244,14 @@ function SuccessContent() {
               </div>
             </div>
 
-            <div className="hidden md:flex items-center gap-2 p-1.5 rounded-xl bg-black/40 border border-white/10 print:border-gray-300">
-              <img src="/logos/ecell-iitb.png" alt="IIT Bombay" className="h-9 w-auto object-contain" />
-              <div className="h-6 w-px bg-white/10 print:bg-gray-300" />
-              <img src="/logos/kmct-college.png" alt="KMCT" className="h-5 w-auto max-w-[90px] object-contain" />
-            </div>
+            <div className="flex items-center gap-4 self-start sm:self-center">
+              <div className="hidden md:flex items-center gap-2 p-1.5 rounded-xl bg-black/40 border border-white/10 print:border-gray-300">
+                <img src="/logos/ecell-iitb.png" alt="IIT Bombay" className="h-9 w-auto object-contain" />
+                <div className="h-6 w-px bg-white/10 print:bg-gray-300" />
+                <img src="/logos/kmct-college.png" alt="KMCT" className="h-5 w-auto max-w-[90px] object-contain" />
+              </div>
 
-            <div className="text-left sm:text-right flex items-center sm:items-start gap-4 justify-between sm:justify-end">
-              <div className="w-16 h-16 bg-white p-1.5 rounded-xl hidden sm:flex items-center justify-center shrink-0 shadow-md">
+              <div className="w-16 h-16 bg-white p-1.5 rounded-xl flex items-center justify-center shrink-0 shadow-md">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
                     `ILLUMINATE-PASS:${registration.registrationNumber}:${registration.fullName}`
@@ -253,33 +260,36 @@ function SuccessContent() {
                   className="w-full h-full object-contain"
                 />
               </div>
+            </div>
+          </div>
 
-              <div>
-                <span className="text-[10px] text-purple-400 font-extrabold uppercase tracking-wider block">
-                  Unique Ticket ID
-                </span>
-                <div className="flex items-center gap-1.5 sm:justify-end">
-                  <span className="text-base sm:text-lg font-mono font-black text-purple-300 tracking-wide print:text-purple-900 bg-purple-950/70 border border-purple-800/40 px-2 py-0.5 rounded-lg shadow-sm">
-                    {registration.registrationNumber}
-                  </span>
-                </div>
-                <div className="mt-1">
-                  <span
-                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      isVerified
-                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
-                        : 'bg-amber-950 text-amber-300 border border-amber-700'
-                    }`}
-                  >
-                    {isVerified ? 'VERIFIED PASS ✓' : 'PENDING APPROVAL'}
-                  </span>
-                </div>
-              </div>
+          {/* Prominent Straight Ticket ID Bar (Always Single Line) */}
+          <div className="my-5 px-5 py-3.5 rounded-2xl bg-[#0d071f]/80 border border-purple-600/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg relative z-10 print:bg-gray-100 print:border-black">
+            <div className="flex items-center gap-2.5 overflow-x-auto">
+              <span className="text-xs uppercase tracking-wider font-mono font-bold text-purple-400 print:text-purple-900 whitespace-nowrap">
+                Ticket ID:
+              </span>
+              <span className="text-base sm:text-lg font-mono font-black text-purple-200 bg-black/70 border border-purple-500/50 px-3.5 py-1 rounded-xl tracking-wider whitespace-nowrap select-all shadow-inner print:bg-white print:text-black print:border-black">
+                {registration.registrationNumber}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap ${
+                  isVerified
+                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 print:border-green-600 print:text-green-800'
+                    : 'bg-amber-950/80 text-amber-300 border border-amber-500/50'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isVerified ? 'VERIFIED PASS ✓' : 'PENDING APPROVAL'}</span>
+              </span>
             </div>
           </div>
 
           {/* Participant Information */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 my-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 my-6">
             <div>
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                 Participant Name
@@ -310,7 +320,7 @@ function SuccessContent() {
                   Amount Recorded
                 </span>
                 <p className="text-base font-bold text-gradient-vibrant print:text-black">
-                  ₹{registration.amountPaid || eventConfig.registrationFee} INR
+                  ₹{displayAmount} INR
                 </p>
               </div>
             </div>
