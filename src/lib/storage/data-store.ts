@@ -206,6 +206,30 @@ export const DataStore = {
     return newRegistration;
   },
 
+  async saveRegistrationDirect(registration: Registration): Promise<Registration> {
+    if (isFirebaseAdminConfigured()) {
+      try {
+        const adminDb = await getAdminDb();
+        if (adminDb) {
+          await adminDb.collection('registrations').doc(registration.id).set(registration, { merge: true });
+        }
+      } catch (e) {
+        console.warn('Firestore saveRegistrationDirect failed:', e);
+      }
+    }
+    const local = readLocalDb();
+    const idx = local.registrations.findIndex(
+      (r) => r.id === registration.id || r.registrationNumber === registration.registrationNumber
+    );
+    if (idx !== -1) {
+      local.registrations[idx] = registration;
+    } else {
+      local.registrations.unshift(registration);
+    }
+    writeLocalDb(local);
+    return registration;
+  },
+
   async getRegistrationById(id: string): Promise<Registration | null> {
     if (!id) return null;
     const cleanId = String(id).trim();

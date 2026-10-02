@@ -59,6 +59,11 @@ export const manualUpiSubmissionSchema = z.object({
   ticketId: z.string().trim().optional(),
   email: z.string().trim().optional(),
   phone: z.string().trim().optional(),
+  fullName: z.string().trim().optional(),
+  institution: z.string().trim().optional(),
+  course: z.string().trim().optional(),
+  yearOfStudy: z.string().trim().optional(),
+  amountPaise: z.number().optional(),
 });
 
 export type ManualUpiSubmissionData = z.infer<typeof manualUpiSubmissionSchema>;

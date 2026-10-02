@@ -135,6 +135,20 @@ export default function RegisterPage() {
       if (typeof window !== 'undefined' && data.registrationId) {
         sessionStorage.setItem('illuminate_registration_id', data.registrationId);
         localStorage.setItem('illuminate_last_registration_id', data.registrationId);
+        if (data.registration) {
+          localStorage.setItem('illuminate_registration_cache', JSON.stringify(data.registration));
+        } else {
+          localStorage.setItem(
+            'illuminate_registration_cache',
+            JSON.stringify({
+              id: data.registrationId,
+              registrationNumber: data.registrationNumber || 'ILM-PASS',
+              ...formData,
+              status: 'pending',
+              paymentStatus: 'unpaid',
+            })
+          );
+        }
       }
       router.push(`/payment?registrationId=${data.registrationId}`);
     } catch (err: any) {

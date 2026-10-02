@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
             isExistingPending: true,
             registrationId: existing.id,
             registrationNumber: existing.registrationNumber,
+            registration: existing,
             message: 'An existing pending registration was found for this email. Proceeding to payment...',
           },
           { status: 200 }
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
       success: true,
       registrationId: newReg.id,
       registrationNumber: newReg.registrationNumber,
+      registration: newReg,
       message: 'Registration created successfully. Please complete payment.',
     });
   } catch (error: any) {

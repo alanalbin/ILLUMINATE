@@ -123,6 +123,17 @@ function PaymentContent() {
               return;
             }
           }
+        } else if (typeof window !== 'undefined' && isMounted) {
+          // Fallback to locally cached registration from previous step
+          const cachedStr = localStorage.getItem('illuminate_registration_cache');
+          if (cachedStr) {
+            try {
+              const cached = JSON.parse(cachedStr);
+              if (cached && (cached.id === targetId || !targetId || targetId === 'latest')) {
+                setRegistration(cached);
+              }
+            } catch {}
+          }
         }
       } catch (err: any) {
         console.warn('Auto-registration resolution note:', err.message);
@@ -256,7 +267,7 @@ function PaymentContent() {
         return;
       }
 
-      // Submit UPI UTR
+      // Submit UPI UTR with full candidate context for self-healing across serverless instances
       const res = await fetch('/api/payment/manual-upi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -265,6 +276,11 @@ function PaymentContent() {
           ticketId: activeReg.registrationNumber,
           email: activeReg.email,
           phone: activeReg.phone,
+          fullName: activeReg.fullName,
+          institution: activeReg.institution,
+          course: activeReg.course,
+          yearOfStudy: activeReg.yearOfStudy,
+          amountPaise: activeReg.amountPaise || 69900,
           utrNumber: refCode,
           payerUpiId: payerUpiId.trim() || undefined,
         }),
@@ -277,8 +293,22 @@ function PaymentContent() {
         return;
       }
 
-      // Success: redirect to verified pass
-      router.push(`/success?registrationId=${activeReg.id}`);
+      // Success: update client storage cache and redirect to verified pass
+      const targetPassId = data.registrationId || activeReg.id;
+      if (typeof window !== 'undefined') {
+        const verifiedRecord = {
+          ...activeReg,
+          id: targetPassId,
+          paymentStatus: 'verified',
+          manualUtr: refCode,
+          ...(data.registration || {}),
+        };
+        localStorage.setItem('illuminate_registration_cache', JSON.stringify(verifiedRecord));
+        sessionStorage.setItem('illuminate_registration_id', targetPassId);
+        localStorage.setItem('illuminate_last_registration_id', targetPassId);
+      }
+
+      router.push(`/success?registrationId=${targetPassId}`);
     } catch (err: any) {
       console.error('UPI submission error:', err);
       setUtrError('Network error while verifying transaction. Please try again.');

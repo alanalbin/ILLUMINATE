@@ -25,6 +25,12 @@ export async function GET(
       registration = await DataStore.getRegistrationByEmail(emailQuery.trim());
     }
 
+    const phoneQuery = req.nextUrl.searchParams.get('phone');
+    if (!registration && phoneQuery) {
+      const all = await DataStore.listRegistrations();
+      registration = all.find((r) => r.phone === phoneQuery.replace(/\D/g, '')) || null;
+    }
+
     if (!registration) {
       return NextResponse.json(
         { success: false, message: 'Registration record not found' },

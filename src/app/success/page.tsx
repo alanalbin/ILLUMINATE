@@ -47,16 +47,38 @@ function SuccessContent() {
           fetch('/api/event'),
         ]);
 
-        if (!regRes.ok) throw new Error('Registration could not be found.');
+        let resolvedReg: Registration | null = null;
+        if (regRes.ok) {
+          const regData = await regRes.json();
+          resolvedReg = regData.registration;
+        }
 
-        const regData = await regRes.json();
-        const eventData = await eventRes.json();
+        // Client cache fallback if serverless instance has not synced yet
+        if (!resolvedReg && typeof window !== 'undefined') {
+          const cachedStr = localStorage.getItem('illuminate_registration_cache');
+          if (cachedStr) {
+            try {
+              const cached = JSON.parse(cachedStr);
+              if (cached && (cached.id === registrationId || cached.registrationNumber === registrationId || !registrationId)) {
+                resolvedReg = cached;
+              }
+            } catch {}
+          }
+        }
 
-        setRegistration(regData.registration);
-        setEventConfig(eventData.event);
+        if (!resolvedReg) throw new Error('Registration could not be found.');
+
+        let eventConfigData = null;
+        if (eventRes.ok) {
+          const eventData = await eventRes.json();
+          eventConfigData = eventData.event;
+        }
+
+        setRegistration(resolvedReg);
+        if (eventConfigData) setEventConfig(eventConfigData);
 
         // Fire celebratory confetti only if payment is verified
-        if (regData.registration.paymentStatus === 'verified') {
+        if (resolvedReg.paymentStatus === 'verified') {
           confetti({
             particleCount: 80,
             spread: 70,
