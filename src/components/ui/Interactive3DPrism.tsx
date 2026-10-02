@@ -1,109 +1,196 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import {
-  Sparkles,
+  Trophy,
   Zap,
-  Activity,
-  Flame,
-  Radio,
+  Volume2,
+  VolumeX,
   RotateCcw,
-  CircleDot,
-  Orbit,
-  Compass,
+  Flame,
+  Target,
+  Sparkles,
+  Gamepad2,
+  Play,
+  Pause,
 } from 'lucide-react';
 
 interface Interactive3DPrismProps {
   className?: string;
 }
 
-type BlackHoleType = 'gargantua' | 'cygnus' | 'sagittarius' | 'primordial';
-
-interface BlackHoleConfig {
-  name: string;
-  classification: string;
-  themeColor: string;
-  coreHex: number;
-  plasmaHex: number;
-  accentHex: number;
-  spinParam: string;
-  velocity: string;
-  description: string;
+interface TargetData {
+  mesh: THREE.Mesh;
+  type: 'crystal' | 'spark' | 'bomb' | 'drone';
+  points: number;
+  rotSpeed: THREE.Vector3;
+  velocity: THREE.Vector3;
+  hp: number;
+  maxHp: number;
+  scale: number;
 }
 
-const BLACK_HOLE_MODES: Record<BlackHoleType, BlackHoleConfig> = {
-  gargantua: {
-    name: 'Gargantua',
-    classification: 'Supermassive Kerr Singularity',
-    themeColor: 'from-violet-500 via-purple-500 to-cyan-400',
-    coreHex: 0x9333ea,
-    plasmaHex: 0x38bdf8,
-    accentHex: 0xc084fc,
-    spinParam: 'a* = 0.998',
-    velocity: '0.92 c',
-    description: 'Relativistic Doppler beaming with warped Einstein lensing ring',
-  },
-  cygnus: {
-    name: 'Cygnus X-1',
-    classification: 'High-Energy Stellar Microquasar',
-    themeColor: 'from-cyan-400 via-blue-500 to-indigo-600',
-    coreHex: 0x06b6d4,
-    plasmaHex: 0x60a5fa,
-    accentHex: 0x38bdf8,
-    spinParam: 'a* = 0.950',
-    velocity: '0.88 c',
-    description: 'Hyper-collimated relativistic X-ray polar plasma jets',
-  },
-  sagittarius: {
-    name: 'Sagittarius A*',
-    classification: 'Milky Way Galactic Supermassive Core',
-    themeColor: 'from-amber-400 via-orange-500 to-rose-600',
-    coreHex: 0xf59e0b,
-    plasmaHex: 0xfbbf24,
-    accentHex: 0xf97316,
-    spinParam: 'a* = 0.900',
-    velocity: '0.82 c',
-    description: 'Dense turbulent thermal accretion flow with solar flare eruptions',
-  },
-  primordial: {
-    name: 'Primordial',
-    classification: 'Quantum Micro-Singularity',
-    themeColor: 'from-fuchsia-400 via-pink-500 to-rose-500',
-    coreHex: 0xe879f9,
-    plasmaHex: 0xf472b6,
-    accentHex: 0xffffff,
-    spinParam: 'a* = 0.999',
-    velocity: '0.98 c',
-    description: 'Quantum gravitational frame dragging & Hawking radiation glow',
-  },
-};
+interface LaserBolt {
+  mesh: THREE.Mesh;
+  velocity: THREE.Vector3;
+  life: number;
+}
+
+interface DebrisParticle {
+  pos: THREE.Vector3;
+  vel: THREE.Vector3;
+  life: number;
+  maxLife: number;
+  color: THREE.Color;
+  size: number;
+}
 
 export default function Interactive3DPrism({ className = '' }: Interactive3DPrismProps) {
   const mountRef = useRef<HTMLDivElement>(null);
 
-  // Component UI State
-  const [activeMode, setActiveMode] = useState<BlackHoleType>('gargantua');
-  const [massConsumed, setMassConsumed] = useState<number>(14);
-  const [isFeeding, setIsFeeding] = useState<boolean>(false);
-  const [jetOverdrive, setJetOverdrive] = useState<boolean>(false);
+  // Game UI State
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [empCharge, setEmpCharge] = useState(0);
+  const [wave, setWave] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(45);
+  const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameover'>('idle');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [floatingBonus, setFloatingBonus] = useState<{ text: string; id: number } | null>(null);
 
-  // Three.js direct bridge refs
-  const feedStarRef = useRef<((customX?: number, customY?: number) => void) | null>(null);
-  const triggerJetRef = useRef<(() => void) | null>(null);
-  const updateModeRef = useRef<((config: BlackHoleConfig) => void) | null>(null);
+  // Audio Context Ref
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
+  // Action Bridge Refs
+  const fireLaserRef = useRef<((clientX: number, clientY: number) => void) | null>(null);
+  const triggerEmpRef = useRef<(() => void) | null>(null);
+  const resetGameRef = useRef<(() => void) | null>(null);
+  const startGameRef = useRef<(() => void) | null>(null);
+
+  // Sound Synthesizer via Web Audio API (zero external assets, crisp retro sci-fi SFX)
+  const playSound = useCallback(
+    (type: 'laser' | 'hit' | 'bomb' | 'emp' | 'combo') => {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtxRef.current) {
+          const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtxRef.current = new AudioContextClass();
+          }
+        }
+        const ctx = audioCtxRef.current;
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+          ctx.resume();
+        }
+
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'laser') {
+          // Sharp downward laser chirping sweep
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.exponentialRampToValueAtTime(180, now + 0.09);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          osc.start(now);
+          osc.stop(now + 0.09);
+        } else if (type === 'hit') {
+          // Crispy crystal shatter chime
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(1040, now + 0.12);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } else if (type === 'bomb') {
+          // Low resonant boom
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.35);
+          gain.gain.setValueAtTime(0.28, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'emp') {
+          // Electric shockwave swell
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.4);
+          gain.gain.setValueAtTime(0.22, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'combo') {
+          // Ascending victory chord
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(660, now + 0.06);
+          osc.frequency.setValueAtTime(880, now + 0.12);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        }
+      } catch {
+        // Audio playback unavailable or restricted
+      }
+    },
+    [soundEnabled]
+  );
+
+  // Load High Score from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('illuminate_blaster_highscore');
+      if (saved) setHighScore(parseInt(saved, 10));
+    } catch {}
+  }, []);
+
+  // Timer Tick during gameplay
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+    const interval = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          setGameState('gameover');
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [gameState]);
+
+  // Update High Score when score exceeds it
+  useEffect(() => {
+    if (score > highScore) {
+      setHighScore(score);
+      try {
+        localStorage.setItem('illuminate_blaster_highscore', score.toString());
+      } catch {}
+    }
+  }, [score, highScore]);
+
+  // Main Three.js Game Setup
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const width = mount.clientWidth || 540;
-    const height = mount.clientHeight || 340;
+    const width = mount.clientWidth || 640;
+    const height = mount.clientHeight || 360;
 
     // 1. Scene, Camera & WebGL Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 1.2, 9.5);
+    camera.position.set(0, 0, 12);
     camera.lookAt(0, 0, 0);
 
     let renderer: THREE.WebGLRenderer;
@@ -120,535 +207,561 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       return;
     }
 
-    // 2. Scene Lighting
-    const ambientLight = new THREE.AmbientLight(0x0e061c, 1.6);
+    // 2. Cyber Space Arena Lighting
+    const ambientLight = new THREE.AmbientLight(0x180b2a, 1.8);
     scene.add(ambientLight);
 
-    const accretionLight1 = new THREE.PointLight(BLACK_HOLE_MODES.gargantua.coreHex, 4.2, 30);
-    accretionLight1.position.set(4, 2, 5);
-    scene.add(accretionLight1);
+    const cannonLight = new THREE.PointLight(0x38bdf8, 3.5, 20);
+    cannonLight.position.set(0, -3.5, 4);
+    scene.add(cannonLight);
 
-    const accretionLight2 = new THREE.PointLight(BLACK_HOLE_MODES.gargantua.plasmaHex, 3.8, 30);
-    accretionLight2.position.set(-4, -2, 4);
-    scene.add(accretionLight2);
+    const arenaLight = new THREE.PointLight(0xa855f7, 3.0, 30);
+    arenaLight.position.set(0, 5, -8);
+    scene.add(arenaLight);
 
-    const jetLight = new THREE.PointLight(0xffffff, 3.5, 20);
-    jetLight.position.set(0, 5, 0);
-    scene.add(jetLight);
+    // 3. Cyber Wireframe Boundary Grid (Arena Walls)
+    const gridHelper = new THREE.GridHelper(26, 20, 0xa855f7, 0x311b5e);
+    gridHelper.position.set(0, -5.2, -6);
+    gridHelper.rotation.x = 0;
+    scene.add(gridHelper);
 
-    // 3. Black Hole Root Group (Tilts with cursor frame-dragging)
-    const blackHoleGroup = new THREE.Group();
-    // Default tilt to showcase the accretion disk and polar jets in 3D
-    blackHoleGroup.rotation.x = 0.38;
-    blackHoleGroup.rotation.z = -0.15;
-    scene.add(blackHoleGroup);
+    // 4. Player 3D Laser Turret Cannon (Bottom Center)
+    const turretGroup = new THREE.Group();
+    turretGroup.position.set(0, -4.2, 5.5);
+    scene.add(turretGroup);
 
-    // =========================================================================
-    // 4. THE EVENT HORIZON (Schwarzschild Singularity Core)
-    // =========================================================================
-    // Pure black void sphere that blocks all light behind it
-    const eventHorizonRadius = 1.45;
-    const horizonGeo = new THREE.SphereGeometry(eventHorizonRadius, 40, 40);
-    const horizonMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      depthWrite: true,
+    const baseGeo = new THREE.CylinderGeometry(0.55, 0.85, 0.4, 16);
+    const baseMat = new THREE.MeshPhongMaterial({
+      color: 0x1f1338,
+      emissive: 0x3b1d75,
+      specular: 0x38bdf8,
+      shininess: 80,
     });
-    const horizonMesh = new THREE.Mesh(horizonGeo, horizonMat);
-    blackHoleGroup.add(horizonMesh);
+    const turretBase = new THREE.Mesh(baseGeo, baseMat);
+    turretGroup.add(turretBase);
 
-    // Inner dark gravitational shadow gradient
-    const shadowHaloGeo = new THREE.SphereGeometry(eventHorizonRadius * 1.02, 32, 32);
-    const shadowHaloMat = new THREE.MeshBasicMaterial({
-      color: 0x05020c,
-      transparent: true,
-      opacity: 0.95,
-      wireframe: false,
-    });
-    const shadowHalo = new THREE.Mesh(shadowHaloGeo, shadowHaloMat);
-    blackHoleGroup.add(shadowHalo);
+    const barrelGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.4, 12);
+    const barrelMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
 
-    // =========================================================================
-    // 5. PHOTON SPHERE & GRAVITATIONAL LENSING RINGS (Einstein Ring)
-    // =========================================================================
-    // The razor-thin glowing sphere where trapped photons circle the singularity
-    const photonRingGeo = new THREE.RingGeometry(eventHorizonRadius * 1.04, eventHorizonRadius * 1.18, 64);
-    const photonRingMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+    const barrelLeft = new THREE.Mesh(barrelGeo, barrelMat);
+    barrelLeft.position.set(-0.24, 0.6, 0);
+    turretGroup.add(barrelLeft);
+
+    const barrelRight = new THREE.Mesh(barrelGeo, barrelMat);
+    barrelRight.position.set(0.24, 0.6, 0);
+    turretGroup.add(barrelRight);
+
+    // 5. 3D Reticle Crosshair (Tracks user pointer in 3D)
+    const reticleGroup = new THREE.Group();
+    reticleGroup.position.set(0, 0, 0);
+    scene.add(reticleGroup);
+
+    const reticleRingGeo = new THREE.RingGeometry(0.38, 0.44, 32);
+    const reticleRingMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
       side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending,
-    });
-    const photonRing = new THREE.Mesh(photonRingGeo, photonRingMat);
-    blackHoleGroup.add(photonRing);
-
-    // Gargantua Vertical Lensing Halo (The iconic light bent over the poles from the rear accretion disk)
-    const verticalLensingGeo = new THREE.TorusGeometry(eventHorizonRadius * 1.28, 0.16, 24, 80);
-    const verticalLensingMat = new THREE.MeshBasicMaterial({
-      color: BLACK_HOLE_MODES.gargantua.plasmaHex,
-      transparent: true,
-      opacity: 0.65,
-      blending: THREE.AdditiveBlending,
-    });
-    const verticalLensing = new THREE.Mesh(verticalLensingGeo, verticalLensingMat);
-    verticalLensing.rotation.y = Math.PI / 2;
-    blackHoleGroup.add(verticalLensing);
-
-    // Secondary concentric lensing halo
-    const secondaryLensingGeo = new THREE.TorusGeometry(eventHorizonRadius * 1.48, 0.08, 16, 80);
-    const secondaryLensingMat = new THREE.MeshBasicMaterial({
-      color: BLACK_HOLE_MODES.gargantua.coreHex,
-      transparent: true,
-      opacity: 0.45,
-      blending: THREE.AdditiveBlending,
-    });
-    const secondaryLensing = new THREE.Mesh(secondaryLensingGeo, secondaryLensingMat);
-    secondaryLensing.rotation.y = Math.PI / 2;
-    blackHoleGroup.add(secondaryLensing);
-
-    // =========================================================================
-    // 6. RELATIVISTIC ACCRETION DISK (Keplerian Swirling Particle Plasma)
-    // =========================================================================
-    // Generates a soft glowing circular particle sprite
-    const spriteCanvas = document.createElement('canvas');
-    spriteCanvas.width = 64;
-    spriteCanvas.height = 64;
-    const sCtx = spriteCanvas.getContext('2d');
-    if (sCtx) {
-      const grad = sCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.2, 'rgba(255, 240, 255, 0.95)');
-      grad.addColorStop(0.5, 'rgba(56, 189, 248, 0.6)');
-      grad.addColorStop(0.8, 'rgba(147, 51, 234, 0.2)');
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      sCtx.fillStyle = grad;
-      sCtx.fillRect(0, 0, 64, 64);
-    }
-    const particleTexture = new THREE.CanvasTexture(spriteCanvas);
-
-    const accretionParticleCount = 420;
-    const accretionGeo = new THREE.BufferGeometry();
-    const accretionPositions = new Float32Array(accretionParticleCount * 3);
-    const accretionColors = new Float32Array(accretionParticleCount * 3);
-
-    interface AccretionParticle {
-      radius: number;
-      angle: number;
-      angularSpeed: number;
-      yOffset: number;
-      size: number;
-    }
-    const accretionData: AccretionParticle[] = [];
-
-    const colorCore = new THREE.Color(BLACK_HOLE_MODES.gargantua.coreHex);
-    const colorPlasma = new THREE.Color(BLACK_HOLE_MODES.gargantua.plasmaHex);
-    const colorWhite = new THREE.Color(0xffffff);
-
-    for (let i = 0; i < accretionParticleCount; i++) {
-      // Radii range from ISCO (Innermost Stable Circular Orbit: 1.7) to outer disk: 5.0
-      const normR = Math.pow(Math.random(), 0.65);
-      const radius = THREE.MathUtils.lerp(1.7, 5.0, normR);
-      const angle = Math.random() * Math.PI * 2;
-      // Keplerian velocity: inner matter orbits significantly faster (v ~ 1/sqrt(r))
-      const angularSpeed = (0.75 / Math.sqrt(radius)) * (0.85 + Math.random() * 0.3);
-      const yOffset = (Math.random() - 0.5) * 0.16 * (radius / 3.0);
-      const size = THREE.MathUtils.lerp(0.35, 0.18, normR);
-
-      accretionData.push({ radius, angle, angularSpeed, yOffset, size });
-
-      accretionPositions[i * 3] = Math.cos(angle) * radius;
-      accretionPositions[i * 3 + 1] = yOffset;
-      accretionPositions[i * 3 + 2] = Math.sin(angle) * radius;
-
-      // Color gradient: White-hot inner disk -> vibrant plasma mid-disk -> violet outer boundary
-      const tempColor = new THREE.Color();
-      if (normR < 0.25) {
-        tempColor.lerpColors(colorWhite, colorPlasma, normR / 0.25);
-      } else {
-        tempColor.lerpColors(colorPlasma, colorCore, (normR - 0.25) / 0.75);
-      }
-      accretionColors[i * 3] = tempColor.r;
-      accretionColors[i * 3 + 1] = tempColor.g;
-      accretionColors[i * 3 + 2] = tempColor.b;
-    }
-
-    accretionGeo.setAttribute('position', new THREE.BufferAttribute(accretionPositions, 3));
-    accretionGeo.setAttribute('color', new THREE.BufferAttribute(accretionColors, 3));
-
-    const accretionMat = new THREE.PointsMaterial({
-      size: 0.32,
-      map: particleTexture,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const accretionMesh = new THREE.Points(accretionGeo, accretionMat);
-    blackHoleGroup.add(accretionMesh);
-
-    // =========================================================================
-    // 7. RELATIVISTIC ASTROPHYSICAL POLAR JETS (Energetic Collimated Beams)
-    // =========================================================================
-    const jetGroup = new THREE.Group();
-    blackHoleGroup.add(jetGroup);
-
-    // Upper and lower beam core cylinders
-    const jetCoreGeo = new THREE.CylinderGeometry(0.06, 0.42, 6.5, 24, 1, true);
-    const jetCoreMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.65,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    });
-
-    const jetNorth = new THREE.Mesh(jetCoreGeo, jetCoreMat);
-    jetNorth.position.y = 3.3;
-    jetGroup.add(jetNorth);
-
-    const jetSouth = new THREE.Mesh(jetCoreGeo, jetCoreMat);
-    jetSouth.position.y = -3.3;
-    jetSouth.rotation.x = Math.PI;
-    jetGroup.add(jetSouth);
-
-    // Outer helical magnetic plasma sheath
-    const jetParticlesCount = 70;
-    const jetGeo = new THREE.BufferGeometry();
-    const jetPositions = new Float32Array(jetParticlesCount * 3);
-    const jetParticlesData: { height: number; speed: number; angle: number; radius: number }[] = [];
-
-    for (let i = 0; i < jetParticlesCount; i++) {
-      const isNorth = i % 2 === 0;
-      const height = (1.5 + Math.random() * 5.0) * (isNorth ? 1 : -1);
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 0.12 + Math.abs(height) * 0.06;
-      const speed = (2.2 + Math.random() * 2.0) * (isNorth ? 1 : -1);
-
-      jetParticlesData.push({ height, speed, angle, radius });
-
-      jetPositions[i * 3] = Math.cos(angle) * radius;
-      jetPositions[i * 3 + 1] = height;
-      jetPositions[i * 3 + 2] = Math.sin(angle) * radius;
-    }
-
-    jetGeo.setAttribute('position', new THREE.BufferAttribute(jetPositions, 3));
-    const jetPointsMat = new THREE.PointsMaterial({
-      size: 0.28,
-      color: BLACK_HOLE_MODES.gargantua.plasmaHex,
-      map: particleTexture,
       transparent: true,
       opacity: 0.8,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
     });
-    const jetPoints = new THREE.Points(jetGeo, jetPointsMat);
-    jetGroup.add(jetPoints);
+    const reticleRing = new THREE.Mesh(reticleRingGeo, reticleRingMat);
+    reticleGroup.add(reticleRing);
 
-    // =========================================================================
-    // 8. TIDAL DISRUPTION & SPAGHETTIFICATION ENGINE ("Feed the Singularity")
-    // =========================================================================
-    // Active star matter clusters spiraling into the black hole and getting stretched
-    const maxInfallingParticles = 60;
-    const infallingGeo = new THREE.BufferGeometry();
-    const infallingPositions = new Float32Array(maxInfallingParticles * 3);
-    const infallingColors = new Float32Array(maxInfallingParticles * 3);
+    // Inner reticle dot
+    const reticleDotGeo = new THREE.CircleGeometry(0.06, 16);
+    const reticleDotMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      blending: THREE.AdditiveBlending,
+    });
+    const reticleDot = new THREE.Mesh(reticleDotGeo, reticleDotMat);
+    reticleGroup.add(reticleDot);
 
-    interface InfallingCluster {
-      id: number;
-      radius: number;
-      angle: number;
-      y: number;
-      speed: number;
-      spread: number;
-      color: THREE.Color;
+    // 6. Active Game Objects Storage
+    const targets: TargetData[] = [];
+    const laserBolts: LaserBolt[] = [];
+    const debris: DebrisParticle[] = [];
+
+    // Particle Texture for explosions
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 32;
+    pCanvas.height = 32;
+    const pCtx = pCanvas.getContext('2d');
+    if (pCtx) {
+      const grad = pCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.3, 'rgba(56, 189, 248, 0.9)');
+      grad.addColorStop(0.7, 'rgba(168, 85, 247, 0.4)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      pCtx.fillStyle = grad;
+      pCtx.fillRect(0, 0, 32, 32);
     }
-    const infallingClusters: InfallingCluster[] = [];
+    const particleTex = new THREE.CanvasTexture(pCanvas);
 
-    infallingGeo.setAttribute('position', new THREE.BufferAttribute(infallingPositions, 3));
-    infallingGeo.setAttribute('color', new THREE.BufferAttribute(infallingColors, 3));
+    // Debris Particle Buffer System
+    const maxDebris = 180;
+    const debrisGeo = new THREE.BufferGeometry();
+    const debrisPositions = new Float32Array(maxDebris * 3);
+    const debrisColors = new Float32Array(maxDebris * 3);
 
-    const infallingMat = new THREE.PointsMaterial({
-      size: 0.42,
-      map: particleTexture,
+    debrisGeo.setAttribute('position', new THREE.BufferAttribute(debrisPositions, 3));
+    debrisGeo.setAttribute('color', new THREE.BufferAttribute(debrisColors, 3));
+
+    const debrisMat = new THREE.PointsMaterial({
+      size: 0.35,
+      map: particleTex,
       vertexColors: true,
       transparent: true,
       opacity: 0.95,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const infallingPoints = new THREE.Points(infallingGeo, infallingMat);
-    blackHoleGroup.add(infallingPoints);
+    const debrisPoints = new THREE.Points(debrisGeo, debrisMat);
+    scene.add(debrisPoints);
 
-    // Gravitational Spacetime Ripple
-    const waveRingGeo = new THREE.RingGeometry(1.4, 1.8, 64);
-    const waveRingMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+    // 7. Shockwave Ring for explosive impacts
+    const shockwaveGeo = new THREE.RingGeometry(0.2, 0.6, 32);
+    const shockwaveMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0,
       blending: THREE.AdditiveBlending,
     });
-    const waveRing = new THREE.Mesh(waveRingGeo, waveRingMat);
-    blackHoleGroup.add(waveRing);
-    let waveActive = false;
-    let waveProgress = 0;
+    const shockwaveMesh = new THREE.Mesh(shockwaveGeo, shockwaveMat);
+    scene.add(shockwaveMesh);
+    let shockwaveActive = false;
+    let shockwaveProgress = 0;
 
-    const spawnInfallingStar = (customRadius = 5.6, customAngle = Math.random() * Math.PI * 2) => {
-      // Add a celestial star matter cluster
-      infallingClusters.push({
-        id: Math.random(),
-        radius: customRadius,
-        angle: customAngle,
-        y: (Math.random() - 0.5) * 0.4,
-        speed: 0.45 + Math.random() * 0.3,
-        spread: 0.05,
-        color: new THREE.Color(0xfde047), // Stellar gold/amber
+    const triggerShockwave = (pos: THREE.Vector3, colorHex = 0x38bdf8) => {
+      shockwaveMesh.position.copy(pos);
+      shockwaveMat.color.setHex(colorHex);
+      shockwaveActive = true;
+      shockwaveProgress = 0;
+      shockwaveMat.opacity = 0.95;
+    };
+
+    // Explosion Particle Spawner
+    const spawnExplosion = (pos: THREE.Vector3, count = 24, baseColor = new THREE.Color(0x38bdf8)) => {
+      for (let i = 0; i < count; i++) {
+        if (debris.length >= maxDebris) debris.shift();
+        const vel = new THREE.Vector3(
+          (Math.random() - 0.5) * 12,
+          (Math.random() - 0.5) * 12,
+          (Math.random() - 0.5) * 12
+        );
+        const col = baseColor.clone();
+        col.offsetHSL((Math.random() - 0.5) * 0.15, 0, (Math.random() - 0.5) * 0.2);
+        debris.push({
+          pos: pos.clone(),
+          vel,
+          life: 1.0,
+          maxLife: 0.5 + Math.random() * 0.5,
+          color: col,
+          size: 0.3 + Math.random() * 0.3,
+        });
+      }
+    };
+
+    // 8. Target Spawner Engine
+    const targetGeos = {
+      crystal: new THREE.IcosahedronGeometry(0.72, 0),
+      spark: new THREE.OctahedronGeometry(0.65, 0),
+      bomb: new THREE.SphereGeometry(0.68, 16, 16),
+      drone: new THREE.DodecahedronGeometry(1.15, 0),
+    };
+
+    const targetMats = {
+      crystal: new THREE.MeshPhongMaterial({
+        color: 0xa855f7,
+        emissive: 0x581c87,
+        specular: 0xffffff,
+        shininess: 90,
+        flatShading: true,
+      }),
+      spark: new THREE.MeshPhongMaterial({
+        color: 0xf59e0b,
+        emissive: 0x78350f,
+        specular: 0xffffff,
+        shininess: 100,
+        flatShading: true,
+      }),
+      bomb: new THREE.MeshPhongMaterial({
+        color: 0xef4444,
+        emissive: 0x991b1b,
+        specular: 0xffffff,
+        shininess: 80,
+      }),
+      drone: new THREE.MeshPhongMaterial({
+        color: 0x06b6d4,
+        emissive: 0x0e7490,
+        specular: 0xffffff,
+        wireframe: false,
+        flatShading: true,
+      }),
+    };
+
+    const spawnTarget = () => {
+      // Determine target type probabilistically
+      const rand = Math.random();
+      let type: 'crystal' | 'spark' | 'bomb' | 'drone' = 'crystal';
+      let points = 100;
+      let hp = 1;
+
+      if (rand > 0.88) {
+        type = 'bomb';
+        points = 250;
+      } else if (rand > 0.72) {
+        type = 'spark';
+        points = 200;
+      } else if (rand > 0.6) {
+        type = 'drone';
+        points = 400;
+        hp = 2;
+      }
+
+      const mesh = new THREE.Mesh(targetGeos[type], targetMats[type].clone());
+      const spawnX = (Math.random() - 0.5) * 11;
+      const spawnY = THREE.MathUtils.lerp(-1.5, 4.0, Math.random());
+      const spawnZ = THREE.MathUtils.lerp(-24, -16, Math.random());
+
+      mesh.position.set(spawnX, spawnY, spawnZ);
+      scene.add(mesh);
+
+      // Add wireframe edge glow
+      const wire = new THREE.Mesh(
+        targetGeos[type],
+        new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.35,
+        })
+      );
+      mesh.add(wire);
+
+      const rotSpeed = new THREE.Vector3(
+        (Math.random() - 0.5) * 3,
+        (Math.random() - 0.5) * 3,
+        (Math.random() - 0.5) * 3
+      );
+
+      // Drift gently forward toward the player
+      const forwardSpeed = 2.5 + Math.random() * 2.0;
+      const velocity = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.4, forwardSpeed);
+
+      targets.push({
+        mesh,
+        type,
+        points,
+        rotSpeed,
+        velocity,
+        hp,
+        maxHp: hp,
+        scale: 1.0,
+      });
+    };
+
+    // Pre-populate with targets
+    for (let i = 0; i < 6; i++) {
+      spawnTarget();
+    }
+
+    // 9. Laser Bolt Spawner & Raycasting
+    const laserBoltGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 8);
+    laserBoltGeo.rotateX(Math.PI / 2);
+    const laserBoltMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const raycaster = new THREE.Raycaster();
+    const mouseNorm = new THREE.Vector2();
+
+    const shootLaser = (targetWorldPos: THREE.Vector3) => {
+      // Recoil animation on cannon
+      turretGroup.position.z = 5.2;
+      cannonLight.intensity = 8.0;
+
+      // Spawn left & right laser bolts
+      const leftStart = turretGroup.position.clone().add(new THREE.Vector3(-0.24, 0.6, 0));
+      const rightStart = turretGroup.position.clone().add(new THREE.Vector3(0.24, 0.6, 0));
+
+      [leftStart, rightStart].forEach((startPos) => {
+        const bolt = new THREE.Mesh(laserBoltGeo, laserBoltMat);
+        bolt.position.copy(startPos);
+        bolt.lookAt(targetWorldPos);
+
+        const dir = targetWorldPos.clone().sub(startPos).normalize();
+        const velocity = dir.multiplyScalar(45);
+
+        scene.add(bolt);
+        laserBolts.push({ mesh: bolt, velocity, life: 1.2 });
       });
 
-      // Pulse spacetime wave
-      waveActive = true;
-      waveProgress = 0;
-      waveRingMat.opacity = 0.9;
-
-      accretionLight1.intensity = 8.5;
-      accretionLight2.intensity = 7.5;
+      playSound('laser');
     };
 
-    feedStarRef.current = () => {
-      spawnInfallingStar();
-      setMassConsumed((m) => m + 1);
-    };
+    // 10. Direct Click / Tap Hit Detection
+    fireLaserRef.current = (clientX: number, clientY: number) => {
+      const rect = mount.getBoundingClientRect();
+      mouseNorm.x = ((clientX - rect.left) / width) * 2 - 1;
+      mouseNorm.y = -((clientY - rect.top) / height) * 2 + 1;
 
-    triggerJetRef.current = () => {
-      jetCoreMat.opacity = 1.0;
-      jetLight.intensity = 9.0;
-      waveActive = true;
-      waveProgress = 0;
-      waveRingMat.opacity = 0.9;
-    };
+      raycaster.setFromCamera(mouseNorm, camera);
 
-    updateModeRef.current = (config: BlackHoleConfig) => {
-      accretionLight1.color.setHex(config.coreHex);
-      accretionLight2.color.setHex(config.plasmaHex);
+      // Calculate target point in 3D space
+      const targetDist = 12;
+      const targetPoint = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(targetDist));
 
-      verticalLensingMat.color.setHex(config.plasmaHex);
-      secondaryLensingMat.color.setHex(config.coreHex);
-      jetPointsMat.color.setHex(config.plasmaHex);
+      shootLaser(targetPoint);
 
-      // Recalculate accretion disk colors
-      const newCoreCol = new THREE.Color(config.coreHex);
-      const newPlasmaCol = new THREE.Color(config.plasmaHex);
-      const colorsArr = accretionGeo.attributes.color.array as Float32Array;
+      // Check intersections with active target meshes
+      const targetMeshes = targets.map((t) => t.mesh);
+      const intersects = raycaster.intersectObjects(targetMeshes, false);
 
-      for (let i = 0; i < accretionParticleCount; i++) {
-        const normR = (accretionData[i].radius - 1.7) / (5.0 - 1.7);
-        const tempColor = new THREE.Color();
-        if (normR < 0.25) {
-          tempColor.lerpColors(colorWhite, newPlasmaCol, normR / 0.25);
-        } else {
-          tempColor.lerpColors(newPlasmaCol, newCoreCol, (normR - 0.25) / 0.75);
+      if (intersects.length > 0) {
+        const hitMesh = intersects[0].object as THREE.Mesh;
+        const targetIdx = targets.findIndex((t) => t.mesh === hitMesh);
+
+        if (targetIdx !== -1) {
+          const t = targets[targetIdx];
+          t.hp -= 1;
+
+          if (t.hp <= 0) {
+            // Target Destroyed!
+            const hitPos = t.mesh.position.clone();
+            scene.remove(t.mesh);
+            targets.splice(targetIdx, 1);
+
+            // Explosions and SFX
+            if (t.type === 'bomb') {
+              playSound('bomb');
+              triggerShockwave(hitPos, 0xef4444);
+              spawnExplosion(hitPos, 36, new THREE.Color(0xef4444));
+
+              // Chain reaction: destroy all nearby targets within radius 4.5
+              for (let j = targets.length - 1; j >= 0; j--) {
+                const other = targets[j];
+                if (other.mesh.position.distanceTo(hitPos) < 4.5) {
+                  scene.remove(other.mesh);
+                  targets.splice(j, 1);
+                  spawnExplosion(other.mesh.position, 18, new THREE.Color(0xf59e0b));
+                  setScore((s) => s + other.points * 2);
+                }
+              }
+            } else if (t.type === 'spark') {
+              playSound('combo');
+              triggerShockwave(hitPos, 0xf59e0b);
+              spawnExplosion(hitPos, 28, new THREE.Color(0xf59e0b));
+            } else {
+              playSound('hit');
+              triggerShockwave(hitPos, 0xa855f7);
+              spawnExplosion(hitPos, 22, new THREE.Color(0xa855f7));
+            }
+
+            // Update Score & Combos
+            setScore((s) => s + t.points);
+            setCombo((c) => {
+              const nextCombo = c + 1;
+              if (nextCombo % 5 === 0) playSound('combo');
+              return nextCombo;
+            });
+            setEmpCharge((charge) => Math.min(100, charge + 15));
+            setTimeLeft((time) => Math.min(60, time + 2)); // Extra time reward!
+
+            setFloatingBonus({
+              text: `+${t.points} PTS`,
+              id: Date.now(),
+            });
+
+            // Replenish target
+            spawnTarget();
+          } else {
+            // Partial hit on armored drone
+            t.mesh.scale.multiplyScalar(0.9);
+            playSound('hit');
+            spawnExplosion(t.mesh.position, 10, new THREE.Color(0x06b6d4));
+          }
         }
-        colorsArr[i * 3] = tempColor.r;
-        colorsArr[i * 3 + 1] = tempColor.g;
-        colorsArr[i * 3 + 2] = tempColor.b;
+      } else {
+        // Missed shot resets combo streak
+        setCombo(0);
       }
-      accretionGeo.attributes.color.needsUpdate = true;
     };
 
-    // =========================================================================
-    // 9. RELATIVISTIC FRAME DRAGGING & CURSOR GRAVITY WARP
-    // =========================================================================
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetRotX = 0.38;
-    let targetRotY = 0;
+    // EMP Shockwave Special Ability
+    triggerEmpRef.current = () => {
+      playSound('emp');
+      const origin = new THREE.Vector3(0, 0, -6);
+      triggerShockwave(origin, 0x38bdf8);
+      shockwaveMesh.scale.set(15, 15, 15);
+
+      let totalEarned = 0;
+      // Detonate all active targets in screen
+      while (targets.length > 0) {
+        const t = targets.pop()!;
+        scene.remove(t.mesh);
+        spawnExplosion(t.mesh.position, 16, new THREE.Color(0x38bdf8));
+        totalEarned += t.points;
+      }
+      setScore((s) => s + totalEarned * 2);
+      setEmpCharge(0);
+
+      // Respawn fresh batch
+      for (let i = 0; i < 6; i++) {
+        spawnTarget();
+      }
+    };
+
+    resetGameRef.current = () => {
+      setScore(0);
+      setCombo(0);
+      setEmpCharge(0);
+      setTimeLeft(45);
+      setWave(1);
+      setGameState('playing');
+
+      // Clear existing targets
+      while (targets.length > 0) {
+        const t = targets.pop()!;
+        scene.remove(t.mesh);
+      }
+      for (let i = 0; i < 6; i++) {
+        spawnTarget();
+      }
+    };
+
+    startGameRef.current = () => {
+      setGameState('playing');
+    };
+
+    // 11. Mouse / Pointer Crosshair Tracking
+    let targetReticleX = 0;
+    let targetReticleY = 0;
 
     const onPointerMove = (e: PointerEvent) => {
       const rect = mount.getBoundingClientRect();
-      const normX = ((e.clientX - rect.left) / width - 0.5) * 2;
-      const normY = ((e.clientY - rect.top) / height - 0.5) * 2;
+      const normX = ((e.clientX - rect.left) / width) * 2 - 1;
+      const normY = -((e.clientY - rect.top) / height) * 2 + 1;
 
-      // Mouse tilts black hole along frame-dragging axis
-      targetRotY = normX * 0.9;
-      targetRotX = 0.38 + normY * 0.6;
-    };
+      // Project onto reticle plane at z = 0
+      targetReticleX = normX * 6.5;
+      targetReticleY = normY * 3.8;
 
-    const onPointerLeave = () => {
-      targetRotX = 0.38;
-      targetRotY = 0;
+      // Cannon aims smoothly at cursor
+      turretGroup.rotation.y = -normX * 0.45;
+      turretGroup.rotation.x = normY * 0.25;
     };
 
     const onPointerDown = (e: PointerEvent) => {
-      const rect = mount.getBoundingClientRect();
-      const normX = ((e.clientX - rect.left) / width - 0.5) * 2;
-      const normY = ((e.clientY - rect.top) / height - 0.5) * 2;
-
-      // Spawn infalling star at pointer's angular coordinate
-      const clickAngle = Math.atan2(normY, normX);
-      spawnInfallingStar(5.2, clickAngle);
-      setMassConsumed((m) => m + 1);
+      if (gameState === 'idle') {
+        setGameState('playing');
+      }
+      if (gameState === 'playing') {
+        fireLaserRef.current?.(e.clientX, e.clientY);
+      }
     };
 
     mount.addEventListener('pointermove', onPointerMove);
-    mount.addEventListener('pointerleave', onPointerLeave);
     mount.addEventListener('pointerdown', onPointerDown);
 
-    // =========================================================================
-    // 10. 60FPS RELATIVISTIC PHYSICS SIMULATION LOOP
-    // =========================================================================
+    // 12. 60FPS Game Physics Loop
     let animId: number;
     const clock = new THREE.Clock();
+    let spawnTimer = 0;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
       const delta = Math.min(clock.getDelta(), 0.05);
       const time = clock.getElapsedTime();
 
-      // Smooth Frame-Dragging Interpolation
-      mouseX += (targetRotY - mouseX) * 0.06;
-      mouseY += (targetRotX - mouseY) * 0.06;
+      // Smooth Reticle tracking
+      reticleGroup.position.x += (targetReticleX - reticleGroup.position.x) * 0.2;
+      reticleGroup.position.y += (targetReticleY - reticleGroup.position.y) * 0.2;
+      reticleRing.rotation.z = time * 1.5;
 
-      blackHoleGroup.rotation.y = time * 0.12 + mouseX;
-      blackHoleGroup.rotation.x = mouseY;
-
-      // Einstein Photon Ring Lensing Oscillation
-      const lensPulse = 1.0 + Math.sin(time * 3.5) * 0.03;
-      photonRing.scale.set(lensPulse, lensPulse, lensPulse);
-      photonRing.lookAt(camera.position);
-
-      verticalLensing.rotation.y = Math.PI / 2 + Math.sin(time * 0.6) * 0.08;
-
-      // -----------------------------------------------------------------------
-      // Keplerian Accretion Disk Simulation & Relativistic Doppler Beaming
-      // -----------------------------------------------------------------------
-      const posArr = accretionGeo.attributes.position.array as Float32Array;
-      const colArr = accretionGeo.attributes.color.array as Float32Array;
-
-      for (let i = 0; i < accretionParticleCount; i++) {
-        const p = accretionData[i];
-        p.angle += p.angularSpeed * delta * 2.2;
-
-        const px = Math.cos(p.angle) * p.radius;
-        const pz = Math.sin(p.angle) * p.radius;
-        const py = p.yOffset + Math.sin(time * 2.5 + p.radius * 2.0) * 0.03;
-
-        posArr[i * 3] = px;
-        posArr[i * 3 + 1] = py;
-        posArr[i * 3 + 2] = pz;
-
-        // Relativistic Doppler Beaming: Matter approaching the camera glows brighter
-        const dopplerFactor = Math.sin(p.angle + blackHoleGroup.rotation.y);
-        const intensityShift = THREE.MathUtils.clamp(1.0 + dopplerFactor * 0.35, 0.6, 1.4);
-        colArr[i * 3] = Math.min(1.0, colArr[i * 3] * intensityShift);
-        colArr[i * 3 + 1] = Math.min(1.0, colArr[i * 3 + 1] * intensityShift);
-        colArr[i * 3 + 2] = Math.min(1.0, colArr[i * 3 + 2] * intensityShift);
+      // Cannon recoil recovery
+      if (turretGroup.position.z < 5.5) {
+        turretGroup.position.z += (5.5 - turretGroup.position.z) * 0.15;
       }
-      accretionGeo.attributes.position.needsUpdate = true;
-      accretionGeo.attributes.color.needsUpdate = true;
-
-      // -----------------------------------------------------------------------
-      // Relativistic Polar Jets Animation
-      // -----------------------------------------------------------------------
-      const jPosArr = jetGeo.attributes.position.array as Float32Array;
-      for (let i = 0; i < jetParticlesCount; i++) {
-        const jp = jetParticlesData[i];
-        jp.height += jp.speed * delta;
-        jp.angle += delta * 4.0;
-
-        // Wrap around at jet extremities
-        if (jp.height > 6.5) jp.height = 1.6;
-        if (jp.height < -6.5) jp.height = -1.6;
-
-        const currentRad = 0.08 + Math.abs(jp.height) * 0.07;
-        jPosArr[i * 3] = Math.cos(jp.angle) * currentRad;
-        jPosArr[i * 3 + 1] = jp.height;
-        jPosArr[i * 3 + 2] = Math.sin(jp.angle) * currentRad;
-      }
-      jetGeo.attributes.position.needsUpdate = true;
-
-      // -----------------------------------------------------------------------
-      // Spaghettification of Infalling Celestial Matter (Tidal Disruption)
-      // -----------------------------------------------------------------------
-      const infPosArr = infallingGeo.attributes.position.array as Float32Array;
-      const infColArr = infallingGeo.attributes.color.array as Float32Array;
-
-      // Clear infalling buffer
-      for (let k = 0; k < infPosArr.length; k++) {
-        infPosArr[k] = 0;
-        infColArr[k] = 0;
+      if (cannonLight.intensity > 3.5) {
+        cannonLight.intensity += (3.5 - cannonLight.intensity) * 0.08;
       }
 
-      for (let cIdx = infallingClusters.length - 1; cIdx >= 0; cIdx--) {
-        const cluster = infallingClusters[cIdx];
-        // Accelerate inward as it approaches the gravitational singularity
-        cluster.speed += delta * (4.2 / (cluster.radius * cluster.radius));
-        cluster.radius -= cluster.speed * delta * 1.5;
-        cluster.angle += (1.8 / Math.sqrt(cluster.radius)) * delta * 3.5;
-        // Tidal stretching (Spaghettification): expands along orbital arc
-        cluster.spread += delta * 0.45;
+      // Shockwave ring expansion
+      if (shockwaveActive) {
+        shockwaveProgress += delta * 3.2;
+        const scale = 1.0 + shockwaveProgress * 8.0;
+        shockwaveMesh.scale.set(scale, scale, scale);
+        shockwaveMat.opacity = Math.max(0, 0.95 * (1.0 - shockwaveProgress));
+        if (shockwaveProgress >= 1.0) shockwaveActive = false;
+      }
 
-        // Plunge across the Event Horizon!
-        if (cluster.radius <= eventHorizonRadius) {
-          infallingClusters.splice(cIdx, 1);
-          // Hawking flash on event horizon entry
-          photonRingMat.opacity = 1.0;
-          accretionLight1.intensity = 9.0;
+      // Laser Bolt Movement
+      for (let i = laserBolts.length - 1; i >= 0; i--) {
+        const bolt = laserBolts[i];
+        bolt.mesh.position.addScaledVector(bolt.velocity, delta);
+        bolt.life -= delta;
+        if (bolt.life <= 0 || bolt.mesh.position.z < -30) {
+          scene.remove(bolt.mesh);
+          laserBolts.splice(i, 1);
+        }
+      }
+
+      // Targets Update & Spawning
+      spawnTimer += delta;
+      if (spawnTimer > 1.8 && targets.length < 8) {
+        spawnTarget();
+        spawnTimer = 0;
+      }
+
+      for (let i = targets.length - 1; i >= 0; i--) {
+        const t = targets[i];
+        t.mesh.rotation.x += t.rotSpeed.x * delta;
+        t.mesh.rotation.y += t.rotSpeed.y * delta;
+        t.mesh.rotation.z += t.rotSpeed.z * delta;
+
+        t.mesh.position.addScaledVector(t.velocity, delta);
+
+        // Target flew past player boundary without being destroyed
+        if (t.mesh.position.z > 8.0) {
+          scene.remove(t.mesh);
+          targets.splice(i, 1);
+          spawnTarget();
+        }
+      }
+
+      // Explosion Debris Particle Physics
+      const dPosArr = debrisGeo.attributes.position.array as Float32Array;
+      const dColArr = debrisGeo.attributes.color.array as Float32Array;
+
+      for (let k = 0; k < dPosArr.length; k++) {
+        dPosArr[k] = 0;
+        dColArr[k] = 0;
+      }
+
+      for (let i = debris.length - 1; i >= 0; i--) {
+        const p = debris[i];
+        p.pos.addScaledVector(p.vel, delta);
+        p.vel.multiplyScalar(0.92); // air resistance
+        p.life -= delta / p.maxLife;
+
+        if (p.life <= 0) {
+          debris.splice(i, 1);
           continue;
         }
 
-        // Draw stretched spaghettified plasma trail
-        const particlesPerCluster = 8;
-        const baseIdx = cIdx * particlesPerCluster;
-        if (baseIdx + particlesPerCluster <= maxInfallingParticles) {
-          for (let p = 0; p < particlesPerCluster; p++) {
-            const spreadAngle = cluster.angle - (p * cluster.spread * 0.08);
-            const spreadRad = cluster.radius + (p * 0.04);
-            const idx = (baseIdx + p) * 3;
+        const idx = i * 3;
+        dPosArr[idx] = p.pos.x;
+        dPosArr[idx + 1] = p.pos.y;
+        dPosArr[idx + 2] = p.pos.z;
 
-            infPosArr[idx] = Math.cos(spreadAngle) * spreadRad;
-            infPosArr[idx + 1] = cluster.y + (p - 4) * 0.02;
-            infPosArr[idx + 2] = Math.sin(spreadAngle) * spreadRad;
-
-            infColArr[idx] = 1.0;
-            infColArr[idx + 1] = 0.9 - p * 0.08;
-            infColArr[idx + 2] = 0.3;
-          }
-        }
+        dColArr[idx] = p.color.r * p.life;
+        dColArr[idx + 1] = p.color.g * p.life;
+        dColArr[idx + 2] = p.color.b * p.life;
       }
-      infallingGeo.attributes.position.needsUpdate = true;
-      infallingGeo.attributes.color.needsUpdate = true;
-
-      // -----------------------------------------------------------------------
-      // Spacetime Gravitational Wave Ripple
-      // -----------------------------------------------------------------------
-      if (waveActive) {
-        waveProgress += delta * 2.2;
-        const waveScale = 1.0 + waveProgress * 3.8;
-        waveRing.scale.set(waveScale, waveScale, waveScale);
-        waveRingMat.opacity = Math.max(0, 0.9 * (1.0 - waveProgress));
-
-        if (waveProgress >= 1.0) {
-          waveActive = false;
-        }
-      }
-
-      // Lights and Jet intensity decay back to baseline
-      if (jetCoreMat.opacity > 0.65) {
-        jetCoreMat.opacity += (0.65 - jetCoreMat.opacity) * 0.05;
-      }
-      if (jetLight.intensity > 3.5) {
-        jetLight.intensity += (3.5 - jetLight.intensity) * 0.06;
-      }
-      if (photonRingMat.opacity > 0.9) {
-        photonRingMat.opacity += (0.9 - photonRingMat.opacity) * 0.05;
-      }
-      if (accretionLight1.intensity > 4.2) {
-        accretionLight1.intensity += (4.2 - accretionLight1.intensity) * 0.05;
-      }
-      if (accretionLight2.intensity > 3.8) {
-        accretionLight2.intensity += (3.8 - accretionLight2.intensity) * 0.05;
-      }
+      debrisGeo.attributes.position.needsUpdate = true;
+      debrisGeo.attributes.color.needsUpdate = true;
 
       renderer.render(scene, camera);
     };
@@ -669,183 +782,228 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
       mount.removeEventListener('pointermove', onPointerMove);
-      mount.removeEventListener('pointerleave', onPointerLeave);
       mount.removeEventListener('pointerdown', onPointerDown);
 
       if (renderer.domElement && mount.contains(renderer.domElement)) {
         mount.removeChild(renderer.domElement);
       }
 
-      horizonGeo.dispose();
-      horizonMat.dispose();
-      shadowHaloGeo.dispose();
-      shadowHaloMat.dispose();
-      photonRingGeo.dispose();
-      photonRingMat.dispose();
-      verticalLensingGeo.dispose();
-      verticalLensingMat.dispose();
-      secondaryLensingGeo.dispose();
-      secondaryLensingMat.dispose();
-      accretionGeo.dispose();
-      accretionMat.dispose();
-      jetCoreGeo.dispose();
-      jetCoreMat.dispose();
-      jetGeo.dispose();
-      jetPointsMat.dispose();
-      infallingGeo.dispose();
-      infallingMat.dispose();
-      waveRingGeo.dispose();
-      waveRingMat.dispose();
-      particleTexture.dispose();
+      // Cleanup
+      baseGeo.dispose();
+      baseMat.dispose();
+      barrelGeo.dispose();
+      barrelMat.dispose();
+      reticleRingGeo.dispose();
+      reticleRingMat.dispose();
+      reticleDotGeo.dispose();
+      reticleDotMat.dispose();
+      gridHelper.dispose();
+      debrisGeo.dispose();
+      debrisMat.dispose();
+      shockwaveGeo.dispose();
+      shockwaveMat.dispose();
+      laserBoltGeo.dispose();
+      laserBoltMat.dispose();
+      particleTex.dispose();
+
+      Object.values(targetGeos).forEach((g) => g.dispose());
+      Object.values(targetMats).forEach((m) => m.dispose());
       renderer.dispose();
     };
-  }, []);
-
-  // Handlers
-  const handleSelectMode = (mode: BlackHoleType) => {
-    setActiveMode(mode);
-    const config = BLACK_HOLE_MODES[mode];
-    updateModeRef.current?.(config);
-  };
-
-  const handleFeed = () => {
-    setIsFeeding(true);
-    feedStarRef.current?.();
-    setTimeout(() => setIsFeeding(false), 600);
-  };
-
-  const handleJetSurge = () => {
-    setJetOverdrive(true);
-    triggerJetRef.current?.();
-    setTimeout(() => setJetOverdrive(false), 500);
-  };
-
-  const currentMode = BLACK_HOLE_MODES[activeMode];
+  }, [gameState, playSound]);
 
   return (
     <div
-      className={`glass-card rounded-3xl p-6 sm:p-7 border border-purple-500/40 hover:border-purple-400/80 bg-gradient-to-b from-[#120824]/95 via-[#080314]/95 to-[#04010a]/95 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-purple-950/70 transition-all duration-300 ${className}`}
+      className={`glass-card rounded-3xl p-6 sm:p-7 border border-purple-500/40 hover:border-purple-400/80 bg-gradient-to-b from-[#130926]/95 via-[#0a0418]/95 to-[#04010a]/95 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-purple-950/70 transition-all duration-300 ${className}`}
     >
-      {/* 1. Header Astrophysics HUD */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08] relative z-20">
+      {/* 1. Arcade Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.08] relative z-20">
         <div className="flex items-center gap-2.5">
           <div className="relative flex items-center justify-center">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping absolute" />
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping absolute" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[12px] font-mono uppercase tracking-wider text-purple-200 font-bold">
-                Relativistic Singularity & Accretion Laboratory
+              <span className="text-[13px] font-mono uppercase tracking-wider text-purple-200 font-bold flex items-center gap-1.5">
+                <Gamepad2 className="w-4 h-4 text-purple-400" />
+                Venture Blaster 3D
               </span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                KERR METRIC
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                ARCADE LIVE
               </span>
             </div>
             <p className="text-[11px] text-zinc-400">
-              Interactive 3D Black Hole • Gravitational Lensing, Accretion Disk & Spaghettification
+              Interactive 3D Target Shooter • Aim with Cursor, Tap to Shoot & Trigger EMPs
             </p>
           </div>
         </div>
 
-        {/* Black Hole Spectrum Mode Selectors */}
-        <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-xl border border-white/[0.08]">
-          {(Object.keys(BLACK_HOLE_MODES) as BlackHoleType[]).map((mKey) => {
-            const mode = BLACK_HOLE_MODES[mKey];
-            const isActive = activeMode === mKey;
-            return (
-              <button
-                key={mKey}
-                type="button"
-                onClick={() => handleSelectMode(mKey)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-gradient-to-r text-white shadow-md font-semibold ' + mode.themeColor
-                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
-                }`}
-              >
-                {mode.name}
-              </button>
-            );
-          })}
+        {/* Arcade Status Readout & Sound Control */}
+        <div className="flex items-center gap-3 font-mono text-xs">
+          {/* Best Score */}
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] text-amber-300">
+            <Trophy className="w-3.5 h-3.5" />
+            <span className="text-[11px] text-zinc-400">BEST:</span>
+            <strong className="text-white font-bold">{highScore}</strong>
+          </div>
+
+          {/* Sound Toggle */}
+          <button
+            type="button"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer"
+            title={soundEnabled ? 'Mute SFX' : 'Enable SFX'}
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4 text-zinc-500" />}
+          </button>
         </div>
       </div>
 
-      {/* 2. Interactive 3D Black Hole Canvas */}
-      <div className="relative w-full h-72 sm:h-80 my-2 z-10 flex items-center justify-center select-none">
+      {/* 2. Interactive 3D Canvas Mount */}
+      <div className="relative w-full h-72 sm:h-80 my-2 z-10 flex items-center justify-center select-none overflow-hidden rounded-2xl bg-[#06020e]/60 border border-white/[0.06]">
         <div
           ref={mountRef}
           className="w-full h-full cursor-crosshair relative z-10"
-          title="Move cursor to warp gravitational frame • Click canvas to drop stellar matter"
+          title="Aim with mouse • Click or tap to shoot laser bolts"
         />
 
-        {/* Live Gravitational Lensing Indicator */}
-        <div className="absolute top-3 left-3 pointer-events-none z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-[10px] font-mono text-zinc-400">
-          <CircleDot className="w-3 h-3 text-cyan-400 animate-spin" />
-          <span>Einstein Ring: Warped</span>
+        {/* Live Floating Bonus Text Animation */}
+        {floatingBonus && (
+          <div
+            key={floatingBonus.id}
+            className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30 animate-bounce font-mono text-lg font-black text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.8)]"
+          >
+            {floatingBonus.text}
+          </div>
+        )}
+
+        {/* In-Game HUD: Score & Streak */}
+        <div className="absolute top-3 left-3 pointer-events-none z-20 flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/60 border border-white/10 backdrop-blur-md">
+            <Target className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-mono text-xs text-zinc-400">SCORE:</span>
+            <strong className="font-mono text-sm text-white tracking-wider">{score}</strong>
+          </div>
+
+          {combo > 1 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold animate-pulse">
+              <Flame className="w-3 h-3 text-amber-400" />
+              <span>STREAK {combo}x COMBO!</span>
+            </div>
+          )}
         </div>
 
-        {/* Live Relativistic Telemetry */}
-        <div className="absolute top-3 right-3 pointer-events-none z-20 flex flex-col items-end gap-0.5 px-2.5 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-[10px] font-mono">
-          <span className="text-zinc-400">Spin Parameter:</span>
-          <span className="text-purple-300 font-bold">{currentMode.spinParam}</span>
+        {/* In-Game HUD: Time Clock */}
+        <div className="absolute top-3 right-3 pointer-events-none z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60 border border-white/10 backdrop-blur-md font-mono text-xs">
+          <span className="text-zinc-400">TIME:</span>
+          <strong className={`text-sm ${timeLeft <= 10 ? 'text-rose-400 animate-ping font-black' : 'text-emerald-400 font-bold'}`}>
+            {timeLeft}s
+          </strong>
         </div>
 
-        {/* Mid-canvas Interaction Guidance Hint */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-md text-[10px] font-mono text-zinc-300">
-          <Orbit className="w-3 h-3 text-amber-300 animate-pulse" />
-          <span>Click anywhere in 3D space to feed stars into the singularity</span>
-        </div>
+        {/* Overlay: Game Start Prompt */}
+        {gameState === 'idle' && (
+          <div className="absolute inset-0 z-30 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-500/40 mb-3 animate-pulse">
+              <Gamepad2 className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl font-black text-white tracking-tight">Venture Blaster 3D</h3>
+            <p className="text-xs text-zinc-300 max-w-sm mt-1 mb-4 leading-relaxed">
+              Blast the cosmic obstacles! Crystals (+100), Golden Sparks (+200), and Red Plasma Bombs (+Chain Reaction)!
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                resetGameRef.current?.();
+              }}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/30 hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              <span>Start Game</span>
+            </button>
+          </div>
+        )}
+
+        {/* Overlay: Game Over Screen */}
+        {gameState === 'gameover' && (
+          <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30 mb-2 font-bold uppercase tracking-wider">
+              Mission Completed
+            </span>
+            <h3 className="text-2xl font-black text-white">Final Score: {score}</h3>
+            <p className="text-xs text-zinc-400 mt-1 mb-4">
+              Best Run: <strong className="text-amber-300">{highScore} PTS</strong>
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                resetGameRef.current?.();
+              }}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/30 hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Play Again</span>
+            </button>
+          </div>
+        )}
+
+        {/* Guidance tip on bottom */}
+        {gameState === 'playing' && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-md text-[10px] font-mono text-zinc-400">
+            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <span>Tap or Click anywhere to fire lasers • Chain bombs for mega points!</span>
+          </div>
+        )}
       </div>
 
-      {/* 3. Astrophysical Controls & Telemetry Dashboard */}
-      <div className="pt-4 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-3 text-xs relative z-20">
-        {/* Kinetic Action Triggers */}
+      {/* 3. Bottom Controls & EMP Ability Dock */}
+      <div className="pt-3 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-3 text-xs relative z-20">
+        {/* EMP Weapon Trigger */}
         <div className="flex items-center gap-2">
-          {/* Feed Singularity (Tidal Disruption Event) */}
           <button
             type="button"
-            onClick={handleFeed}
+            onClick={() => {
+              if (empCharge >= 100) triggerEmpRef.current?.();
+            }}
+            disabled={empCharge < 100}
             className={`px-4 py-2 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
-              isFeeding
-                ? 'bg-gradient-to-r from-amber-500 to-rose-600 text-white border-amber-300 shadow-amber-500/50 scale-105'
-                : 'bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-500 hover:to-indigo-500 text-white border-purple-400/30 hover:border-purple-300 shadow-purple-900/40 hover:scale-[1.02]'
+              empCharge >= 100
+                ? 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white border-cyan-300 shadow-cyan-500/50 hover:scale-105 animate-pulse'
+                : 'bg-white/[0.03] text-zinc-500 border-white/5 cursor-not-allowed'
             }`}
           >
-            <Flame className={`w-3.5 h-3.5 ${isFeeding ? 'animate-bounce text-amber-200' : 'text-amber-400'}`} />
-            <span>Feed Singularity (Tidal Disruption)</span>
+            <Zap className={`w-3.5 h-3.5 ${empCharge >= 100 ? 'text-amber-300 fill-amber-300 animate-bounce' : 'text-zinc-500'}`} />
+            <span>{empCharge >= 100 ? '⚡ DETONATE EMP NOVA!' : `EMP Charging (${empCharge}%)`}</span>
           </button>
 
-          {/* Relativistic Jet Overdrive */}
+          {/* Restart Game */}
           <button
             type="button"
-            onClick={handleJetSurge}
-            className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              jetOverdrive
-                ? 'bg-cyan-500 text-black border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.8)] scale-105'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-zinc-300 hover:text-white'
-            }`}
+            onClick={() => resetGameRef.current?.()}
+            className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+            title="Restart round"
           >
-            <Zap className="w-3.5 h-3.5 text-amber-300" />
-            <span>Jet Overdrive</span>
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Restart</span>
           </button>
         </div>
 
-        {/* Live Astrophysical Telemetry Readout */}
-        <div className="flex items-center gap-4 font-mono text-[11px] text-zinc-400">
-          <div className="flex items-center gap-1.5">
-            <span className="text-zinc-500">Accretion Speed:</span>
-            <span className="text-cyan-400 font-bold">{currentMode.velocity}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
-            <span className="text-zinc-500">Solar Mass Consumed:</span>
-            <strong className="text-amber-300">{massConsumed} M☉</strong>
+        {/* EMP Progress Meter */}
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[10px] font-mono text-zinc-400">EMP ENERGY:</span>
+            <div className="w-28 sm:w-36 h-2 rounded-full bg-white/[0.06] overflow-hidden border border-white/10">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 transition-all duration-300"
+                style={{ width: `${empCharge}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Ambient Cosmic Singularity Glow */}
+      {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-600/20 transition-all duration-700" />
     </div>
   );
