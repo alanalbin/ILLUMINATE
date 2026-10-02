@@ -93,10 +93,10 @@ export default function PartnersShowcase() {
           {PARTNERS.map((partner, index) => (
             <motion.div
               key={partner.name}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30, scale: 0.93 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: '-30px' }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 22, delay: index * 0.08 }}
               className="h-full"
             >
               <TouchInteractiveTilt maxTilt={8} glareOpacity={0.15} className="h-full">

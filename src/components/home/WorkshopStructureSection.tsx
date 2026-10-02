@@ -83,10 +83,10 @@ export default function WorkshopStructureSection() {
             return (
               <motion.div
                 key={m.step}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 35, scale: 0.93 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 22, delay: idx * 0.08 }}
               >
                 <TouchInteractiveTilt maxTilt={8} glareOpacity={0.22}>
                   <div className="glass-card rounded-3xl p-7 sm:p-8 border border-purple-900/40 hover:border-purple-500/50 flex flex-col justify-between group transition-all duration-300 shadow-xl shadow-black/40 hover:shadow-purple-950/50 h-full">

@@ -23,80 +23,69 @@ export default function Scroll3DPopup({
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(
-        window.innerWidth < 768 ||
-        (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches)
-      );
+    const check = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-    checkMobile();
-    window.addEventListener('resize', checkMobile, { passive: true });
-    return () => window.removeEventListener('resize', checkMobile);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Measure scroll progress through the viewport (for desktop 3D continuous perspective)
+  // Measure scroll progress through the viewport
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start end', 'end start'],
   });
 
-  // Smooth out scroll progression using spring physics on desktop
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,
+  // Desktop uses a silky spring for fluid inertia; mobile uses direct GPU scroll progression for zero-latency response
+  const desktopSpring = useSpring(scrollYProgress, {
+    stiffness: 110,
     damping: 22,
+    mass: 0.65,
     restDelta: 0.001,
   });
 
-  // Dynamic 3D perspective transformations for desktop
+  const activeProgress = isMobile ? scrollYProgress : desktopSpring;
+
+  // Punchy 3D Scroll Pop-Up: elements emerge dynamically from depth, pop up into crisp focus, stay stable, and gracefully recede
   const scrollRotateX = useTransform(
-    smoothProgress,
-    [0, 0.38, 0.7, 1],
-    [12, 0, 0, -3]
+    activeProgress,
+    [0, 0.18, 0.82, 1],
+    [isMobile ? 6 : rotateX, 0, 0, isMobile ? -2 : -4]
   );
+
   const scrollScale = useTransform(
-    smoothProgress,
-    [0, 0.38, 0.7, 1],
-    [0.94, 1, 1, 0.99]
+    activeProgress,
+    [0, 0.18, 0.82, 1],
+    [isMobile ? 0.92 : 0.87, 1, 1, isMobile ? 0.98 : 0.96]
   );
+
   const scrollOpacity = useTransform(
-    smoothProgress,
-    [0, 0.2, 0.8, 1],
-    [0.55, 1, 1, 0.95]
+    activeProgress,
+    [0, 0.14, 0.86, 1],
+    [isMobile ? 0.45 : 0.25, 1, 1, isMobile ? 0.9 : 0.85]
   );
+
   const scrollY = useTransform(
-    smoothProgress,
-    [0, 0.38, 0.7, 1],
-    [35, 0, 0, 0]
+    activeProgress,
+    [0, 0.18, 0.82, 1],
+    [isMobile ? 32 : 55, 0, 0, isMobile ? -10 : -18]
   );
+
   const scrollZ = useTransform(
-    smoothProgress,
-    [0, 0.38, 0.7, 1],
-    [-60, 0, 0, -15]
+    activeProgress,
+    [0, 0.18, 0.82, 1],
+    [isMobile ? -30 : -75, 0, 0, isMobile ? -10 : -20]
   );
 
-  // Mobile: Buttery-smooth, hardware-accelerated entrance with zero scroll latency
-  if (isMobile) {
-    return (
-      <div ref={ref} className={`overflow-hidden ${className}`}>
-        <motion.div
-          initial={{ opacity: 0.5, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.12 }}
-          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-          style={{ willChange: 'transform, opacity' }}
-        >
-          {children}
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Desktop: Immersive continuous 3D scroll physics
   return (
     <div
       ref={ref}
-      className={`overflow-hidden ${className}`}
-      style={{ perspective: 1100 }}
+      className={`relative ${className}`}
+      style={{
+        perspective: isMobile ? 850 : 1250,
+        perspectiveOrigin: '50% 38%',
+      }}
     >
       <motion.div
         style={{
@@ -107,6 +96,7 @@ export default function Scroll3DPopup({
           z: enableContinuous3D ? scrollZ : 0,
           transformStyle: 'preserve-3d',
           transformOrigin: '50% 50%',
+          willChange: 'transform, opacity',
         }}
       >
         {children}

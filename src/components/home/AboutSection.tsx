@@ -63,10 +63,10 @@ export default function AboutSection() {
             return (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 35, scale: 0.92 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 22, delay: idx * 0.1 }}
               >
                 <TouchInteractiveTilt maxTilt={8} glareOpacity={0.2} className="h-full">
                   <div className="glass-card rounded-3xl p-8 border border-purple-900/40 hover:border-purple-500/50 transition-all duration-300 shadow-xl shadow-black/30 h-full flex flex-col justify-between">
@@ -90,10 +90,10 @@ export default function AboutSection() {
 
         {/* Nxt Byte E-Cell Spotlight Card */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 35, scale: 0.94 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.6 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 24 }}
           className="mt-14"
         >
           <TouchInteractiveTilt maxTilt={6} glareOpacity={0.2}>

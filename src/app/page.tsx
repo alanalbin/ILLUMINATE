@@ -13,6 +13,7 @@ import EventDetailsSection from '@/components/home/EventDetailsSection';
 import FaqSection from '@/components/home/FaqSection';
 import CtaBanner from '@/components/home/CtaBanner';
 import Scroll3DPopup from '@/components/ui/Scroll3DPopup';
+import ScrollFloatingPopup from '@/components/ui/ScrollFloatingPopup';
 
 // Statically pre-render on CDN with background revalidation
 export const revalidate = 60;
@@ -34,7 +35,9 @@ export default async function HomePage() {
       <HeroSection event={event} />
 
       {/* 3D PC Display Workstation Rectangle with Loading Sequence */}
-      <DisplayWorkstation3D />
+      <Scroll3DPopup delay={0.05}>
+        <DisplayWorkstation3D />
+      </Scroll3DPopup>
 
       {/* Interactive 3D Quantum Prism Showcase (Drag & Click) */}
       <Scroll3DPopup delay={0.05}>
@@ -77,6 +80,9 @@ export default async function HomePage() {
       <Scroll3DPopup delay={0.05}>
         <CtaBanner fee={event.registrationFee} />
       </Scroll3DPopup>
+
+      {/* Interactive Floating Scroll Pop-up Banner */}
+      <ScrollFloatingPopup fee={event.registrationFee} />
     </div>
   );
 }

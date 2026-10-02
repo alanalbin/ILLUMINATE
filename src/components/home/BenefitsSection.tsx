@@ -55,10 +55,10 @@ export default function BenefitsSection({ benefits }: BenefitsSectionProps) {
             return (
               <motion.div
                 key={b.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 35, scale: 0.93 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: idx * 0.08 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 22, delay: idx * 0.08 }}
                 className={isHeroCard ? 'md:col-span-2 lg:col-span-2' : ''}
               >
                 <TouchInteractiveTilt maxTilt={7} glareOpacity={0.25} className="h-full">
