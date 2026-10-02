@@ -93,10 +93,8 @@ export default function Scroll3DPopup({
           scale: enableContinuous3D ? scrollScale : 1,
           opacity: enableContinuous3D ? scrollOpacity : 1,
           y: enableContinuous3D ? scrollY : 0,
-          z: enableContinuous3D ? scrollZ : 0,
-          transformStyle: 'preserve-3d',
+          transformStyle: isMobile ? 'flat' : 'preserve-3d',
           transformOrigin: '50% 50%',
-          willChange: 'transform, opacity',
         }}
       >
         {children}

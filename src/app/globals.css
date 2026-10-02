@@ -222,7 +222,6 @@ body {
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
     transform: translateZ(0);
-    will-change: transform, opacity;
   }
 
   /* Ensure smooth inertial touch scrolling */

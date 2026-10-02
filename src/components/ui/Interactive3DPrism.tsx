@@ -13,7 +13,6 @@ import {
   Sparkles,
   Gamepad2,
   Play,
-  Pause,
 } from 'lucide-react';
 
 interface Interactive3DPrismProps {
@@ -48,13 +47,13 @@ interface DebrisParticle {
 
 export default function Interactive3DPrism({ className = '' }: Interactive3DPrismProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
 
   // Game UI State
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [empCharge, setEmpCharge] = useState(0);
-  const [wave, setWave] = useState(1);
   const [timeLeft, setTimeLeft] = useState(45);
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameover'>('idle');
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -67,7 +66,9 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
   const fireLaserRef = useRef<((clientX: number, clientY: number) => void) | null>(null);
   const triggerEmpRef = useRef<(() => void) | null>(null);
   const resetGameRef = useRef<(() => void) | null>(null);
-  const startGameRef = useRef<(() => void) | null>(null);
+
+  // Viewport In-View State Ref to pause Three.js rendering when off-screen
+  const isCardVisibleRef = useRef<boolean>(true);
 
   // Sound Synthesizer via Web Audio API (zero external assets, crisp retro sci-fi SFX)
   const playSound = useCallback(
@@ -75,7 +76,9 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       if (!soundEnabled) return;
       try {
         if (!audioCtxRef.current) {
-          const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+          const AudioContextClass =
+            window.AudioContext ||
+            (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
           if (AudioContextClass) {
             audioCtxRef.current = new AudioContextClass();
           }
@@ -93,55 +96,48 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
         gain.connect(ctx.destination);
 
         if (type === 'laser') {
-          // Sharp downward laser chirping sweep
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(880, now);
-          osc.frequency.exponentialRampToValueAtTime(180, now + 0.09);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          osc.frequency.exponentialRampToValueAtTime(180, now + 0.08);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
           osc.start(now);
-          osc.stop(now + 0.09);
+          osc.stop(now + 0.08);
         } else if (type === 'hit') {
-          // Crispy crystal shatter chime
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(520, now);
-          osc.frequency.exponentialRampToValueAtTime(1040, now + 0.12);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.frequency.exponentialRampToValueAtTime(1040, now + 0.1);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
           osc.start(now);
-          osc.stop(now + 0.12);
+          osc.stop(now + 0.1);
         } else if (type === 'bomb') {
-          // Low resonant boom
           osc.type = 'sine';
           osc.frequency.setValueAtTime(160, now);
-          osc.frequency.exponentialRampToValueAtTime(40, now + 0.35);
-          gain.gain.setValueAtTime(0.28, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+          gain.gain.setValueAtTime(0.24, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'emp') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+          gain.gain.setValueAtTime(0.2, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
           osc.start(now);
           osc.stop(now + 0.35);
-        } else if (type === 'emp') {
-          // Electric shockwave swell
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(220, now);
-          osc.frequency.exponentialRampToValueAtTime(880, now + 0.4);
-          gain.gain.setValueAtTime(0.22, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-          osc.start(now);
-          osc.stop(now + 0.4);
         } else if (type === 'combo') {
-          // Ascending victory chord
           osc.type = 'sine';
           osc.frequency.setValueAtTime(440, now);
-          osc.frequency.setValueAtTime(660, now + 0.06);
-          osc.frequency.setValueAtTime(880, now + 0.12);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.frequency.setValueAtTime(660, now + 0.05);
+          osc.frequency.setValueAtTime(880, now + 0.1);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
           osc.start(now);
-          osc.stop(now + 0.22);
+          osc.stop(now + 0.18);
         }
-      } catch {
-        // Audio playback unavailable or restricted
-      }
+      } catch {}
     },
     [soundEnabled]
   );
@@ -179,6 +175,22 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     }
   }, [score, highScore]);
 
+  // Viewport Observer: Pause WebGL Render Loop when scrolled off-screen
+  useEffect(() => {
+    const cardEl = cardContainerRef.current;
+    if (!cardEl || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isCardVisibleRef.current = entry.isIntersecting;
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(cardEl);
+    return () => observer.disconnect();
+  }, []);
+
   // Main Three.js Game Setup
   useEffect(() => {
     const mount = mountRef.current;
@@ -186,6 +198,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
 
     const width = mount.clientWidth || 640;
     const height = mount.clientHeight || 360;
+    const isMobile = window.innerWidth < 768;
 
     // 1. Scene, Camera & WebGL Renderer
     const scene = new THREE.Scene();
@@ -197,11 +210,12 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     try {
       renderer = new THREE.WebGLRenderer({
         alpha: true,
-        antialias: true,
+        antialias: !isMobile,
         powerPreference: 'high-performance',
+        precision: isMobile ? 'mediump' : 'highp',
       });
       renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
       mount.appendChild(renderer.domElement);
     } catch {
       return;
@@ -220,9 +234,8 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     scene.add(arenaLight);
 
     // 3. Cyber Wireframe Boundary Grid (Arena Walls)
-    const gridHelper = new THREE.GridHelper(26, 20, 0xa855f7, 0x311b5e);
+    const gridHelper = new THREE.GridHelper(26, isMobile ? 12 : 18, 0xa855f7, 0x311b5e);
     gridHelper.position.set(0, -5.2, -6);
-    gridHelper.rotation.x = 0;
     scene.add(gridHelper);
 
     // 4. Player 3D Laser Turret Cannon (Bottom Center)
@@ -230,7 +243,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     turretGroup.position.set(0, -4.2, 5.5);
     scene.add(turretGroup);
 
-    const baseGeo = new THREE.CylinderGeometry(0.55, 0.85, 0.4, 16);
+    const baseGeo = new THREE.CylinderGeometry(0.55, 0.85, 0.4, 14);
     const baseMat = new THREE.MeshPhongMaterial({
       color: 0x1f1338,
       emissive: 0x3b1d75,
@@ -240,7 +253,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     const turretBase = new THREE.Mesh(baseGeo, baseMat);
     turretGroup.add(turretBase);
 
-    const barrelGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.4, 12);
+    const barrelGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.4, 8);
     const barrelMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
 
     const barrelLeft = new THREE.Mesh(barrelGeo, barrelMat);
@@ -256,7 +269,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     reticleGroup.position.set(0, 0, 0);
     scene.add(reticleGroup);
 
-    const reticleRingGeo = new THREE.RingGeometry(0.38, 0.44, 32);
+    const reticleRingGeo = new THREE.RingGeometry(0.38, 0.44, 24);
     const reticleRingMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       side: THREE.DoubleSide,
@@ -267,8 +280,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     const reticleRing = new THREE.Mesh(reticleRingGeo, reticleRingMat);
     reticleGroup.add(reticleRing);
 
-    // Inner reticle dot
-    const reticleDotGeo = new THREE.CircleGeometry(0.06, 16);
+    const reticleDotGeo = new THREE.CircleGeometry(0.06, 12);
     const reticleDotMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       blending: THREE.AdditiveBlending,
@@ -298,7 +310,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     const particleTex = new THREE.CanvasTexture(pCanvas);
 
     // Debris Particle Buffer System
-    const maxDebris = 180;
+    const maxDebris = isMobile ? 80 : 140;
     const debrisGeo = new THREE.BufferGeometry();
     const debrisPositions = new Float32Array(maxDebris * 3);
     const debrisColors = new Float32Array(maxDebris * 3);
@@ -307,7 +319,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     debrisGeo.setAttribute('color', new THREE.BufferAttribute(debrisColors, 3));
 
     const debrisMat = new THREE.PointsMaterial({
-      size: 0.35,
+      size: isMobile ? 0.32 : 0.38,
       map: particleTex,
       vertexColors: true,
       transparent: true,
@@ -319,7 +331,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     scene.add(debrisPoints);
 
     // 7. Shockwave Ring for explosive impacts
-    const shockwaveGeo = new THREE.RingGeometry(0.2, 0.6, 32);
+    const shockwaveGeo = new THREE.RingGeometry(0.2, 0.6, 24);
     const shockwaveMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       side: THREE.DoubleSide,
@@ -341,13 +353,13 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     };
 
     // Explosion Particle Spawner
-    const spawnExplosion = (pos: THREE.Vector3, count = 24, baseColor = new THREE.Color(0x38bdf8)) => {
+    const spawnExplosion = (pos: THREE.Vector3, count = 16, baseColor = new THREE.Color(0x38bdf8)) => {
       for (let i = 0; i < count; i++) {
         if (debris.length >= maxDebris) debris.shift();
         const vel = new THREE.Vector3(
-          (Math.random() - 0.5) * 12,
-          (Math.random() - 0.5) * 12,
-          (Math.random() - 0.5) * 12
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 10
         );
         const col = baseColor.clone();
         col.offsetHSL((Math.random() - 0.5) * 0.15, 0, (Math.random() - 0.5) * 0.2);
@@ -355,18 +367,18 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
           pos: pos.clone(),
           vel,
           life: 1.0,
-          maxLife: 0.5 + Math.random() * 0.5,
+          maxLife: 0.45 + Math.random() * 0.45,
           color: col,
           size: 0.3 + Math.random() * 0.3,
         });
       }
     };
 
-    // 8. Target Spawner Engine
+    // 8. Reusable Shared Target Geometries & Materials (Zero Memory Leaks)
     const targetGeos = {
       crystal: new THREE.IcosahedronGeometry(0.72, 0),
       spark: new THREE.OctahedronGeometry(0.65, 0),
-      bomb: new THREE.SphereGeometry(0.68, 16, 16),
+      bomb: new THREE.SphereGeometry(0.68, 12, 12),
       drone: new THREE.DodecahedronGeometry(1.15, 0),
     };
 
@@ -395,13 +407,18 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
         color: 0x06b6d4,
         emissive: 0x0e7490,
         specular: 0xffffff,
-        wireframe: false,
         flatShading: true,
       }),
     };
 
+    const sharedWireMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.32,
+    });
+
     const spawnTarget = () => {
-      // Determine target type probabilistically
       const rand = Math.random();
       let type: 'crystal' | 'spark' | 'bomb' | 'drone' = 'crystal';
       let points = 100;
@@ -419,7 +436,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
         hp = 2;
       }
 
-      const mesh = new THREE.Mesh(targetGeos[type], targetMats[type].clone());
+      const mesh = new THREE.Mesh(targetGeos[type], targetMats[type]);
       const spawnX = (Math.random() - 0.5) * 11;
       const spawnY = THREE.MathUtils.lerp(-1.5, 4.0, Math.random());
       const spawnZ = THREE.MathUtils.lerp(-24, -16, Math.random());
@@ -427,16 +444,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       mesh.position.set(spawnX, spawnY, spawnZ);
       scene.add(mesh);
 
-      // Add wireframe edge glow
-      const wire = new THREE.Mesh(
-        targetGeos[type],
-        new THREE.MeshBasicMaterial({
-          color: 0xffffff,
-          wireframe: true,
-          transparent: true,
-          opacity: 0.35,
-        })
-      );
+      const wire = new THREE.Mesh(targetGeos[type], sharedWireMat);
       mesh.add(wire);
 
       const rotSpeed = new THREE.Vector3(
@@ -445,8 +453,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
         (Math.random() - 0.5) * 3
       );
 
-      // Drift gently forward toward the player
-      const forwardSpeed = 2.5 + Math.random() * 2.0;
+      const forwardSpeed = 2.4 + Math.random() * 2.0;
       const velocity = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.4, forwardSpeed);
 
       targets.push({
@@ -461,13 +468,13 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       });
     };
 
-    // Pre-populate with targets
-    for (let i = 0; i < 6; i++) {
+    // Pre-populate initial wave
+    for (let i = 0; i < (isMobile ? 4 : 6); i++) {
       spawnTarget();
     }
 
     // 9. Laser Bolt Spawner & Raycasting
-    const laserBoltGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 8);
+    const laserBoltGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 6);
     laserBoltGeo.rotateX(Math.PI / 2);
     const laserBoltMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
@@ -478,11 +485,9 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
     const mouseNorm = new THREE.Vector2();
 
     const shootLaser = (targetWorldPos: THREE.Vector3) => {
-      // Recoil animation on cannon
       turretGroup.position.z = 5.2;
-      cannonLight.intensity = 8.0;
+      cannonLight.intensity = 7.0;
 
-      // Spawn left & right laser bolts
       const leftStart = turretGroup.position.clone().add(new THREE.Vector3(-0.24, 0.6, 0));
       const rightStart = turretGroup.position.clone().add(new THREE.Vector3(0.24, 0.6, 0));
 
@@ -495,7 +500,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
         const velocity = dir.multiplyScalar(45);
 
         scene.add(bolt);
-        laserBolts.push({ mesh: bolt, velocity, life: 1.2 });
+        laserBolts.push({ mesh: bolt, velocity, life: 1.0 });
       });
 
       playSound('laser');
@@ -509,13 +514,11 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
 
       raycaster.setFromCamera(mouseNorm, camera);
 
-      // Calculate target point in 3D space
       const targetDist = 12;
       const targetPoint = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(targetDist));
 
       shootLaser(targetPoint);
 
-      // Check intersections with active target meshes
       const targetMeshes = targets.map((t) => t.mesh);
       const intersects = raycaster.intersectObjects(targetMeshes, false);
 
@@ -528,38 +531,34 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
           t.hp -= 1;
 
           if (t.hp <= 0) {
-            // Target Destroyed!
             const hitPos = t.mesh.position.clone();
             scene.remove(t.mesh);
             targets.splice(targetIdx, 1);
 
-            // Explosions and SFX
             if (t.type === 'bomb') {
               playSound('bomb');
               triggerShockwave(hitPos, 0xef4444);
-              spawnExplosion(hitPos, 36, new THREE.Color(0xef4444));
+              spawnExplosion(hitPos, isMobile ? 20 : 32, new THREE.Color(0xef4444));
 
-              // Chain reaction: destroy all nearby targets within radius 4.5
               for (let j = targets.length - 1; j >= 0; j--) {
                 const other = targets[j];
                 if (other.mesh.position.distanceTo(hitPos) < 4.5) {
                   scene.remove(other.mesh);
                   targets.splice(j, 1);
-                  spawnExplosion(other.mesh.position, 18, new THREE.Color(0xf59e0b));
+                  spawnExplosion(other.mesh.position, 14, new THREE.Color(0xf59e0b));
                   setScore((s) => s + other.points * 2);
                 }
               }
             } else if (t.type === 'spark') {
               playSound('combo');
               triggerShockwave(hitPos, 0xf59e0b);
-              spawnExplosion(hitPos, 28, new THREE.Color(0xf59e0b));
+              spawnExplosion(hitPos, isMobile ? 16 : 24, new THREE.Color(0xf59e0b));
             } else {
               playSound('hit');
               triggerShockwave(hitPos, 0xa855f7);
-              spawnExplosion(hitPos, 22, new THREE.Color(0xa855f7));
+              spawnExplosion(hitPos, isMobile ? 14 : 20, new THREE.Color(0xa855f7));
             }
 
-            // Update Score & Combos
             setScore((s) => s + t.points);
             setCombo((c) => {
               const nextCombo = c + 1;
@@ -567,29 +566,25 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
               return nextCombo;
             });
             setEmpCharge((charge) => Math.min(100, charge + 15));
-            setTimeLeft((time) => Math.min(60, time + 2)); // Extra time reward!
+            setTimeLeft((time) => Math.min(60, time + 2));
 
             setFloatingBonus({
               text: `+${t.points} PTS`,
               id: Date.now(),
             });
 
-            // Replenish target
             spawnTarget();
           } else {
-            // Partial hit on armored drone
             t.mesh.scale.multiplyScalar(0.9);
             playSound('hit');
-            spawnExplosion(t.mesh.position, 10, new THREE.Color(0x06b6d4));
+            spawnExplosion(t.mesh.position, 8, new THREE.Color(0x06b6d4));
           }
         }
       } else {
-        // Missed shot resets combo streak
         setCombo(0);
       }
     };
 
-    // EMP Shockwave Special Ability
     triggerEmpRef.current = () => {
       playSound('emp');
       const origin = new THREE.Vector3(0, 0, -6);
@@ -597,18 +592,16 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       shockwaveMesh.scale.set(15, 15, 15);
 
       let totalEarned = 0;
-      // Detonate all active targets in screen
       while (targets.length > 0) {
         const t = targets.pop()!;
         scene.remove(t.mesh);
-        spawnExplosion(t.mesh.position, 16, new THREE.Color(0x38bdf8));
+        spawnExplosion(t.mesh.position, 12, new THREE.Color(0x38bdf8));
         totalEarned += t.points;
       }
       setScore((s) => s + totalEarned * 2);
       setEmpCharge(0);
 
-      // Respawn fresh batch
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < (isMobile ? 4 : 6); i++) {
         spawnTarget();
       }
     };
@@ -618,21 +611,15 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       setCombo(0);
       setEmpCharge(0);
       setTimeLeft(45);
-      setWave(1);
       setGameState('playing');
 
-      // Clear existing targets
       while (targets.length > 0) {
         const t = targets.pop()!;
         scene.remove(t.mesh);
       }
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < (isMobile ? 4 : 6); i++) {
         spawnTarget();
       }
-    };
-
-    startGameRef.current = () => {
-      setGameState('playing');
     };
 
     // 11. Mouse / Pointer Crosshair Tracking
@@ -644,11 +631,9 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       const normX = ((e.clientX - rect.left) / width) * 2 - 1;
       const normY = -((e.clientY - rect.top) / height) * 2 + 1;
 
-      // Project onto reticle plane at z = 0
       targetReticleX = normX * 6.5;
       targetReticleY = normY * 3.8;
 
-      // Cannon aims smoothly at cursor
       turretGroup.rotation.y = -normX * 0.45;
       turretGroup.rotation.x = normY * 0.25;
     };
@@ -662,22 +647,27 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       }
     };
 
-    mount.addEventListener('pointermove', onPointerMove);
+    mount.addEventListener('pointermove', onPointerMove, { passive: true });
     mount.addEventListener('pointerdown', onPointerDown);
 
-    // 12. 60FPS Game Physics Loop
+    // 12. 60FPS Game Physics Loop with Viewport Culling & Debris Guard
     let animId: number;
     const clock = new THREE.Clock();
     let spawnTimer = 0;
+    let debrisWasActive = false;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
+
+      // Viewport Culling Optimization: Skip rendering entirely when scrolled out of view!
+      if (!isCardVisibleRef.current) return;
+
       const delta = Math.min(clock.getDelta(), 0.05);
       const time = clock.getElapsedTime();
 
       // Smooth Reticle tracking
-      reticleGroup.position.x += (targetReticleX - reticleGroup.position.x) * 0.2;
-      reticleGroup.position.y += (targetReticleY - reticleGroup.position.y) * 0.2;
+      reticleGroup.position.x += (targetReticleX - reticleGroup.position.x) * 0.22;
+      reticleGroup.position.y += (targetReticleY - reticleGroup.position.y) * 0.22;
       reticleRing.rotation.z = time * 1.5;
 
       // Cannon recoil recovery
@@ -710,7 +700,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
 
       // Targets Update & Spawning
       spawnTimer += delta;
-      if (spawnTimer > 1.8 && targets.length < 8) {
+      if (spawnTimer > 1.8 && targets.length < (isMobile ? 5 : 7)) {
         spawnTarget();
         spawnTimer = 0;
       }
@@ -723,7 +713,6 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
 
         t.mesh.position.addScaledVector(t.velocity, delta);
 
-        // Target flew past player boundary without being destroyed
         if (t.mesh.position.z > 8.0) {
           scene.remove(t.mesh);
           targets.splice(i, 1);
@@ -731,37 +720,40 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
         }
       }
 
-      // Explosion Debris Particle Physics
-      const dPosArr = debrisGeo.attributes.position.array as Float32Array;
-      const dColArr = debrisGeo.attributes.color.array as Float32Array;
+      // Explosion Debris Guard: Only touch and upload vertex buffers when debris is active!
+      if (debris.length > 0 || debrisWasActive) {
+        const dPosArr = debrisGeo.attributes.position.array as Float32Array;
+        const dColArr = debrisGeo.attributes.color.array as Float32Array;
 
-      for (let k = 0; k < dPosArr.length; k++) {
-        dPosArr[k] = 0;
-        dColArr[k] = 0;
-      }
-
-      for (let i = debris.length - 1; i >= 0; i--) {
-        const p = debris[i];
-        p.pos.addScaledVector(p.vel, delta);
-        p.vel.multiplyScalar(0.92); // air resistance
-        p.life -= delta / p.maxLife;
-
-        if (p.life <= 0) {
-          debris.splice(i, 1);
-          continue;
+        for (let k = 0; k < dPosArr.length; k++) {
+          dPosArr[k] = 0;
+          dColArr[k] = 0;
         }
 
-        const idx = i * 3;
-        dPosArr[idx] = p.pos.x;
-        dPosArr[idx + 1] = p.pos.y;
-        dPosArr[idx + 2] = p.pos.z;
+        for (let i = debris.length - 1; i >= 0; i--) {
+          const p = debris[i];
+          p.pos.addScaledVector(p.vel, delta);
+          p.vel.multiplyScalar(0.92);
+          p.life -= delta / p.maxLife;
 
-        dColArr[idx] = p.color.r * p.life;
-        dColArr[idx + 1] = p.color.g * p.life;
-        dColArr[idx + 2] = p.color.b * p.life;
+          if (p.life <= 0) {
+            debris.splice(i, 1);
+            continue;
+          }
+
+          const idx = i * 3;
+          dPosArr[idx] = p.pos.x;
+          dPosArr[idx + 1] = p.pos.y;
+          dPosArr[idx + 2] = p.pos.z;
+
+          dColArr[idx] = p.color.r * p.life;
+          dColArr[idx + 1] = p.color.g * p.life;
+          dColArr[idx + 2] = p.color.b * p.life;
+        }
+        debrisGeo.attributes.position.needsUpdate = true;
+        debrisGeo.attributes.color.needsUpdate = true;
+        debrisWasActive = debris.length > 0;
       }
-      debrisGeo.attributes.position.needsUpdate = true;
-      debrisGeo.attributes.color.needsUpdate = true;
 
       renderer.render(scene, camera);
     };
@@ -776,7 +768,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
 
     return () => {
       cancelAnimationFrame(animId);
@@ -805,6 +797,7 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
       laserBoltGeo.dispose();
       laserBoltMat.dispose();
       particleTex.dispose();
+      sharedWireMat.dispose();
 
       Object.values(targetGeos).forEach((g) => g.dispose());
       Object.values(targetMats).forEach((m) => m.dispose());
@@ -814,7 +807,8 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
 
   return (
     <div
-      className={`glass-card rounded-3xl p-6 sm:p-7 border border-purple-500/40 hover:border-purple-400/80 bg-gradient-to-b from-[#130926]/95 via-[#0a0418]/95 to-[#04010a]/95 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-purple-950/70 transition-all duration-300 ${className}`}
+      ref={cardContainerRef}
+      className={`glass-card rounded-3xl p-6 sm:p-7 border border-purple-500/40 hover:border-purple-400/80 bg-gradient-to-b from-[#130926]/95 via-[#0a0418]/95 to-[#04010a]/95 backdrop-blur-xl relative overflow-hidden group shadow-2xl shadow-purple-950/70 transition-all duration-300 ${className}`}
     >
       {/* 1. Arcade Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.08] relative z-20">
@@ -973,7 +967,11 @@ export default function Interactive3DPrism({ className = '' }: Interactive3DPris
                 : 'bg-white/[0.03] text-zinc-500 border-white/5 cursor-not-allowed'
             }`}
           >
-            <Zap className={`w-3.5 h-3.5 ${empCharge >= 100 ? 'text-amber-300 fill-amber-300 animate-bounce' : 'text-zinc-500'}`} />
+            <Zap
+              className={`w-3.5 h-3.5 ${
+                empCharge >= 100 ? 'text-amber-300 fill-amber-300 animate-bounce' : 'text-zinc-500'
+              }`}
+            />
             <span>{empCharge >= 100 ? '⚡ DETONATE EMP NOVA!' : `EMP Charging (${empCharge}%)`}</span>
           </button>
 
