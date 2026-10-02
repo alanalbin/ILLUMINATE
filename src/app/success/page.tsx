@@ -21,13 +21,14 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { Registration, EventConfig } from '@/types';
+import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const registrationId = searchParams.get('registrationId');
 
   const [registration, setRegistration] = useState<Registration | null>(null);
-  const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
+  const [eventConfig, setEventConfig] = useState<EventConfig>(DEFAULT_EVENT_CONFIG);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +68,18 @@ function SuccessContent() {
         }
 
         if (!resolvedReg) throw new Error('Registration could not be found.');
+
+        // Sanitize amountPaid to ₹699 if stored in paise (e.g. 69900)
+        if (resolvedReg) {
+          const rawAmt = resolvedReg.amountPaid ?? resolvedReg.amountPaise ?? 699;
+          const parsed = typeof rawAmt === 'number' ? rawAmt : parseFloat(String(rawAmt).replace(/[^0-9.]/g, ''));
+          resolvedReg.amountPaid = (!isNaN(parsed) && parsed >= 1000) ? Math.round(parsed / 100) : (parsed || 699);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('illuminate_registration_cache', JSON.stringify(resolvedReg));
+            } catch {}
+          }
+        }
 
         let eventConfigData = null;
         if (eventRes.ok) {

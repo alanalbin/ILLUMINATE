@@ -146,6 +146,8 @@ export default function RegisterPage() {
               ...formData,
               status: 'pending',
               paymentStatus: 'unpaid',
+              amountPaid: 699,
+              amountPaise: 69900,
             })
           );
         }

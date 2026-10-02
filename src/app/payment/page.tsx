@@ -301,8 +301,10 @@ function PaymentContent() {
           id: targetPassId,
           paymentStatus: 'verified',
           manualUtr: refCode,
+          amountPaid: 699,
           ...(data.registration || {}),
         };
+        verifiedRecord.amountPaid = 699;
         localStorage.setItem('illuminate_registration_cache', JSON.stringify(verifiedRecord));
         sessionStorage.setItem('illuminate_registration_id', targetPassId);
         localStorage.setItem('illuminate_last_registration_id', targetPassId);
