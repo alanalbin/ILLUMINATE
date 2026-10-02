@@ -53,25 +53,29 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       powerPreference: 'high-performance',
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.25 : 1.5));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
+    renderer.toneMapping = isMobile ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+    if (!isMobile) {
+      renderer.toneMappingExposure = 1.15;
+    }
     container.appendChild(renderer.domElement);
 
     // 3. Dynamic Cybernetic Lighting
-    const ambientLight = new THREE.AmbientLight(0x1a0d33, 1.5);
+    const ambientLight = new THREE.AmbientLight(0x1a0d33, isMobile ? 2.2 : 1.5);
     scene.add(ambientLight);
 
-    const purpleGlow = new THREE.PointLight(0xa855f7, 3.0, 700);
-    purpleGlow.position.set(110, 80, 100);
-    scene.add(purpleGlow);
+    if (!isMobile) {
+      const purpleGlow = new THREE.PointLight(0xa855f7, 3.0, 700);
+      purpleGlow.position.set(110, 80, 100);
+      scene.add(purpleGlow);
 
-    const cyanGlow = new THREE.PointLight(0x38bdf8, 2.4, 600);
-    cyanGlow.position.set(-110, -70, 90);
-    scene.add(cyanGlow);
+      const cyanGlow = new THREE.PointLight(0x38bdf8, 2.4, 600);
+      cyanGlow.position.set(-110, -70, 90);
+      scene.add(cyanGlow);
+    }
 
     // Interactive Follower Light
-    const pointerLight = new THREE.PointLight(0xc084fc, 5.0, 480);
+    const pointerLight = new THREE.PointLight(0xc084fc, isMobile ? 3.8 : 5.0, 480);
     pointerLight.position.set(0, 0, 90);
     scene.add(pointerLight);
 
@@ -83,7 +87,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     scene.add(gyroscopeGroup);
 
     // 4A. Inner Pulsating Plasma Singularity
-    const plasmaGeo = new THREE.SphereGeometry(isMobile ? 10 : 15, 24, 24);
+    const plasmaGeo = new THREE.SphereGeometry(isMobile ? 10 : 15, isMobile ? 16 : 24, isMobile ? 16 : 24);
     const plasmaMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
@@ -95,15 +99,22 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
     // 4B. Faceted Quantum Icosahedron Core
     const polyGeo = new THREE.IcosahedronGeometry(isMobile ? 18 : 27, 1);
-    const polyMat = new THREE.MeshPhongMaterial({
-      color: 0x8b5cf6,
-      emissive: 0x4c1d95,
-      specular: 0x38bdf8,
-      shininess: 100,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.45,
-    });
+    const polyMat = isMobile
+      ? new THREE.MeshBasicMaterial({
+          color: 0xa855f7,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.45,
+        })
+      : new THREE.MeshPhongMaterial({
+          color: 0x8b5cf6,
+          emissive: 0x4c1d95,
+          specular: 0x38bdf8,
+          shininess: 100,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.45,
+        });
     const polyMesh = new THREE.Mesh(polyGeo, polyMat);
     gyroscopeGroup.add(polyMesh);
 
@@ -112,7 +123,10 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     const ringRadius2 = isMobile ? 48 : 70;
     const ringRadius3 = isMobile ? 62 : 90;
 
-    const ring1Geo = new THREE.TorusGeometry(ringRadius1, 0.7, 14, 80);
+    const ringSegments = isMobile ? 36 : 80;
+    const ringTubeSegments = isMobile ? 8 : 14;
+
+    const ring1Geo = new THREE.TorusGeometry(ringRadius1, 0.7, ringTubeSegments, ringSegments);
     const ring1Mat = new THREE.MeshBasicMaterial({
       color: 0xc084fc,
       transparent: true,
@@ -122,7 +136,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     const ring1Mesh = new THREE.Mesh(ring1Geo, ring1Mat);
     gyroscopeGroup.add(ring1Mesh);
 
-    const ring2Geo = new THREE.TorusGeometry(ringRadius2, 0.65, 14, 80);
+    const ring2Geo = new THREE.TorusGeometry(ringRadius2, 0.65, ringTubeSegments, ringSegments);
     const ring2Mat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
@@ -133,7 +147,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     ring2Mesh.rotation.x = Math.PI / 2.8;
     gyroscopeGroup.add(ring2Mesh);
 
-    const ring3Geo = new THREE.TorusGeometry(ringRadius3, 0.6, 14, 80);
+    const ring3Geo = new THREE.TorusGeometry(ringRadius3, 0.6, ringTubeSegments, ringSegments);
     const ring3Mat = new THREE.MeshBasicMaterial({
       color: 0xe879f9,
       transparent: true,
@@ -307,10 +321,15 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       triggerShockwave(e.clientX, e.clientY);
     };
 
+    let cachedMaxScroll = 1000;
+    const updateMaxScroll = () => {
+      cachedMaxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    };
+    updateMaxScroll();
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      targetScrollProgress = Math.min(1, Math.max(0, scrollY / maxScroll));
+      targetScrollProgress = Math.min(1, Math.max(0, scrollY / cachedMaxScroll));
       scrollVelocity = Math.abs(scrollY - lastScrollY);
       lastScrollY = scrollY;
     };
@@ -324,6 +343,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
     const handleResize = () => {
       if (!container) return;
+      updateMaxScroll();
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -437,21 +457,26 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       }
 
       // Swirling Vortex Particle Physics
-      const pPositions = particleGeo.attributes.position.array as Float32Array;
-      for (let i = 0; i < particleCount; i++) {
-        const orbit = particleOrbits[i];
-        orbit.angle += orbit.speed * delta * (1 + scrollVelocity * 0.02);
-        orbit.yOffset += orbit.ySpeed * delta * 15;
+      if (isMobile) {
+        // Zero PCIe buffer upload overhead on mobile: GPU rotates the mesh directly
+        particlesMesh.rotation.y += delta * 0.28 * (1 + scrollVelocity * 0.01);
+      } else {
+        const pPositions = particleGeo.attributes.position.array as Float32Array;
+        for (let i = 0; i < particleCount; i++) {
+          const orbit = particleOrbits[i];
+          orbit.angle += orbit.speed * delta * (1 + scrollVelocity * 0.02);
+          orbit.yOffset += orbit.ySpeed * delta * 15;
 
-        if (orbit.yOffset > 70) orbit.yOffset = -70;
-        if (orbit.yOffset < -70) orbit.yOffset = 70;
+          if (orbit.yOffset > 70) orbit.yOffset = -70;
+          if (orbit.yOffset < -70) orbit.yOffset = 70;
 
-        // Particle vortex position
-        pPositions[i * 3] = Math.cos(orbit.angle) * orbit.radius;
-        pPositions[i * 3 + 1] = orbit.yOffset;
-        pPositions[i * 3 + 2] = Math.sin(orbit.angle) * orbit.radius;
+          // Particle vortex position
+          pPositions[i * 3] = Math.cos(orbit.angle) * orbit.radius;
+          pPositions[i * 3 + 1] = orbit.yOffset;
+          pPositions[i * 3 + 2] = Math.sin(orbit.angle) * orbit.radius;
+        }
+        particleGeo.attributes.position.needsUpdate = true;
       }
-      particleGeo.attributes.position.needsUpdate = true;
 
       renderer.render(scene, camera);
     };

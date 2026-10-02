@@ -34,60 +34,78 @@ export default function Scroll3DPopup({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Measure scroll progress through the viewport
+  // Measure scroll progress through the viewport (for desktop 3D continuous perspective)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start end', 'end start'],
   });
 
-  // Smooth out scroll progression using spring physics
+  // Smooth out scroll progression using spring physics on desktop
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: isMobile ? 120 : 90,
-    damping: isMobile ? 26 : 22,
+    stiffness: 90,
+    damping: 22,
     restDelta: 0.001,
   });
 
-  // Dynamic 3D perspective transformations mapped to scroll entry, focus, and departure
+  // Dynamic 3D perspective transformations for desktop
   const scrollRotateX = useTransform(
     smoothProgress,
     [0, 0.38, 0.7, 1],
-    [isMobile ? 0 : 12, 0, 0, isMobile ? 0 : -3]
+    [12, 0, 0, -3]
   );
   const scrollScale = useTransform(
     smoothProgress,
     [0, 0.38, 0.7, 1],
-    [isMobile ? 0.98 : 0.94, 1, 1, 0.99]
+    [0.94, 1, 1, 0.99]
   );
   const scrollOpacity = useTransform(
     smoothProgress,
     [0, 0.2, 0.8, 1],
-    [isMobile ? 0.75 : 0.55, 1, 1, 0.98]
+    [0.55, 1, 1, 0.95]
   );
   const scrollY = useTransform(
     smoothProgress,
     [0, 0.38, 0.7, 1],
-    [isMobile ? 16 : 35, 0, 0, 0]
+    [35, 0, 0, 0]
   );
   const scrollZ = useTransform(
     smoothProgress,
     [0, 0.38, 0.7, 1],
-    [isMobile ? 0 : -60, 0, 0, isMobile ? 0 : -15]
+    [-60, 0, 0, -15]
   );
 
+  // Mobile: Buttery-smooth, hardware-accelerated entrance with zero scroll latency
+  if (isMobile) {
+    return (
+      <div ref={ref} className={`overflow-hidden ${className}`}>
+        <motion.div
+          initial={{ opacity: 0.5, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.12 }}
+          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          {children}
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Desktop: Immersive continuous 3D scroll physics
   return (
     <div
       ref={ref}
       className={`overflow-hidden ${className}`}
-      style={{ perspective: isMobile ? undefined : 1100 }}
+      style={{ perspective: 1100 }}
     >
       <motion.div
         style={{
-          rotateX: enableContinuous3D && !isMobile ? scrollRotateX : 0,
+          rotateX: enableContinuous3D ? scrollRotateX : 0,
           scale: enableContinuous3D ? scrollScale : 1,
           opacity: enableContinuous3D ? scrollOpacity : 1,
           y: enableContinuous3D ? scrollY : 0,
-          z: enableContinuous3D && !isMobile ? scrollZ : 0,
-          transformStyle: isMobile ? 'flat' : 'preserve-3d',
+          z: enableContinuous3D ? scrollZ : 0,
+          transformStyle: 'preserve-3d',
           transformOrigin: '50% 50%',
         }}
       >
