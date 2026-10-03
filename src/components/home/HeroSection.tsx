@@ -174,11 +174,11 @@ export default function HeroSection({ event }: HeroSectionProps) {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
                     </span>
                     <Zap className="w-3 h-3 text-amber-400" />
-                    Workshop Date: 20 Oct 2026
+                    Registration Closes: 20 Oct 2026
                   </span>
-                  <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline at KMCT Campus</p>
+                  <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline Event Date Announced Soon</p>
                 </div>
-                <EventCountdown targetDate={event.registrationClosingDate || event.date || '2026-10-20T23:59:59+05:30'} />
+                <EventCountdown targetDate={event.registrationClosingDate || '2026-10-20T23:59:59+05:30'} />
               </div>
 
               {/* 70 Seats Live Countdown Progress */}
