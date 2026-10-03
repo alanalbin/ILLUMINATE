@@ -58,9 +58,18 @@ export async function POST(req: NextRequest) {
     console.error('Razorpay create-order API error:', error);
 
     // Check for authentication error from Razorpay
-    if (error?.statusCode === 401 || error?.error?.code === 'BAD_REQUEST_ERROR' && error?.message?.includes('auth')) {
+    if (
+      error?.statusCode === 401 ||
+      (error?.error?.code === 'BAD_REQUEST_ERROR' && error?.message?.includes('auth')) ||
+      error?.message?.includes('Authentication failed')
+    ) {
       return NextResponse.json(
-        { success: false, message: 'Razorpay authentication failed. Please verify API keys.' },
+        {
+          success: false,
+          isAuthError: true,
+          message:
+            'Razorpay authentication failed: The provided Key ID or Key Secret is invalid or expired. Please regenerate your Test Key in Razorpay Dashboard > Settings > API Keys.',
+        },
         { status: 401 }
       );
     }

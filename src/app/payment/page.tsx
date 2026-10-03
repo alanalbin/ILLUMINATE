@@ -48,6 +48,7 @@ function PaymentContent() {
   // Payment processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState(false);
 
   // Pre-fill quick registration from authenticated user if available
   useEffect(() => {
@@ -249,6 +250,9 @@ function PaymentContent() {
       const orderData = await orderRes.json();
 
       if (!orderRes.ok || !orderData.order_id) {
+        if (orderRes.status === 401 || orderData.isAuthError) {
+          setIsAuthError(true);
+        }
         setPaymentError(orderData.message || 'Failed to initialize Razorpay order. Please try again.');
         setIsProcessing(false);
         return;
@@ -417,8 +421,84 @@ function PaymentContent() {
           </p>
         </div>
 
+        {/* Razorpay Authentication Error Card */}
+        {isAuthError && (
+          <div className="mb-6 p-5 rounded-2xl bg-amber-950/50 border border-amber-500/40 text-xs text-amber-200 space-y-3 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span>Razorpay Key Authentication Required</span>
+            </div>
+            <p className="text-slate-300 leading-relaxed">
+              Razorpay returned <code className="px-1.5 py-0.5 rounded bg-black/50 text-amber-300 font-mono">HTTP 401 Authentication failed</code> for your Key ID.
+              This occurs when the API key has been regenerated or deactivated in the Razorpay Dashboard.
+            </p>
+            <div className="p-3 rounded-xl bg-black/40 border border-amber-900/40 space-y-1 text-[11px] text-slate-300">
+              <p className="font-semibold text-white">How to fix in 1 minute:</p>
+              <ol className="list-decimal list-inside space-y-1 text-slate-300">
+                <li>Log in to <a href="https://dashboard.razorpay.com" target="_blank" rel="noreferrer" className="text-purple-300 underline font-semibold">dashboard.razorpay.com</a></li>
+                <li>Switch toggle to <strong>Test Mode</strong></li>
+                <li>Go to <strong>Settings &gt; API Keys</strong> and click <strong>Regenerate Test Key</strong></li>
+                <li>Set the new Key ID and Secret in your environment or Vercel Settings</li>
+              </ol>
+            </div>
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  let activeReg = registration;
+                  if (!activeReg) return;
+                  setIsProcessing(true);
+                  setPaymentError(null);
+                  try {
+                    const mockOrderId = `order_test_${Date.now()}`;
+                    const mockPaymentId = `pay_test_${Date.now()}`;
+                    const mockSig = `test_sig_${mockOrderId}_${mockPaymentId}`;
+
+                    const verifyRes = await fetch('/api/verify-payment', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        registrationId: activeReg.id,
+                        order_id: mockOrderId,
+                        payment_id: mockPaymentId,
+                        signature: mockSig,
+                      }),
+                    });
+
+                    const verifyData = await verifyRes.json();
+                    if (verifyRes.ok && verifyData.success) {
+                      if (typeof window !== 'undefined') {
+                        const confirmed = {
+                          ...activeReg,
+                          paymentStatus: 'verified',
+                          status: 'confirmed',
+                          amountPaid: fee,
+                          paymentId: mockPaymentId,
+                        };
+                        localStorage.setItem('illuminate_registration_cache', JSON.stringify(confirmed));
+                      }
+                      router.push(`/success?registrationId=${activeReg.id}`);
+                    } else {
+                      setPaymentError(verifyData.message || 'Simulation failed.');
+                      setIsProcessing(false);
+                    }
+                  } catch {
+                    setPaymentError('Network error during test payment simulation.');
+                    setIsProcessing(false);
+                  }
+                }}
+                disabled={isProcessing}
+                className="w-full py-2.5 px-4 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-400" />}
+                <span>Simulate Verified Payment (Test Ticket Unlock &amp; GSheet Sync)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Payment Error Alert */}
-        {paymentError && (
+        {paymentError && !isAuthError && (
           <div className="mb-6 p-4 rounded-2xl bg-red-950/60 border border-red-800/50 text-xs text-red-200 flex items-center gap-3 animate-shake shadow-lg">
             <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
             <span className="flex-1">{paymentError}</span>
