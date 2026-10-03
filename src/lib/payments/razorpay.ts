@@ -5,8 +5,8 @@ import { EmailService } from '@/lib/email/sender';
 import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 import { Registration } from '@/types';
 
-const DEFAULT_TEST_KEY_ID = 'rzp_test_TjQ7knfjgZNPxP';
-const DEFAULT_TEST_KEY_SECRET = 'cE18hxV74WgU6ORozFzddzHb';
+const DEFAULT_TEST_KEY_ID = 'rzp_live_TjYzduwAdntm81';
+const DEFAULT_TEST_KEY_SECRET = 'GA4cx37cm54abKv9TKwFtm1N';
 
 export const getRazorpayKeyId = (): string => {
   return (

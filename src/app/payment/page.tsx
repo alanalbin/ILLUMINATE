@@ -174,6 +174,7 @@ function PaymentContent() {
   // Razorpay Checkout Trigger
   const handleRazorpayPayment = async () => {
     setPaymentError(null);
+    setIsAuthError(false);
     setIsProcessing(true);
 
     try {
@@ -276,7 +277,7 @@ function PaymentContent() {
         orderData.key_id ||
         orderData.keyId ||
         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-        'rzp_test_TjQ7knfjgZNPxP';
+        'rzp_live_TjYzduwAdntm81';
 
       // 3. Open Razorpay Checkout Modal
       const options = {
