@@ -70,6 +70,8 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Payment verified successfully and registration confirmed.',
       registrationId: result.registrationId || registrationId,
+      registrationNumber: result.registrationNumber,
+      ticketId: result.ticketId,
     });
   } catch (error: any) {
     console.error('Verify payment API error:', error);

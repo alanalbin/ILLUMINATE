@@ -4,7 +4,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 
 export const EmailService = {
   async sendRegistrationReceivedEmail(registration: Registration, event: EventConfig): Promise<boolean> {
-    const subject = `Registration Received: ILLUMINATE Workshop [${registration.registrationNumber}]`;
+    const subject = `Registration Received: ILLUMINATE Workshop`;
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0614; color: #f8fafc; padding: 32px; border-radius: 12px; border: 1px solid #7c3aed40;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -18,7 +18,7 @@ export const EmailService = {
         </p>
 
         <div style="background: #150d28; padding: 20px; border-radius: 8px; border-left: 4px solid #9333ea; margin: 24px 0;">
-          <p style="margin: 4px 0; color: #cbd5e1;"><strong>Registration ID:</strong> <span style="color: #c084fc;">${registration.registrationNumber}</span></p>
+          <p style="margin: 4px 0; color: #cbd5e1;"><strong>Pass & Ticket Status:</strong> <span style="color: #fbbf24;">Issued Automatically Upon Payment Completion</span></p>
           <p style="margin: 4px 0; color: #cbd5e1;"><strong>Institution:</strong> ${registration.institution}</p>
           <p style="margin: 4px 0; color: #cbd5e1;"><strong>Course & Year:</strong> ${registration.course} (${registration.yearOfStudy})</p>
           <p style="margin: 4px 0; color: #cbd5e1;"><strong>Status:</strong> Awaiting Payment Confirmation</p>
@@ -26,7 +26,7 @@ export const EmailService = {
         </div>
 
         <p style="color: #94a3b8; font-size: 14px; line-height: 1.5;">
-          Please complete your UPI or gateway payment to confirm your seat and receive your event pass.
+          Please complete your Razorpay payment to confirm your seat and unlock your official ticket and digital event pass.
         </p>
 
         <div style="border-top: 1px solid #7c3aed20; margin-top: 28px; padding-top: 20px; text-align: center; color: #64748b; font-size: 12px;">

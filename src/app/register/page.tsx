@@ -142,7 +142,7 @@ export default function RegisterPage() {
             'illuminate_registration_cache',
             JSON.stringify({
               id: data.registrationId,
-              registrationNumber: data.registrationNumber || 'ILM-PASS',
+              registrationNumber: '',
               ...formData,
               status: 'pending',
               paymentStatus: 'unpaid',

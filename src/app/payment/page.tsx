@@ -243,7 +243,7 @@ function PaymentContent() {
           registrationId: activeReg.id,
           amount: feePaise,
           currency: 'INR',
-          receipt: activeReg.registrationNumber,
+          receipt: activeReg.registrationNumber || activeReg.id.slice(-40),
         }),
       });
 
@@ -292,7 +292,6 @@ function PaymentContent() {
         },
         notes: {
           registrationId: activeReg.id,
-          registrationNumber: activeReg.registrationNumber,
         },
         theme: {
           color: '#7c3aed',
@@ -327,6 +326,7 @@ function PaymentContent() {
               if (typeof window !== 'undefined' && activeReg) {
                 const confirmed = {
                   ...activeReg,
+                  registrationNumber: verifyData.registrationNumber || verifyData.ticketId || activeReg.registrationNumber,
                   paymentStatus: 'verified',
                   status: 'confirmed',
                   amountPaid: fee,
@@ -512,10 +512,11 @@ function PaymentContent() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs uppercase font-extrabold text-purple-400 tracking-wider">
-                    Candidate Pass
+                    Candidate Details
                   </span>
-                  <span className="text-[11px] font-mono font-bold text-purple-300 bg-purple-950/80 border border-purple-800/50 px-2.5 py-0.5 rounded-full">
-                    {registration.registrationNumber}
+                  <span className="text-[11px] font-semibold text-amber-300 bg-amber-950/70 border border-amber-800/50 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                    <Lock className="w-3 h-3 text-amber-400" />
+                    Pass & Ticket ID unlock after payment
                   </span>
                 </div>
                 <h3 className="text-xl font-black text-white mt-1">{registration.fullName}</h3>

@@ -38,9 +38,18 @@ export async function GET(
       );
     }
 
+    // Pass and Ticket ID are strictly locked until payment is verified
+    const isPaid = registration.paymentStatus === 'verified';
+    const safeRegistration: typeof registration = isPaid
+      ? registration
+      : {
+          ...registration,
+          registrationNumber: '', // Only issued after verified payment
+        };
+
     return NextResponse.json({
       success: true,
-      registration,
+      registration: safeRegistration,
     });
   } catch (error: any) {
     console.error('Fetch registration error:', error);

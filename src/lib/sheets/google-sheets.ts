@@ -64,6 +64,14 @@ export async function syncCandidateToGoogleSheet(
   registration: Registration,
   payment?: PaymentRecord | null
 ): Promise<{ success: boolean; error?: string }> {
+  // CRITICAL: ONLY add candidate details to Google Sheet AFTER payment is completed & verified!
+  if (registration.paymentStatus !== 'verified') {
+    console.info(
+      `[Google Sheets Sync Skipped] Candidate ${registration.id} (${registration.email}) is unpaid/unverified. Details are only synced after verified payment.`
+    );
+    return { success: false, error: 'Registration payment is not completed or verified' };
+  }
+
   const webhookUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL || DEFAULT_WEBHOOK_URL;
 
   const formatted = formatCandidateForSheet(registration, payment);

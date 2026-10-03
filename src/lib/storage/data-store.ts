@@ -173,16 +173,13 @@ export const DataStore = {
     regData: Omit<Registration, 'id' | 'registrationNumber' | 'status' | 'paymentStatus' | 'amountPaid' | 'createdAt' | 'updatedAt'>
   ): Promise<Registration> {
     const local = readLocalDb();
-    // Globally unique, collision-proof Ticket ID (e.g. ILM-KMCT-M3K9A1-7F2B14)
-    const timePart = Date.now().toString(36).toUpperCase();
-    const randPart = crypto.randomBytes(3).toString('hex').toUpperCase();
-    const regNumber = `ILM-KMCT-${timePart}-${randPart}`;
     const id = `reg_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
+    // Pass and Ticket ID are strictly NOT issued until payment verification
     const newRegistration: Registration = {
       ...regData,
       id,
-      registrationNumber: regNumber,
+      registrationNumber: '', // Issued only after successful payment verification
       status: 'pending',
       paymentStatus: 'unpaid',
       amountPaid: 0,
@@ -219,7 +216,7 @@ export const DataStore = {
     }
     const local = readLocalDb();
     const idx = local.registrations.findIndex(
-      (r) => r.id === registration.id || r.registrationNumber === registration.registrationNumber
+      (r) => r.id === registration.id || (Boolean(registration.registrationNumber) && r.registrationNumber === registration.registrationNumber)
     );
     if (idx !== -1) {
       local.registrations[idx] = registration;
@@ -242,14 +239,16 @@ export const DataStore = {
           if (doc.exists) {
             return doc.data() as Registration;
           }
-          // Query by ticket registrationNumber
-          const numSnap = await adminDb
-            .collection('registrations')
-            .where('registrationNumber', '==', cleanId)
-            .limit(1)
-            .get();
-          if (!numSnap.empty) {
-            return numSnap.docs[0].data() as Registration;
+          // Query by ticket registrationNumber if valid ticket prefix
+          if (cleanId.startsWith('ILM-')) {
+            const numSnap = await adminDb
+              .collection('registrations')
+              .where('registrationNumber', '==', cleanId)
+              .limit(1)
+              .get();
+            if (!numSnap.empty) {
+              return numSnap.docs[0].data() as Registration;
+            }
           }
           // Query by normalized email
           const emailSnap = await adminDb
@@ -272,7 +271,7 @@ export const DataStore = {
       local.registrations.find(
         (r) =>
           r.id === cleanId ||
-          r.registrationNumber?.toLowerCase() === cleanLower ||
+          (Boolean(r.registrationNumber) && r.registrationNumber.toLowerCase() === cleanLower) ||
           r.email?.toLowerCase() === cleanLower ||
           r.phone === cleanId
       ) || null
@@ -329,7 +328,7 @@ export const DataStore = {
 
     const local = readLocalDb();
     const idx = local.registrations.findIndex(
-      (r) => r.id === current.id || r.registrationNumber === current.registrationNumber
+      (r) => r.id === current.id || (Boolean(current.registrationNumber) && r.registrationNumber === current.registrationNumber)
     );
     if (idx !== -1) {
       local.registrations[idx] = updated;

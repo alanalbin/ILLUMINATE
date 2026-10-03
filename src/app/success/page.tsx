@@ -431,8 +431,10 @@ function SuccessContent() {
                 <span className="text-white font-mono">{registration.email}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-zinc-400">Ticket Reference:</span>
-                <span className="text-purple-300 font-mono font-semibold">{registration.registrationNumber}</span>
+                <span className="text-zinc-400">Pass & Ticket ID:</span>
+                <span className="text-amber-400 font-semibold flex items-center gap-1">
+                  <Lock className="w-3 h-3" /> Issued upon payment
+                </span>
               </div>
               <div className="flex justify-between text-xs pt-2.5 border-t border-white/[0.08] items-center">
                 <span className="text-zinc-400">Amount Due:</span>

@@ -202,7 +202,13 @@ export const PaymentService = {
     orderId: string,
     paymentId: string,
     signature: string
-  ): Promise<{ success: boolean; message: string; registrationId?: string }> {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    registrationId?: string;
+    registrationNumber?: string;
+    ticketId?: string;
+  }> {
     const isValid = this.verifySignature(orderId, paymentId, signature);
     if (!isValid) {
       if (registrationId) {
@@ -237,7 +243,13 @@ export const PaymentService = {
 
     // Idempotency check: if already verified, return success without duplicate processing
     if (registration.paymentStatus === 'verified') {
-      return { success: true, message: 'Payment already verified', registrationId: regId };
+      return {
+        success: true,
+        message: 'Payment already verified',
+        registrationId: regId,
+        registrationNumber: registration.registrationNumber,
+        ticketId: registration.registrationNumber,
+      };
     }
 
     const amountPaise = registration.amountPaise || 69900;
@@ -255,11 +267,20 @@ export const PaymentService = {
       verifiedAt: new Date().toISOString(),
     });
 
-    // Update registration status to verified and confirmed
+    // Generate official Ticket ID ONLY upon verified payment confirmation
+    let ticketId = registration.registrationNumber;
+    if (!ticketId || ticketId === 'PENDING' || ticketId.trim() === '') {
+      const timePart = Date.now().toString(36).toUpperCase();
+      const randPart = crypto.randomBytes(3).toString('hex').toUpperCase();
+      ticketId = `ILM-KMCT-${timePart}-${randPart}`;
+    }
+
+    // Update registration status to verified, confirmed, and assign official Ticket ID
     const updatedReg = await DataStore.updateRegistration(regId, {
       status: 'confirmed',
       paymentStatus: 'verified',
       paymentMethod: 'razorpay',
+      registrationNumber: ticketId,
       amountPaid: amountPaise / 100,
       paymentId,
       confirmationSentAt: new Date().toISOString(),
@@ -271,7 +292,7 @@ export const PaymentService = {
       'PAYMENT_VERIFIED_SUCCESS',
       'registration',
       regId,
-      { orderId, paymentId, amountINR: amountPaise / 100 }
+      { orderId, paymentId, amountINR: amountPaise / 100, ticketId }
     );
 
     // Send confirmation email
@@ -291,6 +312,8 @@ export const PaymentService = {
       success: true,
       message: 'Payment verified and registration confirmed',
       registrationId: regId,
+      registrationNumber: updatedReg?.registrationNumber || ticketId,
+      ticketId: updatedReg?.registrationNumber || ticketId,
     };
   },
 };

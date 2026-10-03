@@ -129,11 +129,32 @@ describe('Razorpay Standard Checkout API Endpoints', () => {
       const data = await res.json();
       expect(data.success).toBe(true);
 
-      // Verify registration is now confirmed & verified
+      // Verify registration is now confirmed & verified with official Ticket ID issued
       const reg = await DataStore.getRegistrationById(testRegistrationId);
       expect(reg?.paymentStatus).toBe('verified');
       expect(reg?.status).toBe('confirmed');
       expect(reg?.paymentMethod).toBe('razorpay');
+      expect(reg?.registrationNumber).toMatch(/^ILM-KMCT-/);
+      expect(data.registrationNumber).toMatch(/^ILM-KMCT-/);
+      expect(data.ticketId).toMatch(/^ILM-KMCT-/);
+    });
+  });
+
+  describe('Post-Payment Exclusivity Rules', () => {
+    it('does NOT assign or expose Ticket ID prior to payment', async () => {
+      const unpaidReg = await DataStore.getRegistrationById(testRegistrationId);
+      expect(unpaidReg?.paymentStatus).toBe('unpaid');
+      expect(unpaidReg?.registrationNumber || '').toBe('');
+    });
+
+    it('rejects syncing candidate details to Google Sheets if payment is unpaid', async () => {
+      const { syncCandidateToGoogleSheet } = await import('@/lib/sheets/google-sheets');
+      const unpaidReg = await DataStore.getRegistrationById(testRegistrationId);
+      expect(unpaidReg).toBeDefined();
+
+      const result = await syncCandidateToGoogleSheet(unpaidReg!);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not completed or verified');
     });
   });
 });

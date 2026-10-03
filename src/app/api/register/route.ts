@@ -61,8 +61,10 @@ export async function POST(req: NextRequest) {
             success: true,
             isExistingPending: true,
             registrationId: existing.id,
-            registrationNumber: existing.registrationNumber,
-            registration: existing,
+            registration: {
+              ...existing,
+              registrationNumber: '', // Ticket ID is only issued after payment
+            },
             message: 'An existing pending registration was found for this email. Proceeding to payment...',
           },
           { status: 200 }
@@ -94,20 +96,19 @@ export async function POST(req: NextRequest) {
       'REGISTRATION_CREATED',
       'registration',
       newReg.id,
-      { registrationNumber: newReg.registrationNumber, fee: eventConfig.registrationFee }
+      { fee: eventConfig.registrationFee }
     );
 
-    // 6. Send transactional registration received email in background
-    EmailService.sendRegistrationReceivedEmail(newReg, eventConfig).catch((err) =>
-      console.warn('Background email error:', err)
-    );
+    // Note: Ticket ID, pass, and confirmation email are strictly issued AFTER payment is verified.
 
     return NextResponse.json({
       success: true,
       registrationId: newReg.id,
-      registrationNumber: newReg.registrationNumber,
-      registration: newReg,
-      message: 'Registration created successfully. Please complete payment.',
+      registration: {
+        ...newReg,
+        registrationNumber: '', // Ticket ID is issued only upon successful payment
+      },
+      message: 'Registration created successfully. Please complete payment to unlock your ticket and pass.',
     });
   } catch (error: any) {
     console.error('Registration API error:', error);
