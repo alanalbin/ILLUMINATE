@@ -13,13 +13,13 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
   associatedInitiative: 'E-Cell, IIT Bombay (National Entrepreneurship Challenge / illuminate)',
   officialWebsite: 'https://www.ecell.in/illuminate/',
 
-  // Schedule & Venue — Unconfirmed details explicitly flagged as TBA
-  date: null, // To be announced
-  startTime: null, // To be announced
-  endTime: null, // To be announced
+  // Schedule & Venue — Confirmed October 20, 2026
+  date: '20 October 2026',
+  startTime: '09:30 AM',
+  endTime: '04:30 PM',
   venue: 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod, Kerala',
-  roomNumber: null, // To be announced
-  registrationClosingDate: null, // To be announced
+  roomNumber: 'Main Seminar Hall (Campus Block A)',
+  registrationClosingDate: '2026-10-20T23:59:59+05:30',
 
   // Pricing & Capacities
   registrationFee: 699, // Official NEC Discounted Fee: ₹699
@@ -145,7 +145,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
       id: 'faq-5',
       question: 'When is the exact date of the workshop?',
       answer:
-        'The exact date is currently To Be Announced. It will be finalized in coordination between KMCT College faculty coordinators and the E-Cell IIT Bombay team once initial participant registrations reach the requisite milestone.',
+        'The workshop is officially scheduled for Tuesday, 20 October 2026 (09:30 AM to 04:30 PM) on campus at KMCT College of Engineering for Emerging Technologies and Management, Kasaragod.',
       category: 'event',
     },
     {

@@ -33,6 +33,29 @@ export default function HeroSection({ event }: HeroSectionProps) {
   const coordinatorName = event.localCoordinator?.name || 'Alan Albin';
   const coordinatorPhone = event.localCoordinator?.phone || '8848563266';
 
+  const [seatsData, setSeatsData] = React.useState<{
+    total: number;
+    paid: number;
+    remaining: number;
+    percentFilled: number;
+  }>({
+    total: event.capacity || event.minimumTarget || 70,
+    paid: 0,
+    remaining: event.capacity || event.minimumTarget || 70,
+    percentFilled: 0,
+  });
+
+  React.useEffect(() => {
+    fetch('/api/event')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.seats) {
+          setSeatsData(data.seats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -141,21 +164,51 @@ export default function HeroSection({ event }: HeroSectionProps) {
               </span>
             </motion.div>
 
-            {/* Live Registration Countdown */}
-            <motion.div variants={itemVariants} className="mt-7 p-4 sm:p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] max-w-lg">
+            {/* Live Registration Countdown & 70 Seats Live Tracker */}
+            <motion.div variants={itemVariants} className="mt-7 p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/[0.1] backdrop-blur-md max-w-lg shadow-xl shadow-purple-950/30 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-bold">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
                     </span>
                     <Zap className="w-3 h-3 text-amber-400" />
-                    Seats Filling Fast
+                    Workshop Date: 20 Oct 2026
                   </span>
-                  <p className="text-xs text-zinc-300 font-medium mt-0.5">Registration Closes Soon</p>
+                  <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline at KMCT Campus</p>
                 </div>
-                <EventCountdown targetDate={event.registrationClosingDate || event.date} />
+                <EventCountdown targetDate={event.registrationClosingDate || event.date || '2026-10-20T23:59:59+05:30'} />
+              </div>
+
+              {/* 70 Seats Live Countdown Progress */}
+              <div className="pt-3 border-t border-white/[0.08]">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="flex items-center gap-1.5 text-zinc-300 font-medium">
+                    <Users className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Workshop Capacity:</span>
+                    <span className="font-bold text-white">{seatsData.total} Seats</span>
+                  </span>
+                  <span className="font-mono text-xs font-black text-amber-400 bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                    🔥 {seatsData.remaining} Seats Left
+                  </span>
+                </div>
+
+                {/* Animated Capacity Progress Bar */}
+                <div className="w-full h-2 rounded-full bg-zinc-900/80 border border-white/[0.08] overflow-hidden p-0.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-purple-500 via-indigo-400 to-amber-400 transition-all duration-1000 shadow-[0_0_12px_rgba(168,85,247,0.6)]"
+                    style={{ width: `${Math.max(6, Math.min(100, seatsData.percentFilled))}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono mt-1.5">
+                  <span>{seatsData.paid} confirmed participants</span>
+                  <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Live seat inventory
+                  </span>
+                </div>
               </div>
             </motion.div>
 

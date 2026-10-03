@@ -34,19 +34,18 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isMobile = window.innerWidth < 768;
 
-    // 2. Deep Cosmic Scene, Fog & Perspective Camera
+    // 2. Cosmic Quantum Scene & Fog
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x05030a, 0.0012);
+    scene.fog = new THREE.FogExp2(0x05030a, 0.0016);
 
     const camera = new THREE.PerspectiveCamera(
       45,
       window.innerWidth / window.innerHeight,
       1,
-      1400
+      1200
     );
-    // Positioned to view the majestic black hole tilted in cosmic perspective
-    camera.position.set(0, isMobile ? 12 : 16, isMobile ? 190 : 175);
-    camera.lookAt(0, isMobile ? 4 : 8, -30);
+    camera.position.set(0, isMobile ? 8 : 12, isMobile ? 180 : 160);
+    camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -55,112 +54,124 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       precision: isMobile ? 'mediump' : 'highp',
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    // Optimization: Clamping pixelRatio prevents GPU fill-rate saturation on 3x Retina / 4K displays
     renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
     if (!isMobile) {
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
+      renderer.toneMappingExposure = 1.2;
     }
     container.appendChild(renderer.domElement);
 
-    // 3. Cosmic Ambient & Accretion Lighting
-    const ambientLight = new THREE.AmbientLight(0x0d0618, isMobile ? 2.0 : 1.6);
+    // 3. Ambient & Pointer Lights
+    const ambientLight = new THREE.AmbientLight(0x0f0826, isMobile ? 2.2 : 1.8);
     scene.add(ambientLight);
 
-    const accretionGlow1 = new THREE.PointLight(0xa855f7, isMobile ? 3.5 : 5.0, 500);
-    accretionGlow1.position.set(50, 20, 40);
-    scene.add(accretionGlow1);
+    const coreLightCyan = new THREE.PointLight(0x38bdf8, isMobile ? 4.0 : 6.0, 400);
+    coreLightCyan.position.set(30, 20, 30);
+    scene.add(coreLightCyan);
 
-    const accretionGlow2 = new THREE.PointLight(0x38bdf8, isMobile ? 3.0 : 4.5, 450);
-    accretionGlow2.position.set(-50, -20, 30);
-    scene.add(accretionGlow2);
+    const coreLightPurple = new THREE.PointLight(0xa855f7, isMobile ? 4.0 : 6.0, 400);
+    coreLightPurple.position.set(-30, -20, 20);
+    scene.add(coreLightPurple);
 
-    // Interactive Follower Light (trails user pointer)
-    const pointerLight = new THREE.PointLight(0x60a5fa, isMobile ? 2.5 : 3.8, 320);
+    const pointerLight = new THREE.PointLight(0x818cf8, isMobile ? 2.5 : 4.0, 300);
     pointerLight.position.set(0, 0, 80);
     scene.add(pointerLight);
 
     // =========================================================================
-    // 4. THE BLACK HOLE SYSTEM (Singularity, Photon Sphere & Lensing Halo)
+    // 4. THE QUANTUM ILLUMINATE CORE (Geodesic Crystal & Plasma Nexus)
     // =========================================================================
-    const blackHoleGroup = new THREE.Group();
-    blackHoleGroup.position.set(0, isMobile ? 6 : 10, -45);
-    blackHoleGroup.rotation.x = 0.42;
-    blackHoleGroup.rotation.z = -0.16;
-    scene.add(blackHoleGroup);
+    const nexusGroup = new THREE.Group();
+    nexusGroup.position.set(0, isMobile ? 4 : 8, -25);
+    scene.add(nexusGroup);
 
-    // 4A. Event Horizon (Schwarzschild Void Sphere)
-    const horizonRadius = isMobile ? 12 : 16;
-    const horizonGeo = new THREE.SphereGeometry(horizonRadius, isMobile ? 24 : 32, isMobile ? 24 : 32);
-    const horizonMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      depthWrite: true,
-    });
-    const horizonMesh = new THREE.Mesh(horizonGeo, horizonMat);
-    blackHoleGroup.add(horizonMesh);
-
-    // Gravitational shadow falloff halo
-    const shadowHaloGeo = new THREE.SphereGeometry(horizonRadius * 1.03, 24, 24);
-    const shadowHaloMat = new THREE.MeshBasicMaterial({
-      color: 0x070212,
+    // 4A. Inner Glowing Plasma Sphere
+    const plasmaRadius = isMobile ? 8 : 12;
+    const plasmaGeo = new THREE.SphereGeometry(plasmaRadius, isMobile ? 20 : 32, isMobile ? 20 : 32);
+    const plasmaMat = new THREE.MeshBasicMaterial({
+      color: 0x9333ea,
       transparent: true,
-      opacity: 0.95,
-    });
-    const shadowHaloMesh = new THREE.Mesh(shadowHaloGeo, shadowHaloMat);
-    blackHoleGroup.add(shadowHaloMesh);
-
-    // 4B. Photon Sphere (Einstein Ring)
-    const photonRingGeo = new THREE.RingGeometry(horizonRadius * 1.04, horizonRadius * 1.18, isMobile ? 36 : 64);
-    const photonRingMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.9,
+      opacity: 0.85,
       blending: THREE.AdditiveBlending,
     });
-    const photonRing = new THREE.Mesh(photonRingGeo, photonRingMat);
-    blackHoleGroup.add(photonRing);
+    const plasmaSphere = new THREE.Mesh(plasmaGeo, plasmaMat);
+    nexusGroup.add(plasmaSphere);
 
-    // 4C. Gargantua Vertical Lensing Halo (Rear disk light bent over poles)
-    const verticalLensingGeo = new THREE.TorusGeometry(
-      horizonRadius * 1.28,
-      isMobile ? 1.0 : 1.3,
-      isMobile ? 10 : 14,
-      isMobile ? 36 : 64
-    );
-    const verticalLensingMat = new THREE.MeshBasicMaterial({
+    // 4B. Inner Faceted Geodesic Icosahedron Cage (Cyan Wireframe)
+    const innerCrystalGeo = new THREE.IcosahedronGeometry(plasmaRadius * 1.35, 1);
+    const innerCrystalMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
+      wireframe: true,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.75,
       blending: THREE.AdditiveBlending,
     });
-    const verticalLensing = new THREE.Mesh(verticalLensingGeo, verticalLensingMat);
-    verticalLensing.rotation.y = Math.PI / 2;
-    blackHoleGroup.add(verticalLensing);
+    const innerCrystal = new THREE.Mesh(innerCrystalGeo, innerCrystalMat);
+    nexusGroup.add(innerCrystal);
 
-    // Secondary concentric lensing arch
-    const secondaryLensingGeo = new THREE.TorusGeometry(
-      horizonRadius * 1.48,
-      isMobile ? 0.6 : 0.8,
-      8,
-      isMobile ? 32 : 54
-    );
-    const secondaryLensingMat = new THREE.MeshBasicMaterial({
+    // 4C. Outer Faceted Geodesic Cage (Violet Wireframe + Transparent Glass Faces)
+    const outerCrystalGeo = new THREE.IcosahedronGeometry(plasmaRadius * 1.7, 1);
+    const outerCrystalWireMat = new THREE.MeshBasicMaterial({
       color: 0xc084fc,
+      wireframe: true,
       transparent: true,
-      opacity: 0.38,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
     });
-    const secondaryLensing = new THREE.Mesh(secondaryLensingGeo, secondaryLensingMat);
-    secondaryLensing.rotation.y = Math.PI / 2;
-    blackHoleGroup.add(secondaryLensing);
+    const outerCrystal = new THREE.Mesh(outerCrystalGeo, outerCrystalWireMat);
+    nexusGroup.add(outerCrystal);
+
+    // 4D. Glass Faces on Outer Icosahedron
+    const glassFacesMat = new THREE.MeshBasicMaterial({
+      color: 0x1e1b4b,
+      transparent: true,
+      opacity: 0.25,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+    });
+    const glassFaces = new THREE.Mesh(outerCrystalGeo, glassFacesMat);
+    nexusGroup.add(glassFaces);
 
     // =========================================================================
-    // 5. HARDWARE-ACCELERATED ACCRETION DISK (Zero-CPU GPU Keplarian Rotation)
+    // 5. GYROSCOPIC HOLOGRAPHIC ORBITAL RINGS
     // =========================================================================
-    // By pre-allocating concentric particle sub-rings and rotating them directly
-    // on the GPU in the vertex transform matrix, we eliminate all per-frame CPU
-    // trigonometry loops and avoid PCIe buffer re-upload thrashing entirely!
+    const ringGroup = new THREE.Group();
+    nexusGroup.add(ringGroup);
+
+    const createGimbalRing = (radius: number, tubeRadius: number, colorHex: number) => {
+      const geo = new THREE.TorusGeometry(radius, tubeRadius, 8, isMobile ? 48 : 80);
+      const mat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+      });
+      return new THREE.Mesh(geo, mat);
+    };
+
+    const ringRadius1 = plasmaRadius * 2.2;
+    const ringRadius2 = plasmaRadius * 2.7;
+    const ringRadius3 = plasmaRadius * 3.2;
+
+    const gimbalRing1 = createGimbalRing(ringRadius1, isMobile ? 0.35 : 0.5, 0x38bdf8);
+    const gimbalRing2 = createGimbalRing(ringRadius2, isMobile ? 0.3 : 0.45, 0xa855f7);
+    const gimbalRing3 = createGimbalRing(ringRadius3, isMobile ? 0.25 : 0.4, 0x818cf8);
+
+    gimbalRing1.rotation.x = Math.PI / 3;
+    gimbalRing2.rotation.y = Math.PI / 4;
+    gimbalRing3.rotation.z = -Math.PI / 6;
+
+    ringGroup.add(gimbalRing1);
+    ringGroup.add(gimbalRing2);
+    ringGroup.add(gimbalRing3);
+
+    // =========================================================================
+    // 6. INTERACTIVE NEURAL CONSTELLATION LATTICE (Nodes + Dynamic Links)
+    // =========================================================================
+    const nodeCount = isMobile ? 65 : 120;
+    const connectionMaxDist = isMobile ? 32 : 42;
+    const constellationSpread = isMobile ? 180 : 260;
+
+    // Node particle texture generator
     const spriteCanvas = document.createElement('canvas');
     spriteCanvas.width = 64;
     spriteCanvas.height = 64;
@@ -168,183 +179,156 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     if (sCtx) {
       const grad = sCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.25, 'rgba(240, 230, 255, 0.95)');
-      grad.addColorStop(0.55, 'rgba(56, 189, 248, 0.6)');
-      grad.addColorStop(0.85, 'rgba(168, 85, 247, 0.2)');
+      grad.addColorStop(0.25, 'rgba(56, 189, 248, 0.9)');
+      grad.addColorStop(0.65, 'rgba(168, 85, 247, 0.4)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       sCtx.fillStyle = grad;
       sCtx.fillRect(0, 0, 64, 64);
     }
     const particleTexture = new THREE.CanvasTexture(spriteCanvas);
 
-    const minR = horizonRadius * 1.25;
-    const maxR = horizonRadius * (isMobile ? 4.2 : 5.6);
-    const rRange = maxR - minR;
+    // Node data vectors for simulation physics
+    interface NodeParticle {
+      origin: THREE.Vector3;
+      position: THREE.Vector3;
+      velocity: THREE.Vector3;
+      pulseOffset: number;
+    }
 
-    const colWhite = new THREE.Color(0xffffff);
+    const nodes: NodeParticle[] = [];
+    const nodePositions = new Float32Array(nodeCount * 3);
+    const nodeColors = new Float32Array(nodeCount * 3);
+
     const colCyan = new THREE.Color(0x38bdf8);
     const colViolet = new THREE.Color(0xa855f7);
-    const colDeep = new THREE.Color(0x6366f1);
+    const colIndigo = new THREE.Color(0x818cf8);
+    const colWhite = new THREE.Color(0xffffff);
 
-    // Helper to generate a pre-baked static particle ring
-    const createAccretionRing = (count: number, rStart: number, rEnd: number, startCol: THREE.Color, endCol: THREE.Color) => {
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
+    for (let i = 0; i < nodeCount; i++) {
+      const x = (Math.random() - 0.5) * constellationSpread;
+      const y = (Math.random() - 0.5) * (constellationSpread * 0.7);
+      const z = (Math.random() - 0.5) * constellationSpread * 0.6 - 20;
 
-      for (let i = 0; i < count; i++) {
-        const norm = Math.pow(Math.random(), 0.8);
-        const r = THREE.MathUtils.lerp(rStart, rEnd, norm);
-        const theta = Math.random() * Math.PI * 2;
-        const y = (Math.random() - 0.5) * (isMobile ? 1.0 : 1.8) * (r / maxR);
+      const origin = new THREE.Vector3(x, y, z);
+      const pos = origin.clone();
+      const vel = new THREE.Vector3(
+        (Math.random() - 0.5) * 0.12,
+        (Math.random() - 0.5) * 0.12,
+        (Math.random() - 0.5) * 0.12
+      );
 
-        positions[i * 3] = Math.cos(theta) * r;
-        positions[i * 3 + 1] = y;
-        positions[i * 3 + 2] = Math.sin(theta) * r;
+      nodes.push({ origin, position: pos, velocity: vel, pulseOffset: Math.random() * Math.PI * 2 });
 
-        const c = new THREE.Color().lerpColors(startCol, endCol, norm);
-        colors[i * 3] = c.r;
-        colors[i * 3 + 1] = c.g;
-        colors[i * 3 + 2] = c.b;
-      }
+      nodePositions[i * 3] = x;
+      nodePositions[i * 3 + 1] = y;
+      nodePositions[i * 3 + 2] = z;
 
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      const mat = new THREE.PointsMaterial({
-        size: isMobile ? 3.2 : 4.6,
-        map: particleTexture,
-        vertexColors: true,
-        transparent: true,
-        opacity: isMobile ? 0.65 : 0.78,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      });
-
-      return new THREE.Points(geo, mat);
-    };
-
-    // 3 concentric rings rotating at Keplerian speeds (v ~ 1/sqrt(r))
-    const innerRingCount = isMobile ? 90 : 160;
-    const midRingCount = isMobile ? 110 : 200;
-    const outerRingCount = isMobile ? 80 : 140;
-
-    const innerRing = createAccretionRing(innerRingCount, minR, minR + rRange * 0.35, colWhite, colCyan);
-    const midRing = createAccretionRing(midRingCount, minR + rRange * 0.28, minR + rRange * 0.72, colCyan, colViolet);
-    const outerRing = createAccretionRing(outerRingCount, minR + rRange * 0.65, maxR, colViolet, colDeep);
-
-    blackHoleGroup.add(innerRing);
-    blackHoleGroup.add(midRing);
-    blackHoleGroup.add(outerRing);
-
-    // =========================================================================
-    // 6. RELATIVISTIC POLAR ASTROPHYSICAL JETS
-    // =========================================================================
-    const jetGroup = new THREE.Group();
-    blackHoleGroup.add(jetGroup);
-
-    const jetCoreGeo = new THREE.CylinderGeometry(0.3, 2.8, isMobile ? 40 : 60, 12, 1, true);
-    const jetCoreMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.32,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    });
-    const jetNorth = new THREE.Mesh(jetCoreGeo, jetCoreMat);
-    jetNorth.position.y = isMobile ? 22 : 32;
-    jetGroup.add(jetNorth);
-
-    const jetSouth = new THREE.Mesh(jetCoreGeo, jetCoreMat);
-    jetSouth.position.y = isMobile ? -22 : -32;
-    jetSouth.rotation.x = Math.PI;
-    jetGroup.add(jetSouth);
-
-    // =========================================================================
-    // 7. DISTANT COSMIC STARS (Pre-computed Static VBO)
-    // =========================================================================
-    const starCount = isMobile ? 45 : 90;
-    const starGeo = new THREE.BufferGeometry();
-    const starPositions = new Float32Array(starCount * 3);
-
-    for (let i = 0; i < starCount; i++) {
-      starPositions[i * 3] = (Math.random() - 0.5) * (isMobile ? 300 : 420);
-      starPositions[i * 3 + 1] = (Math.random() - 0.5) * (isMobile ? 200 : 300);
-      starPositions[i * 3 + 2] = THREE.MathUtils.lerp(-80, -300, Math.random());
+      const t = Math.random();
+      const nodeCol = t < 0.4 ? colCyan : t < 0.8 ? colViolet : colIndigo;
+      nodeColors[i * 3] = nodeCol.r;
+      nodeColors[i * 3 + 1] = nodeCol.g;
+      nodeColors[i * 3 + 2] = nodeCol.b;
     }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
 
-    const starMat = new THREE.PointsMaterial({
-      size: isMobile ? 2.2 : 3.4,
+    const nodeGeo = new THREE.BufferGeometry();
+    nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePositions, 3));
+    nodeGeo.setAttribute('color', new THREE.BufferAttribute(nodeColors, 3));
+
+    const nodeMat = new THREE.PointsMaterial({
+      size: isMobile ? 3.4 : 4.8,
       map: particleTexture,
+      vertexColors: true,
       transparent: true,
-      opacity: 0.48,
+      opacity: 0.85,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const starsMesh = new THREE.Points(starGeo, starMat);
-    scene.add(starsMesh);
+    const nodesMesh = new THREE.Points(nodeGeo, nodeMat);
+    scene.add(nodesMesh);
+
+    // Dynamic Line Mesh for Constellation Connections
+    const maxLines = nodeCount * 4;
+    const linePositions = new Float32Array(maxLines * 6);
+    const lineColors = new Float32Array(maxLines * 6);
+
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+    lineGeo.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
+
+    const lineMat = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.42,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const linesMesh = new THREE.LineSegments(lineGeo, lineMat);
+    scene.add(linesMesh);
 
     // =========================================================================
-    // 8. SPACETIME GRAVITATIONAL WAVE RIPPLE (Click / Tap Shockwave)
+    // 7. INTERACTIVE EXPANDING SHOCKWAVE (Click/Tap Energy Pulse)
     // =========================================================================
-    const waveRingGeo = new THREE.RingGeometry(horizonRadius * 1.05, horizonRadius * 1.3, isMobile ? 32 : 48);
-    const waveRingMat = new THREE.MeshBasicMaterial({
+    const shockwaveGeo = new THREE.RingGeometry(plasmaRadius * 0.8, plasmaRadius * 1.5, isMobile ? 32 : 64);
+    const shockwaveMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0,
       blending: THREE.AdditiveBlending,
     });
-    const waveRing = new THREE.Mesh(waveRingGeo, waveRingMat);
-    blackHoleGroup.add(waveRing);
+    const shockwaveMesh = new THREE.Mesh(shockwaveGeo, shockwaveMat);
+    nexusGroup.add(shockwaveMesh);
 
-    let waveActive = false;
-    let waveProgress = 0;
+    let shockwaveActive = false;
+    let shockwaveProgress = 0;
 
-    const triggerGravitationalWave = () => {
-      waveActive = true;
-      waveProgress = 0;
-      waveRingMat.opacity = 0.95;
+    const triggerShockwave = () => {
+      shockwaveActive = true;
+      shockwaveProgress = 0;
+      shockwaveMat.opacity = 0.95;
 
-      photonRingMat.opacity = 1.0;
-      accretionGlow1.intensity = isMobile ? 6.0 : 8.5;
-      accretionGlow2.intensity = isMobile ? 5.5 : 7.5;
-      pointerLight.intensity = isMobile ? 5.5 : 8.0;
+      coreLightCyan.intensity = isMobile ? 7.0 : 10.0;
+      coreLightPurple.intensity = isMobile ? 7.0 : 10.0;
+      pointerLight.intensity = isMobile ? 6.0 : 9.0;
+      plasmaMat.opacity = 1.0;
     };
 
     // =========================================================================
-    // 9. HIGH-PERFORMANCE INTERACTION LISTENERS (Zero Allocations in Event Loop)
+    // 8. INTERACTION & POINTER LISTENERS
     // =========================================================================
     let targetX = 0;
     let targetY = 0;
     let currentX = 0;
     let currentY = 0;
-
     let targetScrollProgress = 0;
     let currentScrollProgress = 0;
 
-    // Pre-allocated scratch vectors to prevent GC pauses during pointer moves
     const _scratchVec = new THREE.Vector3();
     const _scratchDir = new THREE.Vector3();
     const _scratchPos = new THREE.Vector3();
+    const pointerWorldPos = new THREE.Vector3(0, 0, 80);
 
     const handlePointerMove = (e: PointerEvent) => {
       targetX = (e.clientX / window.innerWidth - 0.5) * 2;
       targetY = (e.clientY / window.innerHeight - 0.5) * 2;
 
-      _scratchVec.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1, 0.5);
+      _scratchVec.set(
+        (e.clientX / window.innerWidth) * 2 - 1,
+        -(e.clientY / window.innerHeight) * 2 + 1,
+        0.5
+      );
       _scratchVec.unproject(camera);
       _scratchDir.copy(_scratchVec).sub(camera.position).normalize();
-      _scratchPos.copy(camera.position).addScaledVector(_scratchDir, 150);
-      pointerLight.position.lerp(_scratchPos, 0.22);
+      _scratchPos.copy(camera.position).addScaledVector(_scratchDir, 140);
+      pointerWorldPos.copy(_scratchPos);
+      pointerLight.position.lerp(_scratchPos, 0.2);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        targetX = (touch.clientX / window.innerWidth - 0.5) * 1.4;
-        targetY = (touch.clientY / window.innerHeight - 0.5) * 1.4;
+        targetX = (touch.clientX / window.innerWidth - 0.5) * 1.5;
+        targetY = (touch.clientY / window.innerHeight - 0.5) * 1.5;
       }
     };
 
@@ -353,7 +337,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       if (target.closest('button, a, input, select, textarea, [role="button"]')) {
         return;
       }
-      triggerGravitationalWave();
+      triggerShockwave();
     };
 
     let cachedMaxScroll = 1000;
@@ -388,7 +372,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // =========================================================================
-    // 10. BUTTERY-SMOOTH 60/120FPS GPU ACCELERATED RENDER LOOP
+    // 9. HIGH-PERFORMANCE 60/120FPS GPU RENDER LOOP
     // =========================================================================
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -401,78 +385,163 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       const delta = Math.min(clock.getDelta(), 0.05);
       const time = clock.getElapsedTime();
 
-      // Smooth scroll interpolation
+      // Smooth interpolations
       currentScrollProgress += (targetScrollProgress - currentScrollProgress) * 0.07;
-
-      // Pointer frame-dragging smoothing
       currentX += (targetX - currentX) * (isMobile ? 0.04 : 0.06);
       currentY += (targetY - currentY) * (isMobile ? 0.04 : 0.06);
 
-      // Camera dynamic cosmic glide along the scroll journey
+      // Camera dynamic glide along page scroll
       if (!prefersReducedMotion) {
-        const scrollCameraY = (isMobile ? 12 : 16) - currentScrollProgress * 22;
-        const scrollCameraZ = (isMobile ? 190 : 175) - currentScrollProgress * 30;
-        const scrollCameraTilt = Math.sin(currentScrollProgress * Math.PI) * 4;
+        const scrollCameraY = (isMobile ? 8 : 12) - currentScrollProgress * 20;
+        const scrollCameraZ = (isMobile ? 180 : 160) - currentScrollProgress * 35;
+        const scrollCameraTilt = Math.sin(currentScrollProgress * Math.PI) * 5;
 
-        camera.position.x = currentX * (isMobile ? 7 : 14) + scrollCameraTilt;
-        camera.position.y = -currentY * (isMobile ? 5 : 9) + scrollCameraY;
+        camera.position.x = currentX * (isMobile ? 8 : 16) + scrollCameraTilt;
+        camera.position.y = -currentY * (isMobile ? 6 : 10) + scrollCameraY;
         camera.position.z = scrollCameraZ;
-        camera.lookAt(0, isMobile ? 4 : 8, -30);
+        camera.lookAt(0, isMobile ? 3 : 5, -25);
 
-        // Relativistic Frame-Dragging: Black hole tilts smoothly toward pointer
-        blackHoleGroup.rotation.y = time * 0.08 + currentX * 0.75 + currentScrollProgress * Math.PI * 0.8;
-        blackHoleGroup.rotation.x = 0.42 + currentY * 0.45;
-        blackHoleGroup.rotation.z = -0.16 + currentX * 0.2;
-
-        // Distant stars slow drift
-        starsMesh.rotation.y = time * 0.01;
+        // Interactive Nexus Core Rotation with Pointer Tilt
+        nexusGroup.rotation.y = time * 0.25 + currentX * 0.8 + currentScrollProgress * Math.PI * 0.7;
+        nexusGroup.rotation.x = currentY * 0.5 + Math.sin(time * 0.4) * 0.1;
+        nexusGroup.rotation.z = currentX * 0.3;
       }
 
-      // Einstein Photon Ring Breathing & Look-At Camera
-      const lensPulse = 1.0 + Math.sin(time * 3.0) * 0.03;
-      photonRing.scale.set(lensPulse, lensPulse, lensPulse);
-      photonRing.lookAt(camera.position);
+      // -----------------------------------------------------------------------
+      // Quantum Core Counter-Rotations & Pulsing
+      // -----------------------------------------------------------------------
+      innerCrystal.rotation.y -= delta * 0.75;
+      innerCrystal.rotation.x += delta * 0.4;
+      outerCrystal.rotation.y += delta * 0.5;
+      outerCrystal.rotation.z -= delta * 0.3;
 
-      verticalLensing.rotation.y = Math.PI / 2 + Math.sin(time * 0.5) * 0.08;
+      const plasmaPulse = 1.0 + Math.sin(time * 3.5) * 0.08;
+      plasmaSphere.scale.set(plasmaPulse, plasmaPulse, plasmaPulse);
+
+      // Gimbal Rings Multi-Axis Orbit
+      const ringSpeed = shockwaveActive ? 2.5 : 1.0;
+      gimbalRing1.rotation.z += delta * 0.8 * ringSpeed;
+      gimbalRing2.rotation.x += delta * 0.65 * ringSpeed;
+      gimbalRing3.rotation.y -= delta * 0.5 * ringSpeed;
 
       // -----------------------------------------------------------------------
-      // Pure GPU Keplarian Accretion Ring Rotations (Zero CPU VBO re-uploads!)
+      // Neural Constellation Nodes Update & Pointer Gravity Physics
       // -----------------------------------------------------------------------
-      const speedMultiplier = waveActive ? 1.8 : 1.0;
-      innerRing.rotation.y += delta * 0.95 * speedMultiplier;
-      midRing.rotation.y += delta * 0.55 * speedMultiplier;
-      outerRing.rotation.y += delta * 0.32 * speedMultiplier;
+      const nodePosAttr = nodeGeo.attributes.position as THREE.BufferAttribute;
+      const posArray = nodePosAttr.array as Float32Array;
 
-      // -----------------------------------------------------------------------
-      // Spacetime Gravitational Wave Ripple
-      // -----------------------------------------------------------------------
-      if (waveActive) {
-        waveProgress += delta * 1.8;
-        const waveScale = 1.0 + waveProgress * 4.5;
-        waveRing.scale.set(waveScale, waveScale, waveScale);
-        waveRingMat.opacity = Math.max(0, 0.95 * (1.0 - waveProgress));
+      let lineIndex = 0;
+      const linePosAttr = lineGeo.attributes.position as THREE.BufferAttribute;
+      const lineArray = linePosAttr.array as Float32Array;
+      const lineColAttr = lineGeo.attributes.color as THREE.BufferAttribute;
+      const lineColArray = lineColAttr.array as Float32Array;
 
-        if (waveProgress >= 1.0) {
-          waveActive = false;
+      for (let i = 0; i < nodeCount; i++) {
+        const node = nodes[i];
+
+        // Harmonic ambient drift around origin
+        const driftX = Math.sin(time * 0.8 + node.pulseOffset) * 2.5;
+        const driftY = Math.cos(time * 0.7 + node.pulseOffset) * 2.5;
+        const driftZ = Math.sin(time * 0.9 + node.pulseOffset * 1.5) * 2.5;
+
+        // Pointer proximity attraction physics
+        const dx = pointerWorldPos.x - (node.origin.x + driftX);
+        const dy = pointerWorldPos.y - (node.origin.y + driftY);
+        const dz = pointerWorldPos.z - (node.origin.z + driftZ);
+        const distToPointer = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+        let attractX = 0;
+        let attractY = 0;
+        let attractZ = 0;
+
+        if (distToPointer < 65) {
+          const force = (1.0 - distToPointer / 65) * 9.0;
+          attractX = (dx / distToPointer) * force;
+          attractY = (dy / distToPointer) * force;
+          attractZ = (dz / distToPointer) * force;
+        }
+
+        const targetNodeX = node.origin.x + driftX + attractX;
+        const targetNodeY = node.origin.y + driftY + attractY;
+        const targetNodeZ = node.origin.z + driftZ + attractZ;
+
+        node.position.x += (targetNodeX - node.position.x) * 0.08;
+        node.position.y += (targetNodeY - node.position.y) * 0.08;
+        node.position.z += (targetNodeZ - node.position.z) * 0.08;
+
+        posArray[i * 3] = node.position.x;
+        posArray[i * 3 + 1] = node.position.y;
+        posArray[i * 3 + 2] = node.position.z;
+
+        // Build connections between nearby node pairs
+        for (let j = i + 1; j < nodeCount; j++) {
+          if (lineIndex >= maxLines) break;
+
+          const other = nodes[j];
+          const cdx = node.position.x - other.position.x;
+          const cdy = node.position.y - other.position.y;
+          const cdz = node.position.z - other.position.z;
+          const distNodes = Math.sqrt(cdx * cdx + cdy * cdy + cdz * cdz);
+
+          if (distNodes < connectionMaxDist) {
+            const alpha = 1.0 - distNodes / connectionMaxDist;
+
+            const baseIdx = lineIndex * 6;
+            lineArray[baseIdx] = node.position.x;
+            lineArray[baseIdx + 1] = node.position.y;
+            lineArray[baseIdx + 2] = node.position.z;
+            lineArray[baseIdx + 3] = other.position.x;
+            lineArray[baseIdx + 4] = other.position.y;
+            lineArray[baseIdx + 5] = other.position.z;
+
+            // Gradient line color based on proximity and theme
+            lineColArray[baseIdx] = colCyan.r * alpha;
+            lineColArray[baseIdx + 1] = colCyan.g * alpha;
+            lineColArray[baseIdx + 2] = colCyan.b * alpha;
+            lineColArray[baseIdx + 3] = colViolet.r * alpha;
+            lineColArray[baseIdx + 4] = colViolet.g * alpha;
+            lineColArray[baseIdx + 5] = colViolet.b * alpha;
+
+            lineIndex++;
+          }
         }
       }
 
-      // Lighting decay back to baseline
-      const baseGlow1 = isMobile ? 3.5 : 5.0;
-      const baseGlow2 = isMobile ? 3.0 : 4.5;
-      const basePointer = isMobile ? 2.5 : 3.8;
+      nodePosAttr.needsUpdate = true;
+      lineGeo.setDrawRange(0, lineIndex * 2);
+      linePosAttr.needsUpdate = true;
+      lineColAttr.needsUpdate = true;
 
-      if (accretionGlow1.intensity > baseGlow1) {
-        accretionGlow1.intensity += (baseGlow1 - accretionGlow1.intensity) * 0.05;
+      // -----------------------------------------------------------------------
+      // Shockwave Pulse Expansion & Fade
+      // -----------------------------------------------------------------------
+      if (shockwaveActive) {
+        shockwaveProgress += delta * 1.6;
+        const waveScale = 1.0 + shockwaveProgress * 5.0;
+        shockwaveMesh.scale.set(waveScale, waveScale, waveScale);
+        shockwaveMat.opacity = Math.max(0, 0.95 * (1.0 - shockwaveProgress));
+
+        if (shockwaveProgress >= 1.0) {
+          shockwaveActive = false;
+        }
       }
-      if (accretionGlow2.intensity > baseGlow2) {
-        accretionGlow2.intensity += (baseGlow2 - accretionGlow2.intensity) * 0.05;
+
+      // Lights decay smoothly to standard levels
+      const baseCyan = isMobile ? 4.0 : 6.0;
+      const basePurple = isMobile ? 4.0 : 6.0;
+      const basePointer = isMobile ? 2.5 : 4.0;
+
+      if (coreLightCyan.intensity > baseCyan) {
+        coreLightCyan.intensity += (baseCyan - coreLightCyan.intensity) * 0.05;
+      }
+      if (coreLightPurple.intensity > basePurple) {
+        coreLightPurple.intensity += (basePurple - coreLightPurple.intensity) * 0.05;
       }
       if (pointerLight.intensity > basePointer) {
         pointerLight.intensity += (basePointer - pointerLight.intensity) * 0.05;
       }
-      if (photonRingMat.opacity > 0.9) {
-        photonRingMat.opacity += (0.9 - photonRingMat.opacity) * 0.05;
+      if (plasmaMat.opacity > 0.85) {
+        plasmaMat.opacity += (0.85 - plasmaMat.opacity) * 0.05;
       }
 
       renderer.render(scene, camera);
@@ -493,30 +562,25 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
         container.removeChild(renderer.domElement);
       }
 
-      horizonGeo.dispose();
-      horizonMat.dispose();
-      shadowHaloGeo.dispose();
-      shadowHaloMat.dispose();
-      photonRingGeo.dispose();
-      photonRingMat.dispose();
-      verticalLensingGeo.dispose();
-      verticalLensingMat.dispose();
-      secondaryLensingGeo.dispose();
-      secondaryLensingMat.dispose();
-
-      innerRing.geometry.dispose();
-      (innerRing.material as THREE.Material).dispose();
-      midRing.geometry.dispose();
-      (midRing.material as THREE.Material).dispose();
-      outerRing.geometry.dispose();
-      (outerRing.material as THREE.Material).dispose();
-
-      jetCoreGeo.dispose();
-      jetCoreMat.dispose();
-      starGeo.dispose();
-      starMat.dispose();
-      waveRingGeo.dispose();
-      waveRingMat.dispose();
+      plasmaGeo.dispose();
+      plasmaMat.dispose();
+      innerCrystalGeo.dispose();
+      innerCrystalMat.dispose();
+      outerCrystalGeo.dispose();
+      outerCrystalWireMat.dispose();
+      glassFacesMat.dispose();
+      gimbalRing1.geometry.dispose();
+      (gimbalRing1.material as THREE.Material).dispose();
+      gimbalRing2.geometry.dispose();
+      (gimbalRing2.material as THREE.Material).dispose();
+      gimbalRing3.geometry.dispose();
+      (gimbalRing3.material as THREE.Material).dispose();
+      nodeGeo.dispose();
+      nodeMat.dispose();
+      lineGeo.dispose();
+      lineMat.dispose();
+      shockwaveGeo.dispose();
+      shockwaveMat.dispose();
       particleTexture.dispose();
       renderer.dispose();
     };
@@ -536,7 +600,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       ref={containerRef}
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
       style={{
-        background: 'radial-gradient(ellipse at 50% 35%, #0f0724 0%, #05030a 70%, #020106 100%)',
+        background: 'radial-gradient(ellipse at 50% 30%, #0d0724 0%, #05030a 65%, #020106 100%)',
       }}
       aria-hidden="true"
     />

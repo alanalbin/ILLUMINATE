@@ -27,6 +27,19 @@ export function getEffectiveTargetTimestamp(targetDate?: string | Date | null): 
     return parsed;
   }
 
+  // Authoritative Workshop Date: 20th of October 2026 (23:59:59 IST)
+  const october20Target = new Date('2026-10-20T23:59:59+05:30').getTime();
+  if (october20Target > Date.now()) {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('illuminate_countdown_target', october20Target.toString());
+      } catch {
+        // Storage access blocked or restricted
+      }
+    }
+    return october20Target;
+  }
+
   // Fallback to persistent deadline in localStorage so it doesn't reset on every refresh
   if (typeof window !== 'undefined') {
     try {
@@ -42,19 +55,11 @@ export function getEffectiveTargetTimestamp(targetDate?: string | Date | null): 
     }
   }
 
-  // Create rolling target 14 days from now aligned to end of day
+  // Create rolling target 14 days from now aligned to end of day if past Oct 2026
   const fallback = new Date();
   fallback.setDate(fallback.getDate() + 14);
   fallback.setHours(23, 59, 59, 999);
   const fallbackTs = fallback.getTime();
-
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem('illuminate_countdown_target', fallbackTs.toString());
-    } catch {
-      // Ignore localStorage write failures
-    }
-  }
 
   return fallbackTs;
 }
