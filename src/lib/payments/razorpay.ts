@@ -1,32 +1,50 @@
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { DataStore } from '@/lib/storage/data-store';
+import { EmailService } from '@/lib/email/sender';
+import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
-const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
-
-export const isRazorpayConfigured = (): boolean => {
-  return Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET && !RAZORPAY_KEY_ID.startsWith('rzp_test_placeholder'));
+export const getRazorpayKeyId = (): string => {
+  return process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
 };
 
-let razorpayClient: Razorpay | null = null;
-if (isRazorpayConfigured()) {
+export const getRazorpayKeySecret = (): string => {
+  return process.env.RAZORPAY_KEY_SECRET || '';
+};
+
+export const isRazorpayConfigured = (): boolean => {
+  const keyId = getRazorpayKeyId();
+  const keySecret = getRazorpayKeySecret();
+  return Boolean(keyId && keySecret && !keyId.startsWith('rzp_test_placeholder'));
+};
+
+export function getRazorpayClient(): Razorpay | null {
+  const keyId = getRazorpayKeyId();
+  const keySecret = getRazorpayKeySecret();
+
+  if (!keyId || !keySecret) {
+    return null;
+  }
+
   try {
-    razorpayClient = new Razorpay({
-      key_id: RAZORPAY_KEY_ID,
-      key_secret: RAZORPAY_KEY_SECRET,
+    return new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
     });
   } catch (err) {
-    console.warn('Failed to initialize Razorpay SDK:', err);
+    console.error('Failed to initialize Razorpay SDK:', err);
+    return null;
   }
 }
 
 export interface CreateOrderResult {
   success: boolean;
+  order_id: string;
   orderId: string;
+  amount: number;
   amountPaise: number;
   currency: string;
+  key_id: string;
   keyId: string;
   isTestMode: boolean;
   notes?: Record<string, string>;
@@ -34,6 +52,69 @@ export interface CreateOrderResult {
 }
 
 export const PaymentService = {
+  async createOrder(params: {
+    amount: number; // in paise, minimum 100
+    currency?: string;
+    receipt?: string;
+    registrationId?: string;
+  }): Promise<CreateOrderResult> {
+    if (!params.amount || params.amount < 100) {
+      throw new Error('Minimum order amount is 100 paise');
+    }
+
+    const keyId = getRazorpayKeyId();
+    const keySecret = getRazorpayKeySecret();
+
+    if (!keyId || !keySecret) {
+      throw new Error('Razorpay credentials are not configured');
+    }
+
+    const client = getRazorpayClient();
+    if (!client) {
+      throw new Error('Failed to initialize Razorpay client');
+    }
+
+    const currency = params.currency || 'INR';
+    const receipt =
+      params.receipt ||
+      (params.registrationId ? `rcpt_${params.registrationId.slice(-12)}` : `rcpt_${Date.now()}`);
+
+    try {
+      const options = {
+        amount: Math.round(params.amount),
+        currency,
+        receipt,
+        notes: params.registrationId ? { registrationId: params.registrationId } : undefined,
+      };
+
+      const order = await (client as any).orders.create(options);
+
+      if (params.registrationId) {
+        await DataStore.updateRegistration(params.registrationId, {
+          orderId: order.id,
+          amountPaise: Math.round(params.amount),
+          paymentStatus: 'pending',
+        });
+      }
+
+      return {
+        success: true,
+        order_id: order.id,
+        orderId: order.id,
+        amount: Number(order.amount),
+        amountPaise: Number(order.amount),
+        currency: order.currency,
+        key_id: keyId,
+        keyId: keyId,
+        isTestMode: keyId.startsWith('rzp_test_'),
+        notes: options.notes,
+      };
+    } catch (error: any) {
+      console.error('Razorpay orders.create error:', error);
+      throw error;
+    }
+  },
+
   async createOrderForRegistration(registrationId: string): Promise<CreateOrderResult> {
     const registration = await DataStore.getRegistrationById(registrationId);
     if (!registration) {
@@ -41,84 +122,45 @@ export const PaymentService = {
     }
 
     const eventConfig = await DataStore.getEventConfig();
+    const feePaise = Math.round((eventConfig.registrationFee || 699) * 100);
 
-    // Server-side authoritative fee calculation in integer paise
-    const feePaise = Math.round(eventConfig.registrationFee * 100);
-
-    // If live payments are not enabled, or Razorpay keys not provided, provide sandbox test order
-    if (!isRazorpayConfigured() || !eventConfig.livePaymentsEnabled) {
-      const mockOrderId = `order_test_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-      
-      // Update registration with order ID
-      await DataStore.updateRegistration(registrationId, {
-        orderId: mockOrderId,
-        amountPaise: feePaise,
-        paymentStatus: 'pending',
-      });
-
-      return {
-        success: true,
-        orderId: mockOrderId,
-        amountPaise: feePaise,
-        currency: 'INR',
-        keyId: RAZORPAY_KEY_ID || 'rzp_test_local_sandbox',
-        isTestMode: true,
-        notes: {
-          registrationId,
-          registrationNumber: registration.registrationNumber,
-          eventId: eventConfig.id,
-        },
-      };
-    }
-
-    try {
-      const options = {
-        amount: feePaise,
-        currency: 'INR',
-        receipt: registration.registrationNumber,
-        notes: {
-          registrationId,
-          registrationNumber: registration.registrationNumber,
-          eventId: eventConfig.id,
-        },
-      };
-
-      const order = await (razorpayClient as any).orders.create(options);
-
-      await DataStore.updateRegistration(registrationId, {
-        orderId: order.id,
-        amountPaise: feePaise,
-        paymentStatus: 'pending',
-      });
-
-      return {
-        success: true,
-        orderId: order.id,
-        amountPaise: feePaise,
-        currency: 'INR',
-        keyId: RAZORPAY_KEY_ID,
-        isTestMode: RAZORPAY_KEY_ID.startsWith('rzp_test_'),
-      };
-    } catch (error: any) {
-      console.error('Razorpay order creation error:', error);
-      throw new Error(error?.message || 'Failed to initialize payment gateway order');
-    }
+    return this.createOrder({
+      amount: feePaise,
+      currency: 'INR',
+      receipt: registration.registrationNumber,
+      registrationId,
+    });
   },
 
   verifySignature(orderId: string, paymentId: string, signature: string): boolean {
-    // In test sandbox without keys, accept test payment verification token
-    if (!isRazorpayConfigured()) {
-      return signature === `test_sig_${orderId}_${paymentId}` || signature.startsWith('mock_sig_');
+    if (!orderId || !paymentId || !signature) {
+      return false;
+    }
+
+    if (process.env.NODE_ENV === 'test' && signature === `test_sig_${orderId}_${paymentId}`) {
+      return true;
+    }
+
+    const keySecret = getRazorpayKeySecret();
+    if (!keySecret) {
+      console.warn('RAZORPAY_KEY_SECRET is not configured');
+      return false;
     }
 
     try {
       const body = `${orderId}|${paymentId}`;
       const expectedSignature = crypto
-        .createHmac('sha256', RAZORPAY_KEY_SECRET)
+        .createHmac('sha256', keySecret)
         .update(body)
         .digest('hex');
 
-      return crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(signature));
+      const expectedBuf = Buffer.from(expectedSignature, 'utf-8');
+      const signatureBuf = Buffer.from(String(signature), 'utf-8');
+
+      return (
+        expectedBuf.length === signatureBuf.length &&
+        crypto.timingSafeEqual(expectedBuf, signatureBuf)
+      );
     } catch (err) {
       console.error('Signature verification error:', err);
       return false;
@@ -126,14 +168,15 @@ export const PaymentService = {
   },
 
   verifyWebhookSignature(rawBody: string, webhookSignature: string): boolean {
-    if (!RAZORPAY_WEBHOOK_SECRET) {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || getRazorpayKeySecret();
+    if (!secret) {
       console.warn('RAZORPAY_WEBHOOK_SECRET is not configured');
       return false;
     }
 
     try {
       const expectedSignature = crypto
-        .createHmac('sha256', RAZORPAY_WEBHOOK_SECRET)
+        .createHmac('sha256', secret)
         .update(rawBody)
         .digest('hex');
 
@@ -145,57 +188,69 @@ export const PaymentService = {
   },
 
   async handlePaymentSuccess(
-    registrationId: string,
+    registrationId: string | undefined,
     orderId: string,
     paymentId: string,
     signature: string
-  ): Promise<{ success: boolean; message: string }> {
-    const registration = await DataStore.getRegistrationById(registrationId);
-    if (!registration) {
-      return { success: false, message: 'Registration not found' };
-    }
-
-    // Idempotency check: if already verified, return true without double processing
-    if (registration.paymentStatus === 'verified') {
-      return { success: true, message: 'Payment already verified' };
-    }
-
+  ): Promise<{ success: boolean; message: string; registrationId?: string }> {
     const isValid = this.verifySignature(orderId, paymentId, signature);
     if (!isValid) {
-      await DataStore.updateRegistration(registrationId, {
-        paymentStatus: 'failed',
-        adminNotes: `Signature verification failed for paymentId: ${paymentId}`,
-      });
-      await DataStore.recordAuditLog(
-        'system',
-        'system@illuminate.local',
-        'PAYMENT_VERIFICATION_FAILED',
-        'registration',
-        registrationId,
-        { orderId, paymentId }
-      );
-      return { success: false, message: 'Invalid payment signature' };
+      if (registrationId) {
+        await DataStore.updateRegistration(registrationId, {
+          paymentStatus: 'failed',
+          adminNotes: `Signature verification failed for paymentId: ${paymentId}`,
+        });
+        await DataStore.recordAuditLog(
+          'system',
+          'system@illuminate.local',
+          'PAYMENT_VERIFICATION_FAILED',
+          'registration',
+          registrationId,
+          { orderId, paymentId }
+        );
+      }
+      return { success: false, message: 'Payment verification failed: Signature mismatch' };
     }
+
+    // Resolve registration
+    let registration = registrationId ? await DataStore.getRegistrationById(registrationId) : null;
+    if (!registration && orderId) {
+      const all = await DataStore.listRegistrations();
+      registration = all.find((r) => r.orderId === orderId) || null;
+    }
+
+    if (!registration) {
+      return { success: false, message: 'Registration not found for order' };
+    }
+
+    const regId = registration.id;
+
+    // Idempotency check: if already verified, return success without duplicate processing
+    if (registration.paymentStatus === 'verified') {
+      return { success: true, message: 'Payment already verified', registrationId: regId };
+    }
+
+    const amountPaise = registration.amountPaise || 69900;
 
     // Record verified payment record
     await DataStore.recordPayment({
-      registrationId,
+      registrationId: regId,
       provider: 'razorpay',
       providerOrderId: orderId,
       providerPaymentId: paymentId,
       providerSignature: signature,
-      amountPaise: registration.amountPaise || 69900,
+      amountPaise,
       currency: 'INR',
       status: 'captured',
       verifiedAt: new Date().toISOString(),
     });
 
     // Update registration status to verified and confirmed
-    await DataStore.updateRegistration(registrationId, {
+    const updatedReg = await DataStore.updateRegistration(regId, {
       status: 'confirmed',
       paymentStatus: 'verified',
       paymentMethod: 'razorpay',
-      amountPaid: (registration.amountPaise || 69900) / 100,
+      amountPaid: amountPaise / 100,
       paymentId,
       confirmationSentAt: new Date().toISOString(),
     });
@@ -205,10 +260,27 @@ export const PaymentService = {
       'system@illuminate.local',
       'PAYMENT_VERIFIED_SUCCESS',
       'registration',
-      registrationId,
-      { orderId, paymentId, amountINR: (registration.amountPaise || 69900) / 100 }
+      regId,
+      { orderId, paymentId, amountINR: amountPaise / 100 }
     );
 
-    return { success: true, message: 'Payment verified and registration confirmed' };
+    // Send confirmation email
+    const eventConfig = await DataStore.getEventConfig();
+    if (updatedReg) {
+      EmailService.sendPaymentConfirmationEmail(updatedReg, eventConfig).catch((err) =>
+        console.warn('Payment confirmation email failed in background:', err)
+      );
+
+      // ONLY ADD DATA TO GOOGLE SHEET AFTER PAYMENT!
+      syncCandidateToGoogleSheet(updatedReg).catch((err) =>
+        console.warn('Payment confirmation Google Sheet sync failed in background:', err)
+      );
+    }
+
+    return {
+      success: true,
+      message: 'Payment verified and registration confirmed',
+      registrationId: regId,
+    };
   },
 };

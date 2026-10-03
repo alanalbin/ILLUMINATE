@@ -19,6 +19,8 @@ import {
   Loader2,
   ShieldCheck,
   ArrowLeft,
+  ArrowRight,
+  Lock,
 } from 'lucide-react';
 import { Registration, EventConfig } from '@/types';
 import { DEFAULT_EVENT_CONFIG } from '@/lib/config/event-defaults';
@@ -180,43 +182,21 @@ function SuccessContent() {
           </Link>
         </div>
 
-        {/* Status Notification Banner */}
+        {/* Status Notification Banner & Ticket Pass Display */}
         {isVerified ? (
-          <div className="mb-8 p-6 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center gap-4 text-emerald-200 shadow-xl shadow-emerald-950/20">
-            <div className="w-12 h-12 rounded-xl bg-emerald-900/60 border border-emerald-500/40 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+          <>
+            <div className="mb-8 p-6 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center gap-4 text-emerald-200 shadow-xl shadow-emerald-950/20">
+              <div className="w-12 h-12 rounded-xl bg-emerald-900/60 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white">Payment Verified & Seat Confirmed!</h2>
+                <p className="text-xs text-emerald-300 mt-0.5">
+                  Your official ILLUMINATE workshop pass is generated below. A confirmation has been dispatched to{' '}
+                  <strong className="text-white">{registration.email}</strong>.
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Payment Verified & Seat Confirmed!</h2>
-              <p className="text-xs text-emerald-300 mt-0.5">
-                Your official ILLUMINATE workshop pass is generated below. A confirmation has been dispatched to{' '}
-                <strong className="text-white">{registration.email}</strong>.
-              </p>
-            </div>
-          </div>
-        ) : isManualReview ? (
-          <div className="mb-8 p-6 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex items-center gap-4 text-amber-200 shadow-xl shadow-amber-950/20">
-            <div className="w-12 h-12 rounded-xl bg-amber-900/60 border border-amber-500/40 flex items-center justify-center shrink-0">
-              <Clock className="w-7 h-7 text-amber-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Awaiting Coordinator Verification</h2>
-              <p className="text-xs text-amber-300 mt-0.5">
-                Your UPI transaction reference (<strong>{registration.manualUtr}</strong>) has been queued for review by the campus coordinator. Your pass will be activated upon approval.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="mb-8 p-6 rounded-2xl bg-purple-950/40 border border-purple-500/40 flex items-center gap-4 text-purple-200">
-            <Clock className="w-7 h-7 text-purple-400 shrink-0" />
-            <div>
-              <h2 className="text-lg font-bold text-white">Payment Pending</h2>
-              <p className="text-xs text-purple-300 mt-0.5">
-                Please complete your registration payment to activate this pass.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Printable Pass Container */}
         <div
@@ -421,6 +401,62 @@ function SuccessContent() {
             </div>
           </div>
         </div>
+          </>
+        ) : (
+          /* TICKET LOCKED: ONLY ISSUED AFTER PAYMENT */
+          <div className="glass-card rounded-3xl p-8 sm:p-12 border border-purple-800/40 text-center shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <div className="w-16 h-16 rounded-2xl bg-amber-950/60 border border-amber-500/40 flex items-center justify-center mx-auto mb-5 text-amber-400 shadow-lg">
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <span className="text-xs uppercase font-extrabold tracking-widest text-amber-400 bg-amber-950/80 border border-amber-800/60 px-4 py-1.5 rounded-full shadow-sm">
+              Payment Required to Unlock Ticket
+            </span>
+
+            <h2 className="text-2xl sm:text-3xl font-black text-white mt-4 tracking-tight">
+              Workshop Pass is Locked
+            </h2>
+
+            <p className="mt-2.5 text-slate-300 text-sm max-w-lg mx-auto leading-relaxed">
+              Official ILLUMINATE &apos;26 workshop passes and E-Cell IIT Bombay certificates are issued exclusively after payment verification. Please complete your Razorpay payment to activate and view your pass.
+            </p>
+
+            <div className="my-7 max-w-md mx-auto p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-left space-y-2.5">
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-400">Participant:</span>
+                <span className="text-white font-semibold">{registration.fullName}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-400">Email:</span>
+                <span className="text-white font-mono">{registration.email}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-400">Ticket Reference:</span>
+                <span className="text-purple-300 font-mono font-semibold">{registration.registrationNumber}</span>
+              </div>
+              <div className="flex justify-between text-xs pt-2.5 border-t border-white/[0.08] items-center">
+                <span className="text-zinc-400">Amount Due:</span>
+                <span className="text-emerald-400 font-bold text-lg">₹{displayAmount}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href={`/payment?registrationId=${registration.id}`}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl shadow-purple-950/80 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <span>Pay ₹{displayAmount} with Razorpay to Unlock Pass</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/"
+                className="w-full sm:w-auto px-6 py-4 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition-colors"
+              >
+                Return to Home
+              </Link>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

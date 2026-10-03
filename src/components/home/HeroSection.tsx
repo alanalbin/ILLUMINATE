@@ -145,13 +145,17 @@ export default function HeroSection({ event }: HeroSectionProps) {
             <motion.div variants={itemVariants} className="mt-7 p-4 sm:p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] max-w-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                    </span>
                     <Zap className="w-3 h-3 text-amber-400" />
                     Seats Filling Fast
                   </span>
                   <p className="text-xs text-zinc-300 font-medium mt-0.5">Registration Closes Soon</p>
                 </div>
-                <EventCountdown />
+                <EventCountdown targetDate={event.registrationClosingDate || event.date} />
               </div>
             </motion.div>
 
