@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     const paymentId = body.razorpay_payment_id || body.payment_id || body.paymentId;
     const signature = body.razorpay_signature || body.signature;
     const registrationId = body.registrationId || body.registration_id;
+    const registrationData = body.registrationData || body.registration;
 
     // Missing fields check
     if (!orderId || !paymentId || !signature) {
@@ -56,7 +57,8 @@ export async function POST(req: NextRequest) {
       registrationId,
       orderId,
       paymentId,
-      signature
+      signature,
+      registrationData
     );
 
     if (!result.success) {

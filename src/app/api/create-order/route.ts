@@ -15,7 +15,19 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    let { amount, currency = 'INR', receipt, registrationId } = body;
+    let { amount, currency = 'INR', receipt, registrationId, registration, registrationData } = body;
+
+    const candidateRecord = registration || registrationData;
+    if (candidateRecord && (candidateRecord.email || candidateRecord.fullName)) {
+      try {
+        await DataStore.saveRegistrationDirect({
+          ...candidateRecord,
+          id: candidateRecord.id || registrationId || `reg_${Date.now()}`,
+        });
+      } catch (err) {
+        console.warn('Could not persist registration in create-order:', err);
+      }
+    }
 
     // If registrationId is provided but amount is missing, resolve authoritative amount
     if ((!amount || typeof amount !== 'number') && registrationId) {
@@ -23,7 +35,7 @@ export async function POST(req: NextRequest) {
       const eventConfig = await DataStore.getEventConfig();
       amount = reg?.amountPaise || Math.round((eventConfig.registrationFee || 699) * 100);
       if (!receipt && reg) {
-        receipt = reg.registrationNumber;
+        receipt = reg.registrationNumber || reg.id.slice(-40);
       }
     }
 

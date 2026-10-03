@@ -3,6 +3,7 @@ import Razorpay from 'razorpay';
 import { DataStore } from '@/lib/storage/data-store';
 import { EmailService } from '@/lib/email/sender';
 import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
+import { Registration } from '@/types';
 
 const DEFAULT_TEST_KEY_ID = 'rzp_test_TjQ7knfjgZNPxP';
 const DEFAULT_TEST_KEY_SECRET = 'cE18hxV74WgU6ORozFzddzHb';
@@ -87,11 +88,22 @@ export const PaymentService = {
       (params.registrationId ? `rcpt_${params.registrationId.slice(-12)}` : `rcpt_${Date.now()}`);
 
     try {
+      let regNotes: Record<string, string> = {};
+      if (params.registrationId) {
+        regNotes.registrationId = params.registrationId;
+        try {
+          const reg = await DataStore.getRegistrationById(params.registrationId);
+          if (reg?.email) regNotes.email = reg.email;
+          if (reg?.fullName) regNotes.fullName = reg.fullName;
+          if (reg?.phone) regNotes.phone = reg.phone;
+        } catch {}
+      }
+
       const options = {
         amount: Math.round(params.amount),
         currency,
         receipt,
-        notes: params.registrationId ? { registrationId: params.registrationId } : undefined,
+        notes: Object.keys(regNotes).length > 0 ? regNotes : undefined,
       };
 
       const order = await (client as any).orders.create(options);
@@ -201,7 +213,8 @@ export const PaymentService = {
     registrationId: string | undefined,
     orderId: string,
     paymentId: string,
-    signature: string
+    signature: string,
+    registrationData?: Partial<Registration>
   ): Promise<{
     success: boolean;
     message: string;
@@ -228,11 +241,91 @@ export const PaymentService = {
       return { success: false, message: 'Payment verification failed: Signature mismatch' };
     }
 
-    // Resolve registration
+    // 1. Tier 1: Resolve registration by ID
     let registration = registrationId ? await DataStore.getRegistrationById(registrationId) : null;
+
+    // 2. Tier 2: Lookup by orderId in datastore
     if (!registration && orderId) {
       const all = await DataStore.listRegistrations();
       registration = all.find((r) => r.orderId === orderId) || null;
+    }
+
+    // 3. Tier 3: Restore from client-provided registration payload (crucial for stateless serverless lambdas)
+    if (!registration && registrationData && (registrationData.email || registrationData.fullName)) {
+      console.info('[PaymentService] Restoring registration from client payload in serverless instance:', registrationData.id || registrationId);
+      const restoredReg: Registration = {
+        id: registrationData.id || registrationId || `reg_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+        registrationNumber: registrationData.registrationNumber || '',
+        fullName: registrationData.fullName || 'Participant',
+        email: registrationData.email || '',
+        normalizedEmail: (registrationData.email || '').toLowerCase().trim(),
+        phone: registrationData.phone || '',
+        institution: registrationData.institution || 'KMCT College of Engineering',
+        course: registrationData.course || 'Engineering',
+        yearOfStudy: registrationData.yearOfStudy || '3rd Year',
+        eventId: registrationData.eventId || 'illuminate-kmct-2026',
+        paymentMethod: 'razorpay',
+        amountPaid: (registrationData.amountPaise || 69900) / 100,
+        amountPaise: registrationData.amountPaise || 69900,
+        currency: 'INR',
+        orderId,
+        paymentId,
+        status: 'pending',
+        paymentStatus: 'unpaid',
+        createdAt: registrationData.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      registration = await DataStore.saveRegistrationDirect(restoredReg);
+    }
+
+    // 4. Tier 4: Query Razorpay API directly for order/payment metadata
+    if (!registration) {
+      try {
+        const client = getRazorpayClient();
+        if (client) {
+          const rzpPayment = await (client as any).payments.fetch(paymentId);
+          const rzpOrder = orderId ? await (client as any).orders.fetch(orderId) : null;
+          const rzpEmail = rzpPayment?.email || rzpOrder?.notes?.email;
+          const rzpPhone = rzpPayment?.contact || rzpOrder?.notes?.phone;
+          const rzpRegId = rzpOrder?.notes?.registrationId || rzpPayment?.notes?.registrationId || registrationId;
+
+          if (rzpEmail) {
+            registration = await DataStore.getRegistrationByEmail(rzpEmail);
+          }
+          if (!registration && rzpRegId) {
+            registration = await DataStore.getRegistrationById(rzpRegId);
+          }
+
+          if (!registration && (rzpEmail || rzpPhone)) {
+            const email = rzpEmail || `participant_${paymentId.slice(-6)}@illuminate.local`;
+            const synthesized: Registration = {
+              id: rzpRegId || `reg_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+              registrationNumber: '',
+              fullName: rzpPayment?.notes?.fullName || rzpPayment?.notes?.name || email.split('@')[0],
+              email: email,
+              normalizedEmail: email.toLowerCase().trim(),
+              phone: rzpPhone || '',
+              institution: rzpPayment?.notes?.institution || 'KMCT College of Engineering',
+              course: rzpPayment?.notes?.course || 'Engineering',
+              yearOfStudy: rzpPayment?.notes?.yearOfStudy || '3rd Year',
+              eventId: 'illuminate-kmct-2026',
+              paymentMethod: 'razorpay',
+              amountPaid: (rzpPayment?.amount || 69900) / 100,
+              amountPaise: rzpPayment?.amount || 69900,
+              currency: 'INR',
+              orderId,
+              paymentId,
+              status: 'pending',
+              paymentStatus: 'unpaid',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            registration = await DataStore.saveRegistrationDirect(synthesized);
+          }
+        }
+      } catch (rzpErr) {
+        console.warn('[PaymentService] Razorpay order/payment fallback fetch warning:', rzpErr);
+      }
     }
 
     if (!registration) {

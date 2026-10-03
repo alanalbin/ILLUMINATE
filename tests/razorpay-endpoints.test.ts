@@ -138,6 +138,53 @@ describe('Razorpay Standard Checkout API Endpoints', () => {
       expect(data.registrationNumber).toMatch(/^ILM-KMCT-/);
       expect(data.ticketId).toMatch(/^ILM-KMCT-/);
     });
+
+    it('successfully recovers and confirms registration in serverless environment using client registration payload', async () => {
+      const phantomRegId = `phantom_reg_${Date.now()}`;
+      const orderId = `order_phantom_${Date.now()}`;
+      const paymentId = `pay_phantom_${Date.now()}`;
+      const secret = getRazorpayKeySecret() || 'cE18hxV74WgU6ORozFzddzHb';
+
+      const validSignature = crypto
+        .createHmac('sha256', secret)
+        .update(`${orderId}|${paymentId}`)
+        .digest('hex');
+
+      // Call verify-payment for a registration ID that does not exist in DataStore initially
+      const req = new NextRequest('http://localhost:3000/api/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registrationId: phantomRegId,
+          razorpay_order_id: orderId,
+          razorpay_payment_id: paymentId,
+          razorpay_signature: validSignature,
+          registrationData: {
+            id: phantomRegId,
+            fullName: 'Restored Candidate',
+            email: `restored_${Date.now()}@kmct.edu.in`,
+            phone: '9876500000',
+            institution: 'KMCT College of Engineering',
+            course: 'B.Tech IT',
+            yearOfStudy: '4th Year',
+            amountPaise: 69900,
+          },
+        }),
+      });
+
+      const res = await verifyPaymentPOST(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.ticketId).toMatch(/^ILM-KMCT-/);
+
+      // Verify the restored registration is now present and verified in DataStore
+      const recovered = await DataStore.getRegistrationById(phantomRegId);
+      expect(recovered).toBeDefined();
+      expect(recovered?.paymentStatus).toBe('verified');
+      expect(recovered?.status).toBe('confirmed');
+      expect(recovered?.fullName).toBe('Restored Candidate');
+    });
   });
 
   describe('Post-Payment Exclusivity Rules', () => {

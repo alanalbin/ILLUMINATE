@@ -241,6 +241,8 @@ function PaymentContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           registrationId: activeReg.id,
+          registration: activeReg,
+          registrationData: activeReg,
           amount: feePaise,
           currency: 'INR',
           receipt: activeReg.registrationNumber || activeReg.id.slice(-40),
@@ -314,6 +316,8 @@ function PaymentContent() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 registrationId: activeReg?.id,
+                registration: activeReg,
+                registrationData: activeReg,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
@@ -335,7 +339,7 @@ function PaymentContent() {
                 localStorage.setItem('illuminate_registration_cache', JSON.stringify(confirmed));
               }
               // Redirect to ticket page where the pass is unlocked
-              router.push(`/success?registrationId=${activeReg?.id}`);
+              router.push(`/success?registrationId=${verifyData.registrationId || activeReg?.id}`);
             } else {
               setPaymentError(verifyData.message || 'Payment signature verification failed. Please contact support.');
               setIsProcessing(false);
