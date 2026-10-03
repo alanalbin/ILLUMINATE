@@ -4,12 +4,19 @@ import { DataStore } from '@/lib/storage/data-store';
 import { EmailService } from '@/lib/email/sender';
 import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 
+const DEFAULT_TEST_KEY_ID = 'rzp_test_TjLZ2jdgj33ttd';
+const DEFAULT_TEST_KEY_SECRET = '9FPSUF66akEH79M1JLiMcfP5';
+
 export const getRazorpayKeyId = (): string => {
-  return process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
+  return (
+    process.env.RAZORPAY_KEY_ID ||
+    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+    DEFAULT_TEST_KEY_ID
+  );
 };
 
 export const getRazorpayKeySecret = (): string => {
-  return process.env.RAZORPAY_KEY_SECRET || '';
+  return process.env.RAZORPAY_KEY_SECRET || DEFAULT_TEST_KEY_SECRET;
 };
 
 export const isRazorpayConfigured = (): boolean => {
