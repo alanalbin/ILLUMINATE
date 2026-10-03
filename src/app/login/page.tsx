@@ -48,6 +48,7 @@ function LoginContent() {
   const {
     user,
     signInWithGoogle,
+    loginAsDemoUser,
     signOut,
   } = useAuth();
 
@@ -126,11 +127,33 @@ function LoginContent() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 rounded-2xl bg-red-950/70 border border-red-500/40 text-red-200 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-lg">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-semibold">{error}</p>
+            <div className="mb-6 p-4 rounded-2xl bg-red-950/70 border border-red-500/40 text-red-200 text-xs space-y-3 animate-in fade-in duration-200 shadow-lg">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold">{error}</p>
+                </div>
               </div>
+
+              {error.includes('not authorized in Firebase') && (
+                <div className="pt-2 border-t border-red-800/40 space-y-2">
+                  <p className="text-[11px] text-slate-300">
+                    To enable Google Sign-In permanently: Open <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-purple-300 underline font-bold">Firebase Console</a> &gt; <strong>Authentication</strong> &gt; <strong>Settings</strong> &gt; <strong>Authorized domains</strong> and add your website domain.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      loginAsDemoUser({ displayName: 'Registered Participant' });
+                      router.push(redirectPath);
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                    <span>Proceed Directly to Registration Form</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

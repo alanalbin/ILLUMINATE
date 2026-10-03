@@ -145,9 +145,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error('Google Sign In Error:', error);
+      let errorMessage = error.message || 'Failed to sign in with Google. Please check your connection.';
+      if (error?.code === 'auth/unauthorized-domain') {
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'your domain';
+        errorMessage = `Domain "${domain}" is not authorized in Firebase Console. Go to Firebase Console -> Authentication -> Settings -> Authorized domains and add "${domain}".`;
+      }
       return {
         success: false,
-        error: error.message || 'Failed to sign in with Google. Please check your connection.',
+        error: errorMessage,
       };
     }
   };
