@@ -106,7 +106,7 @@ describe('Razorpay Standard Checkout API Endpoints', () => {
     it('returns status 200 and confirms registration when HMAC-SHA256 signature is valid', async () => {
       const orderId = `order_${Date.now()}`;
       const paymentId = `pay_${Date.now()}`;
-      const secret = getRazorpayKeySecret() || '9FPSUF66akEH79M1JLiMcfP5';
+      const secret = getRazorpayKeySecret() || 'cE18hxV74WgU6ORozFzddzHb';
 
       const validSignature = crypto
         .createHmac('sha256', secret)

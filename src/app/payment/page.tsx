@@ -274,7 +274,7 @@ function PaymentContent() {
         orderData.key_id ||
         orderData.keyId ||
         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-        'rzp_test_TjLZ2jdgj33ttd';
+        'rzp_test_TjQ7knfjgZNPxP';
 
       // 3. Open Razorpay Checkout Modal
       const options = {

@@ -15,7 +15,7 @@ describe('Payment Signature Verification Logic', () => {
   it('correctly validates genuine HMAC-SHA256 signature generated with key secret', () => {
     const orderId = 'order_real_8877';
     const paymentId = 'pay_real_9922';
-    const secret = getRazorpayKeySecret() || '9FPSUF66akEH79M1JLiMcfP5';
+    const secret = getRazorpayKeySecret() || 'cE18hxV74WgU6ORozFzddzHb';
     const validSignature = crypto
       .createHmac('sha256', secret)
       .update(`${orderId}|${paymentId}`)
