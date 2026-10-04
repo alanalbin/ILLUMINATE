@@ -40,7 +40,7 @@ export default function HeroSection({ event, initialSeats }: HeroSectionProps) {
   const coordinatorPhone = event.localCoordinator?.phone || '8848563266';
 
   const defaultTotal = event.capacity || event.minimumTarget || 70;
-  const defaultPaid = initialSeats?.paid ?? 5;
+  const defaultPaid = initialSeats?.paid ?? 6;
   const defaultRemaining = initialSeats?.remaining ?? Math.max(0, defaultTotal - defaultPaid);
   const defaultPercent = initialSeats?.percentFilled ?? Math.min(100, Math.round((defaultPaid / defaultTotal) * 100));
 
@@ -57,6 +57,20 @@ export default function HeroSection({ event, initialSeats }: HeroSectionProps) {
   });
 
   const [isLiveActive, setIsLiveActive] = React.useState(true);
+
+  // Synchronize with server initialSeats prop updates
+  React.useEffect(() => {
+    if (initialSeats) {
+      setSeatsData({
+        total: initialSeats.total ?? defaultTotal,
+        paid: initialSeats.paid ?? 6,
+        remaining: initialSeats.remaining ?? Math.max(0, (initialSeats.total ?? defaultTotal) - (initialSeats.paid ?? 6)),
+        percentFilled:
+          initialSeats.percentFilled ??
+          Math.min(100, Math.round(((initialSeats.paid ?? 6) / (initialSeats.total ?? defaultTotal)) * 100)),
+      });
+    }
+  }, [initialSeats?.total, initialSeats?.paid, initialSeats?.remaining, initialSeats?.percentFilled, defaultTotal]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -81,8 +95,8 @@ export default function HeroSection({ event, initialSeats }: HeroSectionProps) {
 
     fetchLiveSeats();
 
-    // Active live polling interval every 15 seconds
-    const interval = setInterval(fetchLiveSeats, 15000);
+    // Active live polling interval every 10 seconds
+    const interval = setInterval(fetchLiveSeats, 10000);
 
     // Refresh immediately when returning to tab
     const handleVisibility = () => {

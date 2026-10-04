@@ -30,6 +30,30 @@ interface SheetCandidate {
   amountINR: number;
 }
 
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
 /**
  * Parses Google Sheet CSV export to read verified registered candidates
  */
@@ -37,7 +61,7 @@ async function fetchSheetCandidates(): Promise<SheetCandidate[]> {
   try {
     const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv`;
     const res = await fetch(csvUrl, {
-      next: { revalidate: 15 },
+      cache: 'no-store',
       headers: { Accept: 'text/csv' },
     });
     if (!res.ok) return [];
@@ -46,20 +70,8 @@ async function fetchSheetCandidates(): Promise<SheetCandidate[]> {
     const rows: SheetCandidate[] = [];
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      const regex = /(?:^|,)("(?:[^"]|"")*"|[^,]*)/g;
-      const cols: string[] = [];
-      let match;
-      while ((match = regex.exec(line)) !== null) {
-        let val = match[1] || '';
-        if (val.startsWith('"') && val.endsWith('"')) {
-          val = val.slice(1, -1).replace(/""/g, '"');
-        }
-        cols.push(val.trim());
-        if (regex.lastIndex >= line.length) break;
-      }
-
+    for (let i = 0; i < lines.length; i++) {
+      const cols = parseCsvLine(lines[i]);
       if (cols.length >= 5 && cols[1]?.startsWith('ILM-')) {
         rows.push({
           timestamp: cols[0] || '',
@@ -104,14 +116,29 @@ async function fetchRazorpayCaptured(): Promise<any[]> {
   }
 }
 
+function isTestRecord(email?: string, fullName?: string): boolean {
+  const em = (email || '').toLowerCase().trim();
+  const fn = (fullName || '').toLowerCase().trim();
+  return (
+    em.includes('test_') ||
+    em.includes('example.com') ||
+    em.includes('qrtest_') ||
+    em.includes('_test@') ||
+    em.includes('restored_') ||
+    fn.includes('test') ||
+    fn.includes('restored') ||
+    fn === 'test participant'
+  );
+}
+
 /**
  * Reconciles live confirmed payments into DataStore so local and serverless databases
  * stay synchronized with real participants.
  */
-async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetCandidate[]): Promise<number> {
+async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetCandidate[]): Promise<Set<string>> {
   const sheetMap = new Map<string, SheetCandidate>();
   for (const s of sheetRows) {
-    if (s.email) sheetMap.set(s.email.toLowerCase(), s);
+    if (s.email) sheetMap.set(s.email.toLowerCase().trim(), s);
   }
 
   const confirmedEmails = new Set<string>();
@@ -119,15 +146,16 @@ async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetC
   // 1. Gather confirmed from Razorpay
   for (const p of capturedPayments) {
     const email = (p.email || p.notes?.email || '').toLowerCase().trim();
-    if (email && !email.includes('test_') && !email.includes('example.com')) {
+    const name = p.notes?.fullName || p.notes?.name || '';
+    if (email && !isTestRecord(email, name)) {
       confirmedEmails.add(email);
     }
   }
 
   // 2. Gather confirmed from Google Sheet
   for (const s of sheetRows) {
-    if (s.email && !s.email.includes('test_') && !s.email.includes('example.com')) {
-      confirmedEmails.add(s.email);
+    if (s.email && !isTestRecord(s.email, s.fullName)) {
+      confirmedEmails.add(s.email.toLowerCase().trim());
     }
   }
 
@@ -136,9 +164,11 @@ async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetC
     const existingList = await DataStore.listRegistrations();
     const existingEmails = new Set(existingList.map((r) => r.email.toLowerCase().trim()));
 
+    // Sync Razorpay payments
     for (const p of capturedPayments) {
       const email = (p.email || p.notes?.email || '').toLowerCase().trim();
-      if (!email || email.includes('test_') || email.includes('example.com')) continue;
+      const name = p.notes?.fullName || p.notes?.name || '';
+      if (!email || isTestRecord(email, name)) continue;
 
       if (!existingEmails.has(email)) {
         const sheet = sheetMap.get(email);
@@ -177,11 +207,45 @@ async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetC
         existingEmails.add(email);
       }
     }
+
+    // Sync Google Sheet candidates
+    for (const s of sheetRows) {
+      const email = (s.email || '').toLowerCase().trim();
+      if (!email || isTestRecord(email, s.fullName)) continue;
+
+      if (!existingEmails.has(email)) {
+        const reg: Registration = {
+          id: `reg_sheet_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          registrationNumber: s.registrationNumber,
+          fullName: s.fullName,
+          email,
+          normalizedEmail: email,
+          phone: s.phone,
+          institution: s.institution || 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod',
+          course: s.course || 'Engineering',
+          yearOfStudy: s.yearOfStudy || '1st Year',
+          eventId: 'illuminate-kmct-2026',
+          paymentMethod: s.paymentMethod?.toLowerCase().includes('upi') ? 'manual_upi' : 'razorpay',
+          amountPaid: s.amountINR || 699,
+          amountPaise: (s.amountINR || 699) * 100,
+          currency: 'INR',
+          orderId: '',
+          paymentId: s.utr || '',
+          status: 'confirmed',
+          paymentStatus: 'verified',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        await DataStore.saveRegistrationDirect(reg);
+        existingEmails.add(email);
+      }
+    }
   } catch (err) {
     console.warn('[LiveSeats] Reconciliation warning:', err);
   }
 
-  return confirmedEmails.size;
+  return confirmedEmails;
 }
 
 /**
@@ -203,21 +267,19 @@ export async function getLiveSeatsInfo(): Promise<LiveSeatsInfo> {
       fetchSheetCandidates(),
     ]);
 
-    const liveConfirmedCount = await reconcileWithDataStore(rzpPayments, sheetCandidates);
+    const liveConfirmedEmails = await reconcileWithDataStore(rzpPayments, sheetCandidates);
 
     // Also check DataStore verified registrations
     const dbRegistrations = await DataStore.listRegistrations();
-    const dbVerified = dbRegistrations.filter((r) => {
-      if (r.paymentStatus !== 'verified') return false;
-      const em = r.email.toLowerCase();
-      if (em.includes('test_') || em.includes('example.com') || r.fullName === 'Test Participant') {
-        return false;
+    for (const r of dbRegistrations) {
+      const email = (r.email || '').toLowerCase().trim();
+      if (r.paymentStatus === 'verified' && email && !isTestRecord(email, r.fullName)) {
+        liveConfirmedEmails.add(email);
       }
-      return true;
-    }).length;
+    }
 
-    // Ground truth: take the maximum of live reconciled count and db verified count
-    const paid = Math.max(liveConfirmedCount, dbVerified);
+    // Ground truth: deduplicated unique confirmed emails across all sources (minimum 6 known verified)
+    const paid = Math.max(6, liveConfirmedEmails.size);
     const remaining = Math.max(0, totalSeats - paid);
     const percentFilled = Math.min(100, Math.round((paid / totalSeats) * 100));
 
@@ -237,9 +299,9 @@ export async function getLiveSeatsInfo(): Promise<LiveSeatsInfo> {
 
     return {
       total: 70,
-      paid: 5,
-      remaining: 65,
-      percentFilled: 7,
+      paid: 6,
+      remaining: 64,
+      percentFilled: 9,
       timestamp: now,
     };
   }

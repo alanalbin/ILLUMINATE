@@ -81,12 +81,9 @@ export function calculateTimeRemaining(targetTs: number, currentNow: number = Da
 
 export default function EventCountdown({ targetDate, className = '' }: EventCountdownProps) {
   const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>({
-    days: 14,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    isEnded: false,
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => {
+    const targetTs = getEffectiveTargetTimestamp(targetDate);
+    return calculateTimeRemaining(targetTs);
   });
 
   useEffect(() => {

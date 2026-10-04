@@ -16,16 +16,17 @@ import Scroll3DPopup from '@/components/ui/Scroll3DPopup';
 import ScrollFloatingPopup from '@/components/ui/ScrollFloatingPopup';
 import { getLiveSeatsInfo } from '@/lib/seats/live-seats';
 
-// Statically pre-render on CDN with background revalidation
-export const revalidate = 60;
+// Dynamic rendering ensures authoritative live seats on every request
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function HomePage() {
   let event = DEFAULT_EVENT_CONFIG;
   let initialSeats = {
     total: 70,
-    paid: 5,
-    remaining: 65,
-    percentFilled: 7,
+    paid: 6,
+    remaining: 64,
+    percentFilled: 9,
   };
 
   try {
