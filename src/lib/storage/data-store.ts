@@ -465,11 +465,26 @@ export const DataStore = {
     const registrations = await this.listRegistrations();
     const config = await this.getEventConfig();
 
-    const total = registrations.length;
-    const paid = registrations.filter((r) => r.paymentStatus === 'verified').length;
-    const pending = registrations.filter((r) => r.paymentStatus === 'pending' || r.paymentStatus === 'unpaid').length;
-    const manualReview = registrations.filter((r) => r.paymentStatus === 'manual_review').length;
-    const failed = registrations.filter((r) => r.paymentStatus === 'failed').length;
+    const isRealRecord = (r: Registration) => {
+      const em = (r.email || '').toLowerCase().trim();
+      if (
+        em.includes('test_') ||
+        em.includes('example.com') ||
+        r.fullName === 'Test Participant' ||
+        r.fullName === 'Restored Candidate' ||
+        r.id?.startsWith('phantom_reg')
+      ) {
+        return false;
+      }
+      return true;
+    };
+
+    const realList = registrations.filter(isRealRecord);
+    const total = realList.length;
+    const paid = realList.filter((r) => r.paymentStatus === 'verified').length;
+    const pending = realList.filter((r) => r.paymentStatus === 'pending' || r.paymentStatus === 'unpaid').length;
+    const manualReview = realList.filter((r) => r.paymentStatus === 'manual_review').length;
+    const failed = realList.filter((r) => r.paymentStatus === 'failed').length;
     const totalRevenueINR = paid * config.registrationFee;
     const targetCount = config.minimumTarget || 70;
     const percentOfTarget = Math.min(100, Math.round((paid / targetCount) * 100));

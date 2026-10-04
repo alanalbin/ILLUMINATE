@@ -25,13 +25,24 @@ import EventCountdown from '@/components/home/EventCountdown';
 
 interface HeroSectionProps {
   event: EventConfig;
+  initialSeats?: {
+    total: number;
+    paid: number;
+    remaining: number;
+    percentFilled: number;
+  };
 }
 
-export default function HeroSection({ event }: HeroSectionProps) {
+export default function HeroSection({ event, initialSeats }: HeroSectionProps) {
   const { user } = useAuth();
   const fee = event.registrationFee || 699;
   const coordinatorName = event.localCoordinator?.name || 'Alan Albin';
   const coordinatorPhone = event.localCoordinator?.phone || '8848563266';
+
+  const defaultTotal = event.capacity || event.minimumTarget || 70;
+  const defaultPaid = initialSeats?.paid ?? 5;
+  const defaultRemaining = initialSeats?.remaining ?? Math.max(0, defaultTotal - defaultPaid);
+  const defaultPercent = initialSeats?.percentFilled ?? Math.min(100, Math.round((defaultPaid / defaultTotal) * 100));
 
   const [seatsData, setSeatsData] = React.useState<{
     total: number;
@@ -39,21 +50,53 @@ export default function HeroSection({ event }: HeroSectionProps) {
     remaining: number;
     percentFilled: number;
   }>({
-    total: event.capacity || event.minimumTarget || 70,
-    paid: 0,
-    remaining: event.capacity || event.minimumTarget || 70,
-    percentFilled: 0,
+    total: initialSeats?.total ?? defaultTotal,
+    paid: defaultPaid,
+    remaining: defaultRemaining,
+    percentFilled: defaultPercent,
   });
 
+  const [isLiveActive, setIsLiveActive] = React.useState(true);
+
   React.useEffect(() => {
-    fetch('/api/event')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.seats) {
-          setSeatsData(data.seats);
+    let isMounted = true;
+
+    const fetchLiveSeats = async () => {
+      try {
+        const res = await fetch(`/api/event?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { Pragma: 'no-cache', 'Cache-Control': 'no-cache' },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data?.seats) {
+            setSeatsData(data.seats);
+            setIsLiveActive(true);
+          }
         }
-      })
-      .catch(() => {});
+      } catch (err) {
+        // Retain current state on transient network blip
+      }
+    };
+
+    fetchLiveSeats();
+
+    // Active live polling interval every 15 seconds
+    const interval = setInterval(fetchLiveSeats, 15000);
+
+    // Refresh immediately when returning to tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchLiveSeats();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   const containerVariants = {
@@ -189,13 +232,17 @@ export default function HeroSection({ event }: HeroSectionProps) {
                     <span>Workshop Capacity:</span>
                     <span className="font-bold text-white">{seatsData.total} Seats</span>
                   </span>
-                  <span className="font-mono text-xs font-black text-amber-400 bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                    🔥 {seatsData.remaining} Seats Left
+                  <span className="font-mono text-xs font-black text-amber-400 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-500/40 shadow-sm shadow-amber-950/60 flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                    </span>
+                    <span>🔥 {seatsData.remaining} Seats Left</span>
                   </span>
                 </div>
 
                 {/* Animated Capacity Progress Bar */}
-                <div className="w-full h-2 rounded-full bg-zinc-900/80 border border-white/[0.08] overflow-hidden p-0.5">
+                <div className="w-full h-2.5 rounded-full bg-zinc-900/90 border border-white/[0.1] overflow-hidden p-0.5">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-purple-500 via-indigo-400 to-amber-400 transition-all duration-1000 shadow-[0_0_12px_rgba(168,85,247,0.6)]"
                     style={{ width: `${Math.max(6, Math.min(100, seatsData.percentFilled))}%` }}
@@ -203,8 +250,8 @@ export default function HeroSection({ event }: HeroSectionProps) {
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono mt-1.5">
-                  <span>{seatsData.paid} confirmed participants</span>
-                  <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                  <span className="text-zinc-200 font-semibold">{seatsData.paid} confirmed participants</span>
+                  <span className="text-emerald-400 flex items-center gap-1.5 font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Live seat inventory
                   </span>
