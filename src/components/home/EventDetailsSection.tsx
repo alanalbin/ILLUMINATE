@@ -64,19 +64,19 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
                       <p className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Event Date</p>
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-base font-bold text-white">
-                          {event.date || 'To be announced soon (TBA)'}
+                          {event.date || '21 October 2026'}
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800 text-purple-300 font-semibold">
-                          Announced Soon
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-800 text-emerald-300 font-semibold">
+                          Confirmed Date
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">Finalized in coordination with KMCT faculty & E-Cell IIT Bombay</p>
+                      <p className="text-xs text-slate-400 mt-0.5">KMCT Campus, Kasaragod</p>
                     </div>
 
                     <div>
                       <p className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Registration Deadline</p>
-                      <p className="text-base font-bold text-amber-400 mt-1">20 October 2026</p>
-                      <p className="text-xs text-slate-400 mt-0.5">Registration closes at midnight on 20th October</p>
+                      <p className="text-base font-bold text-amber-400 mt-1">21 October 2026</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Registration closes at midnight on 21st October</p>
                     </div>
 
                     <div>

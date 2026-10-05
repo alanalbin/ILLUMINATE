@@ -147,7 +147,7 @@ export default function HeroSection({ event }: HeroSectionProps) {
               </span>
             </motion.div>
 
-            {/* Live Registration Countdown */}
+            {/* Live Workshop Date Countdown */}
             <motion.div variants={itemVariants} className="mt-7 p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/[0.1] backdrop-blur-md max-w-lg shadow-xl shadow-purple-950/30">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -157,11 +157,11 @@ export default function HeroSection({ event }: HeroSectionProps) {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
                     </span>
                     <Zap className="w-3 h-3 text-amber-400" />
-                    Registration Closes: 20 Oct 2026
+                    Workshop Date: 21 Oct 2026
                   </span>
-                  <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline Event Date Announced Soon</p>
+                  <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline at KMCT Campus</p>
                 </div>
-                <EventCountdown targetDate={event.registrationClosingDate || '2026-10-20T23:59:59+05:30'} />
+                <EventCountdown targetDate={event.date || event.registrationClosingDate || '2026-10-21T23:59:59+05:30'} />
               </div>
             </motion.div>
 

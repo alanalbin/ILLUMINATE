@@ -21,9 +21,8 @@ describe('Event Configuration & Safety Rules', () => {
     expect(DEFAULT_EVENT_CONFIG.capacity).toBeNull(); // capacity is null/unrestricted until specifically configured
   });
 
-  it('keeps unconfirmed dates and hall numbers as null / To Be Announced', () => {
-    expect(DEFAULT_EVENT_CONFIG.date).toBeNull();
-    expect(DEFAULT_EVENT_CONFIG.roomNumber).toBeNull();
+  it('specifies confirmed workshop date and coordinator contact', () => {
+    expect(DEFAULT_EVENT_CONFIG.date).toBe('21 October 2026');
     expect(DEFAULT_EVENT_CONFIG.localCoordinator?.name).toBe('Alan Albin');
     expect(DEFAULT_EVENT_CONFIG.localCoordinator?.phone).toBe('8848563266');
   });
