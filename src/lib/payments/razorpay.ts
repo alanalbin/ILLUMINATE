@@ -396,9 +396,11 @@ export const PaymentService = {
       );
 
       // ONLY ADD DATA TO GOOGLE SHEET AFTER PAYMENT!
-      syncCandidateToGoogleSheet(updatedReg).catch((err) =>
-        console.warn('Payment confirmation Google Sheet sync failed in background:', err)
-      );
+      try {
+        await syncCandidateToGoogleSheet(updatedReg);
+      } catch (err) {
+        console.warn('Payment confirmation Google Sheet sync failed:', err);
+      }
     }
 
     return {

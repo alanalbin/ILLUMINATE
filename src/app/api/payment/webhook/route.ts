@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PaymentService } from '@/lib/payments/razorpay';
 import { DataStore } from '@/lib/storage/data-store';
 import { EmailService } from '@/lib/email/sender';
+import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
             verifiedAt: new Date().toISOString(),
           });
 
-          await DataStore.updateRegistration(registrationId, {
+          const updatedReg = await DataStore.updateRegistration(registrationId, {
             status: 'confirmed',
             paymentStatus: 'verified',
             paymentMethod: 'razorpay',
@@ -60,9 +61,17 @@ export async function POST(req: NextRequest) {
           });
 
           const config = await DataStore.getEventConfig();
-          EmailService.sendPaymentConfirmationEmail(reg, config).catch((e) =>
+          EmailService.sendPaymentConfirmationEmail(updatedReg || reg, config).catch((e) =>
             console.warn('Webhook email sending error:', e)
           );
+
+          if (updatedReg) {
+            try {
+              await syncCandidateToGoogleSheet(updatedReg);
+            } catch (e) {
+              console.warn('Webhook Google Sheet sync error:', e);
+            }
+          }
 
           await DataStore.recordAuditLog(
             'system-webhook',
