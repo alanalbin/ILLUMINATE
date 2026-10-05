@@ -14,33 +14,14 @@ import FaqSection from '@/components/home/FaqSection';
 import CtaBanner from '@/components/home/CtaBanner';
 import Scroll3DPopup from '@/components/ui/Scroll3DPopup';
 import ScrollFloatingPopup from '@/components/ui/ScrollFloatingPopup';
-import { getLiveSeatsInfo } from '@/lib/seats/live-seats';
-
-// Dynamic rendering ensures authoritative live seats on every request
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function HomePage() {
   let event = DEFAULT_EVENT_CONFIG;
-  let initialSeats = {
-    total: 70,
-    paid: 6,
-    remaining: 64,
-    percentFilled: 9,
-  };
 
   try {
-    const [fetchedEvent, seats] = await Promise.all([
-      DataStore.getEventConfig(),
-      getLiveSeatsInfo(),
-    ]);
-    event = fetchedEvent;
-    initialSeats = {
-      total: seats.total,
-      paid: seats.paid,
-      remaining: seats.remaining,
-      percentFilled: seats.percentFilled,
-    };
+    event = await DataStore.getEventConfig();
   } catch (err) {
     console.warn('Failed to load event config, falling back to defaults:', err);
   }
@@ -51,7 +32,7 @@ export default async function HomePage() {
       <HomeExperienceManager />
 
       {/* Hero Section */}
-      <HeroSection event={event} initialSeats={initialSeats} />
+      <HeroSection event={event} />
 
       {/* 3D PC Display Workstation Rectangle with Loading Sequence */}
       <Scroll3DPopup delay={0.05}>
