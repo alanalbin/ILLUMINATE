@@ -72,6 +72,22 @@ export async function syncCandidateToGoogleSheet(
     return { success: false, error: 'Registration payment is not completed or verified' };
   }
 
+  // Prevent test suite or dummy runs from sending to production Google Sheet
+  const emailLower = (registration.email || '').toLowerCase().trim();
+  const nameLower = (registration.fullName || '').toLowerCase().trim();
+  if (
+    process.env.NODE_ENV === 'test' ||
+    emailLower.startsWith('test_') ||
+    emailLower.startsWith('restored_') ||
+    emailLower.startsWith('phantom_') ||
+    emailLower.includes('example.com') ||
+    nameLower.includes('test participant') ||
+    nameLower.includes('restored candidate')
+  ) {
+    console.info(`[Google Sheets Sync Skipped] Skipping test candidate (${emailLower}) from syncing to live sheet.`);
+    return { success: true };
+  }
+
   const webhookUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL || DEFAULT_WEBHOOK_URL;
 
   const formatted = formatCandidateForSheet(registration, payment);
