@@ -23,7 +23,7 @@ export interface CandidateRow {
  */
 export function formatCandidateForSheet(
   registration: Registration,
-  payment?: PaymentRecord | null
+  payment?: PaymentRecord | Partial<PaymentRecord> | null
 ): CandidateRow {
   return {
     timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
@@ -62,7 +62,7 @@ export const DEFAULT_WEBHOOK_URL = `https://script.google.com/macros/s/${GOOGLE_
  */
 export async function syncCandidateToGoogleSheet(
   registration: Registration,
-  payment?: PaymentRecord | null
+  payment?: PaymentRecord | Partial<PaymentRecord> | null
 ): Promise<{ success: boolean; error?: string }> {
   // CRITICAL: ONLY add candidate details to Google Sheet AFTER payment is completed & verified!
   if (registration.paymentStatus !== 'verified') {

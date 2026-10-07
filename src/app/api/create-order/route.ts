@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       currency: currency || 'INR',
       receipt: receipt || (registrationId ? `rcpt_${registrationId.slice(-10)}` : `rcpt_${Date.now()}`),
       registrationId,
+      candidate: candidateRecord,
     });
 
     return NextResponse.json({

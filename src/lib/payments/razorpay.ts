@@ -65,6 +65,7 @@ export const PaymentService = {
     currency?: string;
     receipt?: string;
     registrationId?: string;
+    candidate?: Partial<Registration>;
   }): Promise<CreateOrderResult> {
     if (!params.amount || params.amount < 100) {
       throw new Error('Minimum order amount is 100 paise');
@@ -89,6 +90,14 @@ export const PaymentService = {
 
     try {
       let regNotes: Record<string, string> = {};
+      if (params.candidate) {
+        if (params.candidate.email) regNotes.email = params.candidate.email;
+        if (params.candidate.fullName) regNotes.fullName = params.candidate.fullName;
+        if (params.candidate.phone) regNotes.phone = params.candidate.phone;
+        if (params.candidate.institution) regNotes.institution = params.candidate.institution;
+        if (params.candidate.course) regNotes.course = params.candidate.course;
+        if (params.candidate.yearOfStudy) regNotes.yearOfStudy = params.candidate.yearOfStudy;
+      }
       if (params.registrationId) {
         regNotes.registrationId = params.registrationId;
         try {
@@ -96,6 +105,9 @@ export const PaymentService = {
           if (reg?.email) regNotes.email = reg.email;
           if (reg?.fullName) regNotes.fullName = reg.fullName;
           if (reg?.phone) regNotes.phone = reg.phone;
+          if (reg?.institution) regNotes.institution = reg.institution;
+          if (reg?.course) regNotes.course = reg.course;
+          if (reg?.yearOfStudy) regNotes.yearOfStudy = reg.yearOfStudy;
         } catch {}
       }
 
@@ -190,19 +202,33 @@ export const PaymentService = {
   },
 
   verifyWebhookSignature(rawBody: string, webhookSignature: string): boolean {
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || getRazorpayKeySecret();
-    if (!secret) {
-      console.warn('RAZORPAY_WEBHOOK_SECRET is not configured');
+    const secretsToTry = [
+      process.env.RAZORPAY_WEBHOOK_SECRET,
+      getRazorpayKeySecret(),
+    ].filter(Boolean) as string[];
+
+    if (secretsToTry.length === 0) {
+      console.warn('Neither RAZORPAY_WEBHOOK_SECRET nor RAZORPAY_KEY_SECRET is configured');
       return false;
     }
 
     try {
-      const expectedSignature = crypto
-        .createHmac('sha256', secret)
-        .update(rawBody)
-        .digest('hex');
+      const signatureBuf = Buffer.from(webhookSignature, 'utf-8');
+      for (const secret of secretsToTry) {
+        const expectedSignature = crypto
+          .createHmac('sha256', secret)
+          .update(rawBody)
+          .digest('hex');
 
-      return crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(webhookSignature));
+        const expectedBuf = Buffer.from(expectedSignature, 'utf-8');
+        if (
+          expectedBuf.length === signatureBuf.length &&
+          crypto.timingSafeEqual(expectedBuf, signatureBuf)
+        ) {
+          return true;
+        }
+      }
+      return false;
     } catch (err) {
       console.error('Webhook signature verification error:', err);
       return false;
@@ -336,6 +362,11 @@ export const PaymentService = {
 
     // Idempotency check: if already verified, return success without duplicate processing
     if (registration.paymentStatus === 'verified') {
+      try {
+        await syncCandidateToGoogleSheet(registration);
+      } catch (sheetErr) {
+        console.warn('Idempotent Google Sheet sync warning:', sheetErr);
+      }
       return {
         success: true,
         message: 'Payment already verified',

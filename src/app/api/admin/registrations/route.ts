@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DataStore } from '@/lib/storage/data-store';
 import { EmailService } from '@/lib/email/sender';
+import { syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 import { PaymentStatus, RegistrationStatus } from '@/types';
 
 export async function GET(req: NextRequest) {
@@ -111,12 +112,17 @@ export async function PATCH(req: NextRequest) {
       { previousStatus: reg.paymentStatus, newStatus: paymentStatus, notes: adminNotes }
     );
 
-    // If verified by coordinator, dispatch confirmation pass email
+    // If verified by coordinator, dispatch confirmation pass email and sync to Google Sheet
     if (paymentStatus === 'verified' && updated) {
       const config = await DataStore.getEventConfig();
       EmailService.sendPaymentConfirmationEmail(updated, config).catch((e) =>
         console.warn('Failed to send verified pass email:', e)
       );
+      try {
+        await syncCandidateToGoogleSheet(updated);
+      } catch (e) {
+        console.warn('Admin verified Google Sheet sync error:', e);
+      }
     }
 
     return NextResponse.json({

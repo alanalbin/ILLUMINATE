@@ -1,7 +1,7 @@
 import Razorpay from 'razorpay';
 import { DataStore } from '@/lib/storage/data-store';
 import { getRazorpayKeyId, getRazorpayKeySecret, isRazorpayConfigured } from '@/lib/payments/razorpay';
-import { GOOGLE_SHEET_ID } from '@/lib/sheets/google-sheets';
+import { GOOGLE_SHEET_ID, syncCandidateToGoogleSheet } from '@/lib/sheets/google-sheets';
 import { Registration } from '@/types';
 
 export interface LiveSeatsInfo {
@@ -131,6 +131,21 @@ function isTestRecord(email?: string, fullName?: string): boolean {
   );
 }
 
+function formatCandidateTicketId(regId?: string, paymentId?: string): string {
+  if (regId && regId.startsWith('reg_')) {
+    const parts = regId.split('_');
+    const ts = Number(parts[1]);
+    if (!isNaN(ts) && ts > 0) {
+      const timePart = ts.toString(36).toUpperCase();
+      const randPart = (parts[2] || (paymentId ? paymentId.slice(-6) : 'PASS')).slice(0, 6).toUpperCase();
+      return `ILM-KMCT-${timePart}-${randPart}`;
+    }
+  }
+  const timePart = Date.now().toString(36).toUpperCase();
+  const randPart = (paymentId ? paymentId.slice(-6) : Math.random().toString(36).slice(-6)).toUpperCase();
+  return `ILM-KMCT-${timePart}-${randPart}`;
+}
+
 /**
  * Reconciles live confirmed payments into DataStore so local and serverless databases
  * stay synchronized with real participants.
@@ -170,41 +185,76 @@ async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetC
       const name = p.notes?.fullName || p.notes?.name || '';
       if (!email || isTestRecord(email, name)) continue;
 
+      const sheet = sheetMap.get(email);
+      const regNumber = sheet?.registrationNumber || formatCandidateTicketId(p.notes?.registrationId, p.id);
+      const fullName = sheet?.fullName || p.notes?.fullName || p.notes?.name || email.split('@')[0];
+      const phone = sheet?.phone || p.contact?.replace(/^\+91/, '') || p.notes?.phone || '';
+      const institution = sheet?.institution || p.notes?.institution || 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod';
+      const course = sheet?.course || p.notes?.course || 'Engineering';
+      const yearOfStudy = sheet?.yearOfStudy || p.notes?.yearOfStudy || '1st Year';
+      const amountINR = (p.amount || 69900) / 100;
+
+      const reg: Registration = {
+        id: p.notes?.registrationId || `reg_${p.created_at * 1000}_${p.id.slice(-6)}`,
+        registrationNumber: regNumber,
+        fullName,
+        email,
+        normalizedEmail: email,
+        phone,
+        institution,
+        course,
+        yearOfStudy,
+        eventId: 'illuminate-kmct-2026',
+        paymentMethod: 'razorpay',
+        amountPaid: amountINR,
+        amountPaise: p.amount || 69900,
+        currency: 'INR',
+        orderId: p.order_id || '',
+        paymentId: p.id,
+        status: 'confirmed',
+        paymentStatus: 'verified',
+        createdAt: new Date(p.created_at * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
       if (!existingEmails.has(email)) {
-        const sheet = sheetMap.get(email);
-        const regNumber = sheet?.registrationNumber || `ILM-KMCT-${p.id.slice(-8).toUpperCase()}`;
-        const fullName = sheet?.fullName || p.notes?.fullName || p.notes?.name || email.split('@')[0];
-        const phone = sheet?.phone || p.contact?.replace(/^\+91/, '') || p.notes?.phone || '';
-        const institution = sheet?.institution || 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod';
-        const course = sheet?.course || 'Engineering';
-        const yearOfStudy = sheet?.yearOfStudy || '1st Year';
-        const amountINR = (p.amount || 69900) / 100;
-
-        const reg: Registration = {
-          id: p.notes?.registrationId || `reg_${p.created_at * 1000}_${p.id.slice(-6)}`,
-          registrationNumber: regNumber,
-          fullName,
-          email,
-          normalizedEmail: email,
-          phone,
-          institution,
-          course,
-          yearOfStudy,
-          eventId: 'illuminate-kmct-2026',
-          paymentMethod: 'razorpay',
-          amountPaid: amountINR,
-          amountPaise: p.amount || 69900,
-          currency: 'INR',
-          orderId: p.order_id || '',
-          paymentId: p.id,
-          status: 'confirmed',
-          paymentStatus: 'verified',
-          createdAt: new Date(p.created_at * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
         await DataStore.saveRegistrationDirect(reg);
         existingEmails.add(email);
+      }
+
+      // CRITICAL: Automatically sync missing confirmed candidate to Google Sheet if not in sheet yet!
+      if (!sheetMap.has(email)) {
+        console.info(`[LiveSeats] Auto-syncing confirmed paid candidate ${email} (${p.id}) to Google Sheet...`);
+        try {
+          const syncRes = await syncCandidateToGoogleSheet(reg, {
+            registrationId: reg.id,
+            provider: 'razorpay',
+            providerOrderId: p.order_id || '',
+            providerPaymentId: p.id,
+            amountPaise: p.amount || 69900,
+            currency: 'INR',
+            status: 'captured',
+            verifiedAt: new Date(p.created_at * 1000).toISOString(),
+          });
+          if (syncRes.success) {
+            sheetMap.set(email, {
+              timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+              registrationNumber: regNumber,
+              fullName,
+              email,
+              phone,
+              institution,
+              course,
+              yearOfStudy,
+              paymentStatus: 'CONFIRMED / PAID',
+              paymentMethod: 'razorpay',
+              utr: p.id,
+              amountINR,
+            });
+          }
+        } catch (syncErr: any) {
+          console.warn(`[LiveSeats] Auto-sync to Google Sheet failed for ${email}:`, syncErr?.message || syncErr);
+        }
       }
     }
 
@@ -305,4 +355,113 @@ export async function getLiveSeatsInfo(): Promise<LiveSeatsInfo> {
       timestamp: now,
     };
   }
+}
+
+/**
+ * Forces an immediate scan of Razorpay captured payments against Google Sheets
+ * and syncs any missing candidates. Returns summary statistics.
+ */
+export async function syncAllMissingCapturedPaymentsToSheet(): Promise<{
+  success: boolean;
+  totalCaptured: number;
+  inSheetCount: number;
+  syncedCount: number;
+  syncedEmails: string[];
+  errors: string[];
+}> {
+  const [rzpPayments, sheetCandidates] = await Promise.all([
+    fetchRazorpayCaptured(),
+    fetchSheetCandidates(),
+  ]);
+
+  const sheetMap = new Map<string, SheetCandidate>();
+  for (const s of sheetCandidates) {
+    if (s.email) sheetMap.set(s.email.toLowerCase().trim(), s);
+  }
+
+  const syncedEmails: string[] = [];
+  const errors: string[] = [];
+
+  for (const p of rzpPayments) {
+    const email = (p.email || p.notes?.email || '').toLowerCase().trim();
+    const name = p.notes?.fullName || p.notes?.name || '';
+    if (!email || isTestRecord(email, name)) continue;
+
+    if (!sheetMap.has(email)) {
+      const regNumber = formatCandidateTicketId(p.notes?.registrationId, p.id);
+      const fullName = p.notes?.fullName || p.notes?.name || email.split('@')[0];
+      const phone = p.contact?.replace(/^\+91/, '') || p.notes?.phone || '';
+      const institution = p.notes?.institution || 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod';
+      const course = p.notes?.course || 'Engineering';
+      const yearOfStudy = p.notes?.yearOfStudy || '1st Year';
+      const amountINR = (p.amount || 69900) / 100;
+
+      const reg: Registration = {
+        id: p.notes?.registrationId || `reg_${p.created_at * 1000}_${p.id.slice(-6)}`,
+        registrationNumber: regNumber,
+        fullName,
+        email,
+        normalizedEmail: email,
+        phone,
+        institution,
+        course,
+        yearOfStudy,
+        eventId: 'illuminate-kmct-2026',
+        paymentMethod: 'razorpay',
+        amountPaid: amountINR,
+        amountPaise: p.amount || 69900,
+        currency: 'INR',
+        orderId: p.order_id || '',
+        paymentId: p.id,
+        status: 'confirmed',
+        paymentStatus: 'verified',
+        createdAt: new Date(p.created_at * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      try {
+        const res = await syncCandidateToGoogleSheet(reg, {
+          registrationId: reg.id,
+          provider: 'razorpay',
+          providerOrderId: p.order_id || '',
+          providerPaymentId: p.id,
+          amountPaise: p.amount || 69900,
+          currency: 'INR',
+          status: 'captured',
+          verifiedAt: new Date(p.created_at * 1000).toISOString(),
+        });
+
+        if (res.success) {
+          syncedEmails.push(email);
+          sheetMap.set(email, {
+            timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            registrationNumber: regNumber,
+            fullName,
+            email,
+            phone,
+            institution,
+            course,
+            yearOfStudy,
+            paymentStatus: 'CONFIRMED / PAID',
+            paymentMethod: 'razorpay',
+            utr: p.id,
+            amountINR,
+          });
+        } else {
+          errors.push(`Failed to sync ${email}: ${res.error}`);
+        }
+      } catch (err: any) {
+        errors.push(`Error syncing ${email}: ${err?.message || err}`);
+      }
+    }
+  }
+
+  return {
+    success: errors.length === 0,
+    totalCaptured: rzpPayments.length,
+    inSheetCount: sheetCandidates.length,
+    syncedCount: syncedEmails.length,
+    syncedEmails,
+    errors,
+  };
 }
