@@ -1,32 +1,29 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 interface BackgroundCanvas3DProps {
   onReplayIntro?: () => void;
 }
 
-interface FloatingShard {
-  group: THREE.Group;
+interface Asteroid {
   mesh: THREE.Mesh;
-  edges: THREE.LineSegments;
-  basePos: THREE.Vector3;
-  velocity: THREE.Vector3;
+  angle: number;
+  radius: number;
+  speed: number;
+  tilt: number;
   rotSpeed: THREE.Vector3;
-  floatSpeed: number;
-  floatAmp: number;
-  phase: number;
-  highlightMat: THREE.LineBasicMaterial;
+  baseY: number;
+  velocity: THREE.Vector3;
 }
 
 export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(true);
-  const [interactiveHint, setInteractiveHint] = useState<boolean>(false);
 
   useEffect(() => {
-    // 1. WebGL Support Check
+    // 1. WebGL Verification
     try {
       const testCanvas = document.createElement('canvas');
       const gl =
@@ -47,22 +44,22 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
     const isMobile = window.innerWidth < 768;
 
-    // 2. Scene with Deep Moody Abyssal Fog (Beautiful Gloomy Atmosphere)
+    // 2. Scene & Deep Moody Atmospheric Space Fog
     const scene = new THREE.Scene();
-    // Atmospheric dark fog: deep indigo-charcoal gloom that obscures distant objects gently
-    const gloomFogColor = 0x05030c;
-    scene.fog = new THREE.FogExp2(gloomFogColor, isMobile ? 0.0035 : 0.0026);
+    // Eerie deep space gloom fog
+    const spaceFogColor = 0x04020a;
+    scene.fog = new THREE.FogExp2(spaceFogColor, isMobile ? 0.0032 : 0.0022);
 
-    // 3. Perspective Camera
+    // 3. Camera
     const camera = new THREE.PerspectiveCamera(
-      52,
+      50,
       window.innerWidth / window.innerHeight,
       1,
-      1400
+      1600
     );
-    camera.position.set(0, 3, 115);
+    camera.position.set(0, 2, 120);
 
-    // 4. WebGL Renderer with High Performance & Rich Tone Mapping
+    // 4. Renderer with ACES Tone Mapping
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: !isMobile,
@@ -72,7 +69,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.15;
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
@@ -81,375 +78,352 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.domElement.style.pointerEvents = 'none';
     container.appendChild(renderer.domElement);
 
-    // 5. Root Abyssal Anchor (Positioned slightly deep and offset to preserve text visibility)
-    const abyssalVoidGroup = new THREE.Group();
-    abyssalVoidGroup.position.set(0, -2, -35);
-    scene.add(abyssalVoidGroup);
+    // 5. Procedural Texture Generators for Gloomy Planets
+    // A. Ringed Gas Giant Surface Texture (moody stormy atmospheric bands)
+    const generateGasGiantTexture = (): THREE.CanvasTexture => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return new THREE.CanvasTexture(canvas);
 
-    // 6. Moody, Ethereal 3D Lighting Setup
-    // Deep gloomy ambient light - keeps darkness rich without complete pitch-black
-    const ambientLight = new THREE.AmbientLight(0x0e091e, 1.6);
-    scene.add(ambientLight);
+      // Deep gloomy cosmic palette
+      const bands = [
+        '#080415', '#130a2a', '#1e103d', '#140c2e', '#2a144e',
+        '#181033', '#10162f', '#221244', '#0d0720', '#1b1b38',
+        '#28164a', '#120a27', '#080415'
+      ];
 
-    // Monolith Core Void Light - deep spectral violet glow
-    const voidCoreLight = new THREE.PointLight(0x7c3aed, 3.2, 180);
-    voidCoreLight.position.set(0, 0, 0);
-    abyssalVoidGroup.add(voidCoreLight);
+      const grad = ctx.createLinearGradient(0, 0, 0, 256);
+      bands.forEach((color, idx) => {
+        grad.addColorStop(idx / (bands.length - 1), color);
+      });
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 512, 256);
 
-    // Distant Cold Moonlight / Spectral Rim Light - cuts through gloom at an angle
-    const spectralMoonLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
-    spectralMoonLight.position.set(45, 60, -30);
-    scene.add(spectralMoonLight);
+      // Atmospheric turbulent cloud wisps
+      ctx.fillStyle = 'rgba(168, 85, 247, 0.08)';
+      for (let y = 10; y < 250; y += 14) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        for (let x = 0; x <= 512; x += 32) {
+          const dy = Math.sin((x / 512) * Math.PI * 6 + y) * 5;
+          ctx.lineTo(x, y + dy);
+        }
+        ctx.lineTo(512, y + 6);
+        ctx.lineTo(0, y + 6);
+        ctx.closePath();
+        ctx.fill();
+      }
 
-    // Gloomy Volcanic Ember Under-Glow from deep below
-    const emberUnderLight = new THREE.PointLight(0xd97706, 1.2, 170);
-    emberUnderLight.position.set(-40, -45, -25);
-    scene.add(emberUnderLight);
+      // Cold cyan storm streak
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.06)';
+      ctx.beginPath();
+      ctx.ellipse(340, 110, 48, 14, 0.1, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Interactive Spectral Cursor Light - follows mouse in 3D world space, lighting nearby shards
-    const cursorSpectralLight = new THREE.PointLight(0xa78bfa, 3.6, 140);
-    cursorSpectralLight.position.set(0, 0, 30);
-    scene.add(cursorSpectralLight);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    };
 
-    // 7. Procedural Particle Textures (Custom Smoky Mist & Luminous Spectral Point)
-    // A. Soft Volumetric Gloomy Mist Texture (smoky falloff)
-    const mistCanvas = document.createElement('canvas');
-    mistCanvas.width = 128;
-    mistCanvas.height = 128;
-    const mCtx = mistCanvas.getContext('2d');
-    if (mCtx) {
-      const grad = mCtx.createRadialGradient(64, 64, 4, 64, 64, 64);
-      grad.addColorStop(0, 'rgba(168, 85, 247, 0.45)');
-      grad.addColorStop(0.25, 'rgba(99, 102, 241, 0.25)');
-      grad.addColorStop(0.55, 'rgba(56, 189, 248, 0.12)');
-      grad.addColorStop(0.82, 'rgba(15, 10, 30, 0.04)');
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      mCtx.fillStyle = grad;
-      mCtx.fillRect(0, 0, 128, 128);
-    }
-    const mistTexture = new THREE.CanvasTexture(mistCanvas);
+    // B. Planetary Ring Texture (Concentric translucent icy dusty bands)
+    const generateRingTexture = (): THREE.CanvasTexture => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 1;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return new THREE.CanvasTexture(canvas);
 
-    // B. Sharp Spectral Starlight / Ember Texture
-    const emberCanvas = document.createElement('canvas');
-    emberCanvas.width = 64;
-    emberCanvas.height = 64;
-    const eCtx = emberCanvas.getContext('2d');
-    if (eCtx) {
-      const grad = eCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.2, 'rgba(224, 231, 255, 0.9)');
-      grad.addColorStop(0.45, 'rgba(167, 139, 250, 0.5)');
-      grad.addColorStop(0.75, 'rgba(56, 189, 248, 0.15)');
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      eCtx.fillStyle = grad;
-      eCtx.fillRect(0, 0, 64, 64);
-    }
-    const emberTexture = new THREE.CanvasTexture(emberCanvas);
+      const grad = ctx.createLinearGradient(0, 0, 256, 0);
+      grad.addColorStop(0.0, 'rgba(0,0,0,0)');
+      grad.addColorStop(0.12, 'rgba(139, 92, 246, 0.15)');
+      grad.addColorStop(0.25, 'rgba(167, 139, 250, 0.6)');
+      grad.addColorStop(0.42, 'rgba(56, 189, 248, 0.45)');
+      grad.addColorStop(0.55, 'rgba(0,0,0,0.05)'); // Cassini Division gap
+      grad.addColorStop(0.62, 'rgba(192, 132, 252, 0.55)');
+      grad.addColorStop(0.85, 'rgba(124, 58, 237, 0.35)');
+      grad.addColorStop(0.96, 'rgba(148, 163, 184, 0.15)');
+      grad.addColorStop(1.0, 'rgba(0,0,0,0)');
 
-    // 8. Central Gloomy Artifact: The Abyssal Obsidian Monolith
-    // Designed to look atmospheric, mysterious, and monolithic without obstructing foreground text
-    const monolithGroup = new THREE.Group();
-    abyssalVoidGroup.add(monolithGroup);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 1);
 
-    // Dark Faceted Obsidian Core Spire
-    const coreGeo = new THREE.OctahedronGeometry(13, 0);
-    coreGeo.scale(1.0, 1.65, 1.0);
-    const coreMat = new THREE.MeshStandardMaterial({
-      color: 0x05030c,
-      roughness: 0.2,
-      metalness: 0.95,
-      transparent: true,
-      opacity: 0.88,
+      return new THREE.CanvasTexture(canvas);
+    };
+
+    // C. Rocky Cratered Moon Texture
+    const generateMoonTexture = (): THREE.CanvasTexture => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return new THREE.CanvasTexture(canvas);
+
+      // Dark basalt stone base
+      ctx.fillStyle = '#0f0c1b';
+      ctx.fillRect(0, 0, 256, 256);
+
+      // Impact crater maria & rings
+      for (let i = 0; i < 45; i++) {
+        const cx = Math.random() * 256;
+        const cy = Math.random() * 256;
+        const r = 3 + Math.random() * 18;
+
+        const craterGrad = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
+        craterGrad.addColorStop(0, '#07050d');
+        craterGrad.addColorStop(0.7, '#181329');
+        craterGrad.addColorStop(1, '#2d2247');
+
+        ctx.fillStyle = craterGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rim highlight
+        ctx.strokeStyle = 'rgba(167, 139, 250, 0.25)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      return new THREE.CanvasTexture(canvas);
+    };
+
+    // D. Star/Ember Particle Sprite
+    const generateStarSprite = (): THREE.CanvasTexture => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(0.2, 'rgba(224, 231, 255, 0.85)');
+        grad.addColorStop(0.5, 'rgba(167, 139, 250, 0.45)');
+        grad.addColorStop(0.8, 'rgba(56, 189, 248, 0.12)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 64, 64);
+      }
+      return new THREE.CanvasTexture(canvas);
+    };
+
+    const gasGiantTexture = generateGasGiantTexture();
+    const ringTexture = generateRingTexture();
+    const moonTexture = generateMoonTexture();
+    const starSprite = generateStarSprite();
+
+    // 6. Planetary Systems Setup
+    // A. PRIMARY GLOOMY RINGED PLANET (Placed in top-right / upper horizon to frame hero text!)
+    const planet1Group = new THREE.Group();
+    // Offset to upper-right so it never occludes left-column hero headlines and copy
+    planet1Group.position.set(isMobile ? 18 : 36, isMobile ? 12 : 18, -45);
+    scene.add(planet1Group);
+
+    const planetRadius = isMobile ? 15 : 21;
+    const planetGeo = new THREE.SphereGeometry(planetRadius, 48, 48);
+    const planetMat = new THREE.MeshStandardMaterial({
+      map: gasGiantTexture,
+      roughness: 0.65,
+      metalness: 0.2,
+      emissive: 0x0d0720,
+      emissiveIntensity: 0.35,
     });
-    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    monolithGroup.add(coreMesh);
+    const planetMesh = new THREE.Mesh(planetGeo, planetMat);
+    planet1Group.add(planetMesh);
 
-    // Glowing Ethereal Edges for the Monolith
-    const coreEdgeGeo = new THREE.EdgesGeometry(coreGeo);
-    const coreEdgeMat = new THREE.LineBasicMaterial({
-      color: 0x8b5cf6,
-      transparent: true,
-      opacity: 0.65,
-      blending: THREE.AdditiveBlending,
-    });
-    const coreEdges = new THREE.LineSegments(coreEdgeGeo, coreEdgeMat);
-    monolithGroup.add(coreEdges);
-
-    // Outer Moody Wireframe Geodesic Shroud (Soft atmospheric shell)
-    const shroudGeo = new THREE.IcosahedronGeometry(22, 1);
-    const shroudMat = new THREE.MeshBasicMaterial({
-      color: 0x4f46e5,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.18,
-      blending: THREE.AdditiveBlending,
-    });
-    const shroudMesh = new THREE.Mesh(shroudGeo, shroudMat);
-    monolithGroup.add(shroudMesh);
-
-    // Inner Glowing Singularity Sphere (haunting, subtle breathing core)
-    const singularityGeo = new THREE.SphereGeometry(4.5, 32, 32);
-    const singularityMat = new THREE.MeshBasicMaterial({
+    // Ethereal Planetary Atmosphere / Limb Glow Shell
+    const atmoGeo = new THREE.SphereGeometry(planetRadius * 1.025, 36, 36);
+    const atmoMat = new THREE.MeshBasicMaterial({
       color: 0x7c3aed,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.28,
       blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
     });
-    const singularityMesh = new THREE.Mesh(singularityGeo, singularityMat);
-    monolithGroup.add(singularityMesh);
+    const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
+    planet1Group.add(atmoMesh);
 
-    // 9. Three Gloomy Gyroscopic Eclipse Rings (Tilted & Precessing)
-    // Ring 1: Spectral Moonlight Cyan
-    const ringGeo1 = new THREE.TorusGeometry(32, 0.28, 12, 100);
-    const ringMat1 = new THREE.MeshBasicMaterial({
+    // Planetary Rings
+    const ringInnerR = planetRadius * 1.45;
+    const ringOuterR = planetRadius * 2.55;
+    const ringGeo = new THREE.RingGeometry(ringInnerR, ringOuterR, 96);
+
+    // Map 1D radial texture across the ring geometry
+    const ringPos = ringGeo.attributes.position;
+    const ringUVs = ringGeo.attributes.uv;
+    for (let i = 0; i < ringPos.count; i++) {
+      const x = ringPos.getX(i);
+      const y = ringPos.getY(i);
+      const dist = Math.sqrt(x * x + y * y);
+      const u = (dist - ringInnerR) / (ringOuterR - ringInnerR);
+      ringUVs.setXY(i, u, 0.5);
+    }
+    ringGeo.attributes.uv.needsUpdate = true;
+
+    const ringMat = new THREE.MeshStandardMaterial({
+      map: ringTexture,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85,
+      roughness: 0.4,
+      metalness: 0.3,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.x = Math.PI / 2.3;
+    ringMesh.rotation.y = -Math.PI / 6.5;
+    planet1Group.add(ringMesh);
+
+    // B. SECONDARY MOODY PLANET / MOON (Positioned in deep bottom-left perimeter)
+    const moonGroup = new THREE.Group();
+    moonGroup.position.set(isMobile ? -28 : -48, isMobile ? -22 : -28, -60);
+    scene.add(moonGroup);
+
+    const moonRadius = isMobile ? 8.5 : 12;
+    const moonGeo = new THREE.SphereGeometry(moonRadius, 36, 36);
+    const moonMat = new THREE.MeshStandardMaterial({
+      map: moonTexture,
+      roughness: 0.8,
+      metalness: 0.1,
+      emissive: 0x080414,
+      emissiveIntensity: 0.2,
+    });
+    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    moonGroup.add(moonMesh);
+
+    // Crescent Atmosphere Glow on Moon
+    const moonAtmoGeo = new THREE.SphereGeometry(moonRadius * 1.03, 32, 32);
+    const moonAtmoMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.22,
       blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
     });
-    const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
-    ring1.rotation.x = Math.PI / 3.2;
-    ring1.rotation.y = Math.PI / 7;
-    abyssalVoidGroup.add(ring1);
+    const moonAtmoMesh = new THREE.Mesh(moonAtmoGeo, moonAtmoMat);
+    moonGroup.add(moonAtmoMesh);
 
-    // Ring 2: Deep Twilight Violet
-    const ringGeo2 = new THREE.TorusGeometry(40, 0.32, 12, 110);
-    const ringMat2 = new THREE.MeshBasicMaterial({
-      color: 0x8b5cf6,
+    // C. DISTANT ECLIPSED EXOPLANET / DWARF MOON
+    const distantPlanetGroup = new THREE.Group();
+    distantPlanetGroup.position.set(-8, 38, -110);
+    scene.add(distantPlanetGroup);
+
+    const distantGeo = new THREE.SphereGeometry(6, 28, 28);
+    const distantMat = new THREE.MeshBasicMaterial({
+      color: 0x181030,
+    });
+    const distantMesh = new THREE.Mesh(distantGeo, distantMat);
+    distantPlanetGroup.add(distantMesh);
+
+    // Eerie Eclipse Ring Corona around distant planet
+    const eclipseGeo = new THREE.RingGeometry(6.1, 7.8, 48);
+    const eclipseMat = new THREE.MeshBasicMaterial({
+      color: 0x818cf8,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
       blending: THREE.AdditiveBlending,
     });
-    const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
-    ring2.rotation.x = -Math.PI / 2.8;
-    ring2.rotation.z = Math.PI / 5;
-    abyssalVoidGroup.add(ring2);
+    const eclipseMesh = new THREE.Mesh(eclipseGeo, eclipseMat);
+    distantPlanetGroup.add(eclipseMesh);
 
-    // Ring 3: Ghostly Platinum/Silver Outer Halo
-    const ringGeo3 = new THREE.TorusGeometry(48, 0.36, 12, 120);
-    const ringMat3 = new THREE.MeshBasicMaterial({
-      color: 0x94a3b8,
-      transparent: true,
-      opacity: 0.35,
-      blending: THREE.AdditiveBlending,
-    });
-    const ring3 = new THREE.Mesh(ringGeo3, ringMat3);
-    ring3.rotation.y = Math.PI / 2.2;
-    ring3.rotation.z = -Math.PI / 6;
-    abyssalVoidGroup.add(ring3);
-
-    // Orbiting Gloomy Wisps / Spectral Satellite Shards
-    const wispCount = 6;
-    const wisps: Array<{
-      mesh: THREE.Mesh;
-      ringIndex: number;
-      speed: number;
-      angle: number;
-      radius: number;
-    }> = [];
-
-    for (let w = 0; w < wispCount; w++) {
-      const wispGeo = new THREE.OctahedronGeometry(1.1, 0);
-      const wispMat = new THREE.MeshBasicMaterial({
-        color: w % 2 === 0 ? 0x38bdf8 : 0xa78bfa,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.8,
-      });
-      const wispMesh = new THREE.Mesh(wispGeo, wispMat);
-      abyssalVoidGroup.add(wispMesh);
-
-      wisps.push({
-        mesh: wispMesh,
-        ringIndex: w % 3,
-        speed: 0.6 + Math.random() * 0.5,
-        angle: (w / wispCount) * Math.PI * 2,
-        radius: w % 3 === 0 ? 32 : w % 3 === 1 ? 40 : 48,
-      });
-    }
-
-    // 10. Floating Dark Obsidian Shards (Positioned on the PERIPHERY to keep text crystal clear)
-    // When the mouse approaches, they tilt and magnetically respond!
-    const shards: FloatingShard[] = [];
-    const shardCount = isMobile ? 8 : 16;
-
-    const shardGeometries = [
-      () => {
-        const g = new THREE.ConeGeometry(3.2, 7.5, 4);
-        g.rotateX(Math.PI);
-        return g;
-      },
-      () => new THREE.OctahedronGeometry(3.5, 0),
-      () => new THREE.IcosahedronGeometry(3.2, 0),
-      () => {
-        const g = new THREE.CylinderGeometry(0.8, 2.8, 7.0, 5);
-        return g;
-      },
+    // 7. Dynamic Orbiting Asteroid Belt (Around the Main Planet)
+    const asteroids: Asteroid[] = [];
+    const asteroidCount = isMobile ? 24 : 52;
+    const asteroidGeos = [
+      () => new THREE.DodecahedronGeometry(0.8 + Math.random() * 1.2, 0),
+      () => new THREE.OctahedronGeometry(0.7 + Math.random() * 1.0, 0),
+      () => new THREE.IcosahedronGeometry(0.6 + Math.random() * 0.9, 0),
     ];
 
-    const shardEdgeColors = [0x8b5cf6, 0x38bdf8, 0xa78bfa, 0x6366f1, 0xd97706];
-
-    for (let i = 0; i < shardCount; i++) {
-      const geo = shardGeometries[i % shardGeometries.length]();
-      const col = shardEdgeColors[i % shardEdgeColors.length];
-
+    for (let a = 0; a < asteroidCount; a++) {
+      const geo = asteroidGeos[a % asteroidGeos.length]();
       const mat = new THREE.MeshStandardMaterial({
-        color: 0x060410,
-        roughness: 0.22,
-        metalness: 0.9,
-        transparent: true,
-        opacity: 0.88,
+        color: 0x161028,
+        roughness: 0.85,
+        metalness: 0.2,
       });
       const mesh = new THREE.Mesh(geo, mat);
 
-      const edgeGeo = new THREE.EdgesGeometry(geo);
-      const highlightMat = new THREE.LineBasicMaterial({
-        color: col,
-        transparent: true,
-        opacity: 0.7,
-        blending: THREE.AdditiveBlending,
-      });
-      const edges = new THREE.LineSegments(edgeGeo, highlightMat);
+      // Distribute in an inclined asteroid belt plane
+      const angle = (a / asteroidCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+      const radius = planetRadius * 1.8 + Math.random() * (planetRadius * 1.4);
+      const tilt = Math.PI / 2.3 + (Math.random() - 0.5) * 0.15;
+      const speed = 0.25 + Math.random() * 0.35;
+      const baseY = (Math.random() - 0.5) * 4;
 
-      const group = new THREE.Group();
-      group.add(mesh);
-      group.add(edges);
+      planet1Group.add(mesh);
 
-      // Peripheral distribution: strictly outside center area so text in center/left-center is pristine
-      // Distribute along left rim, right rim, upper corners, lower corners
-      const side = i % 2 === 0 ? -1 : 1;
-      const angle = (i / shardCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
-      const xDistance = 46 + Math.random() * 42;
-      const posX = side * xDistance;
-      const posY = Math.sin(angle) * 44 + (Math.random() - 0.5) * 20;
-      const posZ = -15 + (Math.random() - 0.5) * 45;
-
-      group.position.set(posX, posY, posZ);
-      scene.add(group);
-
-      shards.push({
-        group,
+      asteroids.push({
         mesh,
-        edges,
-        highlightMat,
-        basePos: new THREE.Vector3(posX, posY, posZ),
-        velocity: new THREE.Vector3(0, 0, 0),
+        angle,
+        radius,
+        speed,
+        tilt,
+        baseY,
         rotSpeed: new THREE.Vector3(
-          (Math.random() - 0.5) * 0.012,
-          (Math.random() - 0.5) * 0.015,
-          (Math.random() - 0.5) * 0.01
+          (Math.random() - 0.5) * 0.03,
+          (Math.random() - 0.5) * 0.04,
+          (Math.random() - 0.5) * 0.02
         ),
-        floatSpeed: 0.4 + Math.random() * 0.45,
-        floatAmp: 2.0 + Math.random() * 3.0,
-        phase: Math.random() * Math.PI * 2,
+        velocity: new THREE.Vector3(0, 0, 0),
       });
     }
 
-    // 11. Gloomy Volumetric Mist Layer (Soft atmospheric drifting fog)
-    const mistCount = isMobile ? 180 : 380;
-    const mistGeo = new THREE.BufferGeometry();
-    const mistPos = new Float32Array(mistCount * 3);
-    const mistColors = new Float32Array(mistCount * 3);
-    const mistVels = new Float32Array(mistCount * 3);
+    // 8. Swirling Cosmic Dust & Starlight Field (Interactive particles)
+    const starCount = isMobile ? 1200 : 2500;
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+    const starBasePos = new Float32Array(starCount * 3);
+    const starSpeeds = new Float32Array(starCount);
 
-    for (let i = 0; i < mistCount; i++) {
-      const i3 = i * 3;
-      // Spread across wide atmospheric space
-      mistPos[i3] = (Math.random() - 0.5) * 260;
-      mistPos[i3 + 1] = (Math.random() - 0.5) * 160;
-      mistPos[i3 + 2] = -120 + Math.random() * 180;
-
-      // Drift velocities
-      mistVels[i3] = (Math.random() - 0.5) * 0.05;
-      mistVels[i3 + 1] = (Math.random() - 0.5) * 0.03;
-      mistVels[i3 + 2] = (Math.random() - 0.5) * 0.04;
-
-      // Dark moody mist colors (deep violet, shadowy cyan, midnight grey)
-      const t = Math.random();
-      const col = new THREE.Color();
-      if (t < 0.45) {
-        col.setRGB(0.08, 0.04, 0.16);
-      } else if (t < 0.8) {
-        col.setRGB(0.04, 0.08, 0.15);
-      } else {
-        col.setRGB(0.12, 0.06, 0.18);
-      }
-
-      mistColors[i3] = col.r;
-      mistColors[i3 + 1] = col.g;
-      mistColors[i3 + 2] = col.b;
-    }
-
-    mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
-    mistGeo.setAttribute('color', new THREE.BufferAttribute(mistColors, 3));
-
-    const mistMat = new THREE.PointsMaterial({
-      size: isMobile ? 38 : 56,
-      map: mistTexture,
-      transparent: true,
-      opacity: 0.38,
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      sizeAttenuation: true,
-    });
-    const mistField = new THREE.Points(mistGeo, mistMat);
-    scene.add(mistField);
-
-    // 12. Interactive Spectral Embers & Constellation Field (Responds to cursor fluidly!)
-    const emberCount = isMobile ? 1200 : 2600;
-    const emberGeo = new THREE.BufferGeometry();
-    const emberPos = new Float32Array(emberCount * 3);
-    const emberColors = new Float32Array(emberCount * 3);
-    const emberBasePos = new Float32Array(emberCount * 3);
-    const emberPhases = new Float32Array(emberCount);
-    const emberSpeeds = new Float32Array(emberCount);
-
-    for (let i = 0; i < emberCount; i++) {
-      const i3 = i * 3;
-
-      // Radial distribution with a gentle center void so hero text is unobstructed
+    for (let s = 0; s < starCount; s++) {
+      const s3 = s * 3;
+      // Spread across wide starry abyss with center text corridor reduced
       const angle = Math.random() * Math.PI * 2;
       const u = Math.random();
-      // Radius biased outwards: 18 min to 110 max
-      const r = 18 + Math.pow(u, 1.2) * 92;
-      const px = Math.cos(angle) * r * 1.35;
-      const py = (Math.random() - 0.5) * 110;
-      const pz = -50 + Math.random() * 110;
+      const r = 24 + Math.pow(u, 1.3) * 110;
 
-      emberPos[i3] = px;
-      emberPos[i3 + 1] = py;
-      emberPos[i3 + 2] = pz;
+      const px = Math.cos(angle) * r * 1.4;
+      const py = (Math.random() - 0.5) * 130;
+      const pz = -120 + Math.random() * 160;
 
-      emberBasePos[i3] = px;
-      emberBasePos[i3 + 1] = py;
-      emberBasePos[i3 + 2] = pz;
+      starPos[s3] = px;
+      starPos[s3 + 1] = py;
+      starPos[s3 + 2] = pz;
 
-      emberPhases[i] = Math.random() * Math.PI * 2;
-      emberSpeeds[i] = 0.4 + Math.random() * 0.7;
+      starBasePos[s3] = px;
+      starBasePos[s3 + 1] = py;
+      starBasePos[s3 + 2] = pz;
 
-      // Color gradation: spectral pale violet -> cold moonlight cyan -> faint ember gold
+      starSpeeds[s] = 0.3 + Math.random() * 0.7;
+
+      // Color gradation: spectral pale violet, cold cyan, and faint distant ember
       const colType = Math.random();
       const col = new THREE.Color();
-      if (colType < 0.5) {
+      if (colType < 0.55) {
         col.lerpColors(new THREE.Color(0xa78bfa), new THREE.Color(0x818cf8), Math.random());
-      } else if (colType < 0.85) {
-        col.lerpColors(new THREE.Color(0x38bdf8), new THREE.Color(0xa5f3fc), Math.random());
+      } else if (colType < 0.88) {
+        col.lerpColors(new THREE.Color(0x38bdf8), new THREE.Color(0x93c5fd), Math.random());
       } else {
-        col.lerpColors(new THREE.Color(0xf59e0b), new THREE.Color(0xd97706), Math.random());
+        col.lerpColors(new THREE.Color(0xd97706), new THREE.Color(0xf59e0b), Math.random());
       }
 
-      emberColors[i3] = col.r;
-      emberColors[i3 + 1] = col.g;
-      emberColors[i3 + 2] = col.b;
+      starColors[s3] = col.r;
+      starColors[s3 + 1] = col.g;
+      starColors[s3 + 2] = col.b;
     }
 
-    emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
-    emberGeo.setAttribute('color', new THREE.BufferAttribute(emberColors, 3));
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
 
-    const emberMat = new THREE.PointsMaterial({
-      size: isMobile ? 3.0 : 3.8,
-      map: emberTexture,
+    const starMat = new THREE.PointsMaterial({
+      size: isMobile ? 3.2 : 3.8,
+      map: starSprite,
       transparent: true,
       opacity: 0.8,
       vertexColors: true,
@@ -457,12 +431,32 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       depthWrite: false,
       sizeAttenuation: true,
     });
-    const emberCloud = new THREE.Points(emberGeo, emberMat);
-    scene.add(emberCloud);
+    const starField = new THREE.Points(starGeo, starMat);
+    scene.add(starField);
 
-    // 13. Interactive Spectral Gloom Shockwave (Click & Tap Ripple)
-    const shockwaveGeo = new THREE.RingGeometry(1, 4.5, 64);
-    const shockwaveMat = new THREE.MeshBasicMaterial({
+    // 9. Lighting Setup (Gloomy Space Contrast with Eerie Spectral Illumination)
+    // Shadowy ambient light
+    const ambientLight = new THREE.AmbientLight(0x0e071c, 1.5);
+    scene.add(ambientLight);
+
+    // Distant Star Light (Casting dramatic crescent shadow on the planets)
+    const starSunLight = new THREE.DirectionalLight(0xdbeafe, 2.8);
+    starSunLight.position.set(70, 45, 60);
+    scene.add(starSunLight);
+
+    // Moody Atmospheric Backlight
+    const rimLight = new THREE.DirectionalLight(0x7c3aed, 1.4);
+    rimLight.position.set(-60, -40, -50);
+    scene.add(rimLight);
+
+    // Interactive 3D Cursor Probe Light - illuminates the night sides of planets in 3D!
+    const cursorProbeLight = new THREE.PointLight(0xa78bfa, 3.8, 160);
+    cursorProbeLight.position.set(0, 0, 30);
+    scene.add(cursorProbeLight);
+
+    // 10. Click Shockwave / Planetary Flare Ring
+    const flareGeo = new THREE.RingGeometry(1, 4.0, 64);
+    const flareMat = new THREE.MeshBasicMaterial({
       color: 0x818cf8,
       side: THREE.DoubleSide,
       transparent: true,
@@ -470,14 +464,14 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const shockwaveMesh = new THREE.Mesh(shockwaveGeo, shockwaveMat);
-    shockwaveMesh.position.set(0, 0, 10);
-    scene.add(shockwaveMesh);
+    const flareMesh = new THREE.Mesh(flareGeo, flareMat);
+    flareMesh.position.set(0, 0, 10);
+    scene.add(flareMesh);
 
-    let shockwaveActive = false;
-    let shockwaveScale = 1.0;
+    let flareActive = false;
+    let flareScale = 1.0;
 
-    // 14. Pointer Physics, 3D Raycasting & Drag Interaction
+    // 11. Interactive Pointer & Raycasting Physics
     const mouse = new THREE.Vector2(0, 0);
     const targetMouse = new THREE.Vector2(0, 0);
     const raycaster = new THREE.Raycaster();
@@ -503,8 +497,8 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       if (isPointerDown) {
         const deltaX = clientX - dragStartX;
         const deltaY = clientY - dragStartY;
-        targetDragRot.y = (deltaX / window.innerWidth) * 0.8;
-        targetDragRot.x = (deltaY / window.innerHeight) * 0.6;
+        targetDragRot.y = (deltaX / window.innerWidth) * 0.6;
+        targetDragRot.x = (deltaY / window.innerHeight) * 0.5;
       }
     };
 
@@ -520,42 +514,25 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       isPointerDown = false;
     };
 
-    const triggerShockwave = (atX?: number, atY?: number) => {
-      // Trigger ethereal shockwave expanding from pointer location
-      shockwaveActive = true;
-      shockwaveScale = 1.0;
-      shockwaveMat.opacity = 0.9;
+    const onWindowClick = () => {
+      // Trigger celestial shockwave pulse
+      flareActive = true;
+      flareScale = 1.0;
+      flareMat.opacity = 0.95;
+      flareMesh.position.set(mouse3D.x, mouse3D.y, 5);
 
-      // Position shockwave at current 3D cursor position if available
-      shockwaveMesh.position.set(mouse3D.x, mouse3D.y, 5);
+      cursorProbeLight.intensity = 8.5;
 
-      // Burst cursor spectral light and void core
-      cursorSpectralLight.intensity = 8.5;
-      voidCoreLight.intensity = 7.0;
+      // Burst spin to planets and asteroids
+      planetMesh.rotation.y += 0.35;
+      ringMesh.rotation.z += 0.25;
+      moonMesh.rotation.y += 0.4;
 
-      // Accelerate floating shards with angular momentum burst
-      for (const shard of shards) {
-        shard.rotSpeed.x += (Math.random() - 0.5) * 0.08;
-        shard.rotSpeed.y += (Math.random() - 0.5) * 0.08;
-        shard.rotSpeed.z += (Math.random() - 0.5) * 0.06;
-
-        // Push shards outward slightly from shockwave center
-        const dx = shard.group.position.x - mouse3D.x;
-        const dy = shard.group.position.y - mouse3D.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        shard.velocity.x += (dx / dist) * 12.0;
-        shard.velocity.y += (dy / dist) * 12.0;
+      for (const ast of asteroids) {
+        ast.speed += 0.4;
+        ast.rotSpeed.x += (Math.random() - 0.5) * 0.08;
+        ast.rotSpeed.y += (Math.random() - 0.5) * 0.08;
       }
-
-      // Gyroscopic ring acceleration
-      ring1.rotation.z += 0.35;
-      ring2.rotation.z -= 0.45;
-      ring3.rotation.z += 0.3;
-    };
-
-    const onWindowClick = (e: MouseEvent) => {
-      // Only trigger if click wasn't a significant drag
-      triggerShockwave();
     };
 
     const onScroll = () => {
@@ -578,7 +555,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
 
-    // 15. 60FPS Abyssal Simulation Loop
+    // 12. 60FPS Planetary Simulation Loop
     const clock = new THREE.Clock();
     let animId = 0;
 
@@ -588,7 +565,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       const delta = Math.min(clock.getDelta(), 0.08);
       const elapsedTime = clock.getElapsedTime();
 
-      // Smooth pointer & drag easing
+      // Smooth pointer easing
       mouse.x += (targetMouse.x - mouse.x) * 0.055;
       mouse.y += (targetMouse.y - mouse.y) * 0.055;
       scrollY += (targetScrollY - scrollY) * 0.05;
@@ -600,174 +577,111 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       raycaster.setFromCamera(mouse, camera);
       raycaster.ray.intersectPlane(planeZ, mouse3D);
 
-      // Interactive Cursor Light smoothly tracks coordinates
-      cursorSpectralLight.position.set(mouse3D.x, mouse3D.y, mouse3D.z + 20);
-      cursorSpectralLight.intensity = Math.max(3.2, cursorSpectralLight.intensity * 0.95);
-      voidCoreLight.intensity = Math.max(2.8, voidCoreLight.intensity * 0.96);
+      // Cursor Light smoothly tracks coordinates and dims back to ambient
+      cursorProbeLight.position.set(mouse3D.x, mouse3D.y, mouse3D.z + 24);
+      cursorProbeLight.intensity = Math.max(3.4, cursorProbeLight.intensity * 0.96);
 
-      // Smooth 3D Camera Parallax (Cinematic Gloomy Tilt & Drift)
-      const targetCamX = mouse.x * 16 + dragRotOffset.y * 25;
-      const targetCamY = mouse.y * 10 - (scrollY * 0.02) - dragRotOffset.x * 20;
+      // Smooth 3D Camera Parallax
+      const targetCamX = mouse.x * 14 + dragRotOffset.y * 22;
+      const targetCamY = mouse.y * 9 - (scrollY * 0.02) - dragRotOffset.x * 18;
       camera.position.x += (targetCamX - camera.position.x) * 0.04;
       camera.position.y += (targetCamY - camera.position.y) * 0.04;
-      camera.lookAt(0, -(scrollY * 0.015), -15);
+      camera.lookAt(0, -(scrollY * 0.015), -20);
 
-      // Rotate and breathe the Abyssal Monolith
-      const monolithPulse = 1.0 + Math.sin(elapsedTime * 1.4) * 0.05;
-      coreMesh.scale.set(monolithPulse, monolithPulse * 1.65, monolithPulse);
-      monolithGroup.rotation.y += delta * 0.22;
-      monolithGroup.rotation.x = Math.sin(elapsedTime * 0.5) * 0.12 + mouse.y * 0.25;
-      monolithGroup.rotation.z = Math.cos(elapsedTime * 0.4) * 0.08 + mouse.x * 0.2;
+      // Rotate Main Planet & Rings
+      planetMesh.rotation.y += delta * 0.12;
+      ringMesh.rotation.z += delta * 0.06;
+      atmoMesh.rotation.y += delta * 0.15;
 
-      shroudMesh.rotation.y -= delta * 0.18;
-      shroudMesh.rotation.z += delta * 0.12;
+      // Subtle planetary floating harmonic oscillation
+      planet1Group.position.y = (isMobile ? 12 : 18) + Math.sin(elapsedTime * 0.6) * 2.2;
+      planet1Group.rotation.z = Math.sin(elapsedTime * 0.4) * 0.04 + mouse.x * 0.06;
+      planet1Group.rotation.x = Math.cos(elapsedTime * 0.3) * 0.03 + mouse.y * 0.05;
 
-      // Breathing Singularity
-      const singPulse = 1.0 + Math.sin(elapsedTime * 3.2) * 0.15;
-      singularityMesh.scale.set(singPulse, singPulse, singPulse);
+      // Rotate Moon
+      moonMesh.rotation.y -= delta * 0.08;
+      moonGroup.position.y = (isMobile ? -22 : -28) + Math.cos(elapsedTime * 0.5) * 2.0;
 
-      // Gyroscopic Eclipse Rings Rotation
-      ring1.rotation.z += delta * 0.45;
-      ring1.rotation.x += delta * 0.05;
-      ring2.rotation.z -= delta * 0.38;
-      ring2.rotation.y += delta * 0.08;
-      ring3.rotation.z += delta * 0.28;
+      // Distant Planet corona shimmer
+      eclipseMesh.rotation.z += delta * 0.1;
+      const coronaPulse = 1.0 + Math.sin(elapsedTime * 2.2) * 0.06;
+      eclipseMesh.scale.set(coronaPulse, coronaPulse, 1);
 
-      // Orbiting Wisps
-      for (const wisp of wisps) {
-        wisp.angle += wisp.speed * delta;
-        const wx = Math.cos(wisp.angle) * wisp.radius;
-        const wy = Math.sin(wisp.angle) * wisp.radius * 0.35;
-        const wz = Math.sin(wisp.angle) * wisp.radius;
-        wisp.mesh.position.set(wx, wy, wz);
-        wisp.mesh.rotation.x += delta * 2.0;
-        wisp.mesh.rotation.y += delta * 2.4;
+      // Update Orbiting Asteroids in the Belt
+      for (const ast of asteroids) {
+        ast.angle += ast.speed * delta;
+        ast.speed = Math.max(0.2, ast.speed * 0.995); // return to normal orbit speed
+
+        const cosA = Math.cos(ast.angle);
+        const sinA = Math.sin(ast.angle);
+
+        const x = cosA * ast.radius;
+        const z = sinA * ast.radius;
+        const y = Math.sin(ast.angle * 2) * (ast.radius * 0.15) + ast.baseY;
+
+        // Apply belt tilt
+        ast.mesh.position.set(x, y * Math.cos(ast.tilt) - z * Math.sin(ast.tilt), z * Math.cos(ast.tilt) + y * Math.sin(ast.tilt));
+
+        ast.mesh.rotation.x += ast.rotSpeed.x;
+        ast.mesh.rotation.y += ast.rotSpeed.y;
+        ast.mesh.rotation.z += ast.rotSpeed.z;
       }
 
-      // Update Shockwave Ripple
-      if (shockwaveActive) {
-        shockwaveScale += 65.0 * delta;
-        shockwaveMesh.scale.set(shockwaveScale, shockwaveScale, 1);
-        shockwaveMat.opacity = Math.max(0, 0.9 - shockwaveScale / 80.0);
-        if (shockwaveScale >= 80.0) {
-          shockwaveActive = false;
+      // Update Flare Shockwave
+      if (flareActive) {
+        flareScale += 60.0 * delta;
+        flareMesh.scale.set(flareScale, flareScale, 1);
+        flareMat.opacity = Math.max(0, 0.95 - flareScale / 85.0);
+        if (flareScale >= 85.0) {
+          flareActive = false;
         }
       }
 
-      // Update Drifting Volumetric Mist
-      const mPosAttr = mistGeo.attributes.position as THREE.BufferAttribute;
-      const mPosArr = mPosAttr.array as Float32Array;
-      for (let i = 0; i < mistCount; i++) {
-        const i3 = i * 3;
-        mPosArr[i3] += mistVels[i3];
-        mPosArr[i3 + 1] += mistVels[i3 + 1];
-        mPosArr[i3 + 2] += mistVels[i3 + 2];
+      // Update Swirling Cosmic Dust & Starlight Field (Interactive fluid wake)
+      const sPosAttr = starGeo.attributes.position as THREE.BufferAttribute;
+      const sPosArr = sPosAttr.array as Float32Array;
 
-        // Wrap around bounds
-        if (mPosArr[i3] > 140) mPosArr[i3] = -140;
-        if (mPosArr[i3] < -140) mPosArr[i3] = 140;
-        if (mPosArr[i3 + 1] > 90) mPosArr[i3 + 1] = -90;
-        if (mPosArr[i3 + 1] < -90) mPosArr[i3 + 1] = 90;
-      }
-      mPosAttr.needsUpdate = true;
+      for (let s = 0; s < starCount; s++) {
+        const s3 = s * 3;
+        const spd = starSpeeds[s];
 
-      // Update Interactive Spectral Embers (Fluid Magnetic Wake & Repulsion)
-      const ePosAttr = emberGeo.attributes.position as THREE.BufferAttribute;
-      const ePosArr = ePosAttr.array as Float32Array;
+        // Ambient gentle drift
+        const oscY = Math.sin(elapsedTime * spd + s) * 2.0;
+        const oscX = Math.cos(elapsedTime * (spd * 0.8) + s) * 1.6;
 
-      for (let i = 0; i < emberCount; i++) {
-        const i3 = i * 3;
-        const spd = emberSpeeds[i];
-        const phase = emberPhases[i];
+        let px = starBasePos[s3] + oscX;
+        let py = starBasePos[s3 + 1] + oscY;
+        let pz = starBasePos[s3 + 2];
 
-        // Harmonic ambient drift around base position
-        const oscY = Math.sin(elapsedTime * spd + phase) * 2.2;
-        const oscX = Math.cos(elapsedTime * (spd * 0.7) + phase) * 1.8;
-
-        let px = emberBasePos[i3] + oscX;
-        let py = emberBasePos[i3 + 1] + oscY;
-        let pz = emberBasePos[i3 + 2];
-
-        // Interactive Cursor Magnetic Fluid Wake
+        // Cursor Repulsion & Swirl Wake
         const dx = px - mouse3D.x;
         const dy = py - mouse3D.y;
         const dz = pz - mouse3D.z;
         const distSq = dx * dx + dy * dy + dz * dz;
 
-        if (distSq < 1850 && distSq > 0.001) {
+        if (distSq < 1900 && distSq > 0.001) {
           const dist = Math.sqrt(distSq);
-          // Fluid repulsion force
           const force = (1 - dist / 43.0) * 18.0;
           px += (dx / dist) * force;
           py += (dy / dist) * force;
-          // Swirl torque around cursor
-          px += (-dy / dist) * (force * 0.5);
-          py += (dx / dist) * (force * 0.5);
-          pz += (dz / dist) * force * 0.35;
+          // Swirl around pointer
+          px += (-dy / dist) * (force * 0.45);
+          py += (dx / dist) * (force * 0.45);
+          pz += (dz / dist) * force * 0.3;
         }
 
-        ePosArr[i3] = px;
-        ePosArr[i3 + 1] = py;
-        ePosArr[i3 + 2] = pz;
+        sPosArr[s3] = px;
+        sPosArr[s3 + 1] = py;
+        sPosArr[s3 + 2] = pz;
       }
-      ePosAttr.needsUpdate = true;
-
-      // Update Floating Peripheral Shards (Kinetic Bobbing & Magnetic Proximity)
-      for (let i = 0; i < shards.length; i++) {
-        const shard = shards[i];
-
-        shard.group.rotation.x += shard.rotSpeed.x;
-        shard.group.rotation.y += shard.rotSpeed.y;
-        shard.group.rotation.z += shard.rotSpeed.z;
-
-        // Damping
-        shard.rotSpeed.x *= 0.994;
-        shard.rotSpeed.y *= 0.994;
-
-        // Harmonic bobbing
-        const floatY = Math.sin(elapsedTime * shard.floatSpeed + shard.phase) * shard.floatAmp;
-        const targetX = shard.basePos.x;
-        const targetY = shard.basePos.y + floatY;
-        const targetZ = shard.basePos.z;
-
-        // Magnetic Attraction/Repulsion with cursor
-        const dx = shard.group.position.x - mouse3D.x;
-        const dy = shard.group.position.y - mouse3D.y;
-        const dz = shard.group.position.z - mouse3D.z;
-        const distSq = dx * dx + dy * dy + dz * dz;
-
-        if (distSq < 2600 && distSq > 0.001) {
-          const dist = Math.sqrt(distSq);
-          const repel = (1 - dist / 51.0) * 22.0;
-          shard.velocity.x += (dx / dist) * repel * delta;
-          shard.velocity.y += (dy / dist) * repel * delta;
-          shard.velocity.z += (dz / dist) * (repel * 0.4) * delta;
-
-          // Shard points slightly toward cursor when close
-          shard.rotSpeed.x += (Math.random() - 0.5) * 0.015;
-          shard.rotSpeed.y += (Math.random() - 0.5) * 0.015;
-
-          // Increase edge glow when cursor is near
-          shard.highlightMat.opacity = Math.min(1.0, 0.7 + (1 - dist / 51.0) * 0.3);
-        } else {
-          shard.highlightMat.opacity = 0.65;
-        }
-
-        // Spring force returning to base position
-        shard.velocity.x += (targetX - shard.group.position.x) * 0.035;
-        shard.velocity.y += (targetY - shard.group.position.y) * 0.035;
-        shard.velocity.z += (targetZ - shard.group.position.z) * 0.035;
-        shard.velocity.multiplyScalar(0.92);
-
-        shard.group.position.add(shard.velocity);
-      }
+      sPosAttr.needsUpdate = true;
 
       renderer.render(scene, camera);
     };
 
     animId = requestAnimationFrame(animate);
 
-    // 16. Resource Disposal
+    // 13. Resource Cleanup
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('pointermove', onPointerMove);
@@ -784,46 +698,35 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
         container.removeChild(renderer.domElement);
       }
 
-      coreGeo.dispose();
-      coreMat.dispose();
-      coreEdgeGeo.dispose();
-      coreEdgeMat.dispose();
-      shroudGeo.dispose();
-      shroudMat.dispose();
-      singularityGeo.dispose();
-      singularityMat.dispose();
-      ringGeo1.dispose();
-      ringMat1.dispose();
-      ringGeo2.dispose();
-      ringMat2.dispose();
-      ringGeo3.dispose();
-      ringMat3.dispose();
-      mistGeo.dispose();
-      mistMat.dispose();
-      emberGeo.dispose();
-      emberMat.dispose();
-      shockwaveGeo.dispose();
-      shockwaveMat.dispose();
-      mistTexture.dispose();
-      emberTexture.dispose();
+      planetGeo.dispose();
+      planetMat.dispose();
+      atmoGeo.dispose();
+      atmoMat.dispose();
+      ringGeo.dispose();
+      ringMat.dispose();
+      moonGeo.dispose();
+      moonMat.dispose();
+      moonAtmoGeo.dispose();
+      moonAtmoMat.dispose();
+      distantGeo.dispose();
+      distantMat.dispose();
+      eclipseGeo.dispose();
+      eclipseMat.dispose();
+      starGeo.dispose();
+      starMat.dispose();
+      flareGeo.dispose();
+      flareMat.dispose();
+      gasGiantTexture.dispose();
+      ringTexture.dispose();
+      moonTexture.dispose();
+      starSprite.dispose();
 
-      for (const shard of shards) {
-        shard.mesh.geometry.dispose();
-        if (Array.isArray(shard.mesh.material)) {
-          shard.mesh.material.forEach((m) => m.dispose());
+      for (const ast of asteroids) {
+        ast.mesh.geometry.dispose();
+        if (Array.isArray(ast.mesh.material)) {
+          ast.mesh.material.forEach((m) => m.dispose());
         } else {
-          shard.mesh.material.dispose();
-        }
-        shard.edges.geometry.dispose();
-        shard.highlightMat.dispose();
-      }
-
-      for (const wisp of wisps) {
-        wisp.mesh.geometry.dispose();
-        if (Array.isArray(wisp.mesh.material)) {
-          wisp.mesh.material.forEach((m) => m.dispose());
-        } else {
-          wisp.mesh.material.dispose();
+          ast.mesh.material.dispose();
         }
       }
 
@@ -845,9 +748,9 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       ref={containerRef}
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
       style={{
-        // Beautiful gloomy atmospheric gradient with dark vignette ensuring 100% crystal text visibility
+        // Deep space cosmic gradient with atmospheric vignette ensuring 100% crystal text visibility
         background:
-          'radial-gradient(ellipse at 50% 25%, #0d061e 0%, #06030e 55%, #030107 100%)',
+          'radial-gradient(ellipse at 75% 20%, #110726 0%, #06030f 50%, #030107 100%)',
       }}
       aria-hidden="true"
     >
@@ -856,16 +759,16 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse at 35% 40%, rgba(4, 2, 10, 0.6) 0%, rgba(3, 2, 7, 0.25) 50%, rgba(2, 1, 5, 0.8) 100%)',
+            'radial-gradient(ellipse at 35% 45%, rgba(4, 2, 10, 0.65) 0%, rgba(3, 2, 7, 0.3) 55%, rgba(2, 1, 5, 0.85) 100%)',
         }}
       />
 
-      {/* Subtle gloomy atmospheric grain / mist overlay */}
+      {/* Atmospheric cosmic nebula dust / starry rim glow */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-40 mix-blend-screen"
+        className="absolute inset-0 pointer-events-none opacity-30 mix-blend-screen"
         style={{
           background:
-            'radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.09) 0%, transparent 60%)',
+            'radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.18) 0%, transparent 60%), radial-gradient(circle at 15% 75%, rgba(56, 189, 248, 0.12) 0%, transparent 55%)',
         }}
       />
     </div>
