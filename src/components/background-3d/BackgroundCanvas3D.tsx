@@ -7,17 +7,6 @@ interface BackgroundCanvas3DProps {
   onReplayIntro?: () => void;
 }
 
-interface Asteroid {
-  mesh: THREE.Mesh;
-  angle: number;
-  radius: number;
-  speed: number;
-  tilt: number;
-  rotSpeed: THREE.Vector3;
-  baseY: number;
-  velocity: THREE.Vector3;
-}
-
 export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(true);
@@ -44,22 +33,21 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
     const isMobile = window.innerWidth < 768;
 
-    // 2. Scene & Deep Moody Atmospheric Space Fog
+    // 2. Scene & Deep Atmospheric Cosmic Gloom Fog
     const scene = new THREE.Scene();
-    // Eerie deep space gloom fog
-    const spaceFogColor = 0x04020a;
-    scene.fog = new THREE.FogExp2(spaceFogColor, isMobile ? 0.0032 : 0.0022);
+    const gloomFogColor = 0x05030c;
+    scene.fog = new THREE.FogExp2(gloomFogColor, isMobile ? 0.0034 : 0.0024);
 
     // 3. Camera
     const camera = new THREE.PerspectiveCamera(
-      50,
+      52,
       window.innerWidth / window.innerHeight,
       1,
-      1600
+      1400
     );
-    camera.position.set(0, 2, 120);
+    camera.position.set(0, 0, 110);
 
-    // 4. Renderer with ACES Tone Mapping
+    // 4. Renderer with High Dynamic Range Tone Mapping
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: !isMobile,
@@ -69,7 +57,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.2;
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
@@ -78,49 +66,65 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.domElement.style.pointerEvents = 'none';
     container.appendChild(renderer.domElement);
 
-    // 5. Procedural Texture Generators for Gloomy Planets
-    // A. Ringed Gas Giant Surface Texture (moody stormy atmospheric bands)
-    const generateGasGiantTexture = (): THREE.CanvasTexture => {
+    // 5. Procedural Texture Generators
+    // A. Center Planet Surface Texture (High-res moody stormy gas/obsidian bands with bioluminescent fissures)
+    const generateCenterPlanetTexture = (): THREE.CanvasTexture => {
       const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 256;
+      canvas.width = 1024;
+      canvas.height = 512;
       const ctx = canvas.getContext('2d');
       if (!ctx) return new THREE.CanvasTexture(canvas);
 
-      // Deep gloomy cosmic palette
+      // Deep gloomy cosmic gradient bands
       const bands = [
-        '#080415', '#130a2a', '#1e103d', '#140c2e', '#2a144e',
-        '#181033', '#10162f', '#221244', '#0d0720', '#1b1b38',
-        '#28164a', '#120a27', '#080415'
+        '#04020a', '#0b0618', '#140c2c', '#0d0720', '#1c1038',
+        '#12182c', '#221242', '#0f0924', '#181b36', '#261445',
+        '#100824', '#15112e', '#05020c'
       ];
 
-      const grad = ctx.createLinearGradient(0, 0, 0, 256);
+      const grad = ctx.createLinearGradient(0, 0, 0, 512);
       bands.forEach((color, idx) => {
         grad.addColorStop(idx / (bands.length - 1), color);
       });
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 512, 256);
+      ctx.fillRect(0, 0, 1024, 512);
 
-      // Atmospheric turbulent cloud wisps
-      ctx.fillStyle = 'rgba(168, 85, 247, 0.08)';
-      for (let y = 10; y < 250; y += 14) {
+      // Turbulent cloud swirl belts
+      ctx.fillStyle = 'rgba(168, 85, 247, 0.09)';
+      for (let y = 30; y < 490; y += 22) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        for (let x = 0; x <= 512; x += 32) {
-          const dy = Math.sin((x / 512) * Math.PI * 6 + y) * 5;
+        for (let x = 0; x <= 1024; x += 32) {
+          const dy = Math.sin((x / 1024) * Math.PI * 8 + y) * 8;
           ctx.lineTo(x, y + dy);
         }
-        ctx.lineTo(512, y + 6);
-        ctx.lineTo(0, y + 6);
+        ctx.lineTo(1024, y + 10);
+        ctx.lineTo(0, y + 10);
         ctx.closePath();
         ctx.fill();
       }
 
-      // Cold cyan storm streak
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.06)';
+      // Deep moonlight cyan storm vortex
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
       ctx.beginPath();
-      ctx.ellipse(340, 110, 48, 14, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(680, 220, 110, 32, 0.08, 0, Math.PI * 2);
       ctx.fill();
+
+      // Delicate bioluminescent nocturnal filament veins
+      ctx.strokeStyle = 'rgba(192, 132, 252, 0.22)';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 18; i++) {
+        let vx = (i * 58) % 1024;
+        let vy = 120 + ((i * 47) % 280);
+        ctx.beginPath();
+        ctx.moveTo(vx, vy);
+        for (let step = 0; step < 7; step++) {
+          vx += (Math.random() - 0.4) * 28;
+          vy += (Math.random() - 0.5) * 16;
+          ctx.lineTo(vx, vy);
+        }
+        ctx.stroke();
+      }
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.wrapS = THREE.RepeatWrapping;
@@ -128,70 +132,34 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       return tex;
     };
 
-    // B. Planetary Ring Texture (Concentric translucent icy dusty bands)
+    // B. Massive Center Planetary Rings Texture
     const generateRingTexture = (): THREE.CanvasTexture => {
       const canvas = document.createElement('canvas');
-      canvas.width = 256;
+      canvas.width = 512;
       canvas.height = 1;
       const ctx = canvas.getContext('2d');
       if (!ctx) return new THREE.CanvasTexture(canvas);
 
-      const grad = ctx.createLinearGradient(0, 0, 256, 0);
+      const grad = ctx.createLinearGradient(0, 0, 512, 0);
       grad.addColorStop(0.0, 'rgba(0,0,0,0)');
-      grad.addColorStop(0.12, 'rgba(139, 92, 246, 0.15)');
-      grad.addColorStop(0.25, 'rgba(167, 139, 250, 0.6)');
-      grad.addColorStop(0.42, 'rgba(56, 189, 248, 0.45)');
-      grad.addColorStop(0.55, 'rgba(0,0,0,0.05)'); // Cassini Division gap
-      grad.addColorStop(0.62, 'rgba(192, 132, 252, 0.55)');
-      grad.addColorStop(0.85, 'rgba(124, 58, 237, 0.35)');
-      grad.addColorStop(0.96, 'rgba(148, 163, 184, 0.15)');
+      grad.addColorStop(0.08, 'rgba(139, 92, 246, 0.12)');
+      grad.addColorStop(0.2, 'rgba(168, 85, 247, 0.55)');
+      grad.addColorStop(0.38, 'rgba(56, 189, 248, 0.45)');
+      grad.addColorStop(0.5, 'rgba(0,0,0,0.05)'); // Cassini Division gap
+      grad.addColorStop(0.56, 'rgba(192, 132, 252, 0.6)');
+      grad.addColorStop(0.75, 'rgba(124, 58, 237, 0.35)');
+      grad.addColorStop(0.9, 'rgba(148, 163, 184, 0.2)');
+      grad.addColorStop(0.98, 'rgba(56, 189, 248, 0.1)');
       grad.addColorStop(1.0, 'rgba(0,0,0,0)');
 
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 256, 1);
+      ctx.fillRect(0, 0, 512, 1);
 
       return new THREE.CanvasTexture(canvas);
     };
 
-    // C. Rocky Cratered Moon Texture
-    const generateMoonTexture = (): THREE.CanvasTexture => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 256;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return new THREE.CanvasTexture(canvas);
-
-      // Dark basalt stone base
-      ctx.fillStyle = '#0f0c1b';
-      ctx.fillRect(0, 0, 256, 256);
-
-      // Impact crater maria & rings
-      for (let i = 0; i < 45; i++) {
-        const cx = Math.random() * 256;
-        const cy = Math.random() * 256;
-        const r = 3 + Math.random() * 18;
-
-        const craterGrad = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
-        craterGrad.addColorStop(0, '#07050d');
-        craterGrad.addColorStop(0.7, '#181329');
-        craterGrad.addColorStop(1, '#2d2247');
-
-        ctx.fillStyle = craterGrad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Rim highlight
-        ctx.strokeStyle = 'rgba(167, 139, 250, 0.25)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      return new THREE.CanvasTexture(canvas);
-    };
-
-    // D. Star/Ember Particle Sprite
-    const generateStarSprite = (): THREE.CanvasTexture => {
+    // C. Particle Mote Texture
+    const generateParticleSprite = (): THREE.CanvasTexture => {
       const canvas = document.createElement('canvas');
       canvas.width = 64;
       canvas.height = 64;
@@ -200,7 +168,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
         const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
         grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
         grad.addColorStop(0.2, 'rgba(224, 231, 255, 0.85)');
-        grad.addColorStop(0.5, 'rgba(167, 139, 250, 0.45)');
+        grad.addColorStop(0.5, 'rgba(168, 85, 247, 0.45)');
         grad.addColorStop(0.8, 'rgba(56, 189, 248, 0.12)');
         grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = grad;
@@ -209,54 +177,67 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       return new THREE.CanvasTexture(canvas);
     };
 
-    const gasGiantTexture = generateGasGiantTexture();
+    const planetTexture = generateCenterPlanetTexture();
     const ringTexture = generateRingTexture();
-    const moonTexture = generateMoonTexture();
-    const starSprite = generateStarSprite();
+    const particleSprite = generateParticleSprite();
 
-    // 6. Planetary Systems Setup
-    // A. PRIMARY GLOOMY RINGED PLANET (Placed in top-right / upper horizon to frame hero text!)
-    const planet1Group = new THREE.Group();
-    // Offset to upper-right so it never occludes left-column hero headlines and copy
-    planet1Group.position.set(isMobile ? 18 : 36, isMobile ? 12 : 18, -45);
-    scene.add(planet1Group);
+    // 6. THE CENTER PLANET SYSTEM
+    // Positioned dead-center in the background (z: -28)
+    const centerPlanetGroup = new THREE.Group();
+    centerPlanetGroup.position.set(0, -1, -26);
+    scene.add(centerPlanetGroup);
 
-    const planetRadius = isMobile ? 15 : 21;
-    const planetGeo = new THREE.SphereGeometry(planetRadius, 48, 48);
+    // Planet Sphere
+    const planetRadius = isMobile ? 18 : 26;
+    const planetGeo = new THREE.SphereGeometry(planetRadius, 64, 64);
     const planetMat = new THREE.MeshStandardMaterial({
-      map: gasGiantTexture,
-      roughness: 0.65,
-      metalness: 0.2,
-      emissive: 0x0d0720,
+      map: planetTexture,
+      roughness: 0.72,
+      metalness: 0.15,
+      emissive: 0x060312,
       emissiveIntensity: 0.35,
     });
     const planetMesh = new THREE.Mesh(planetGeo, planetMat);
-    planet1Group.add(planetMesh);
+    // Axial planet tilt
+    planetMesh.rotation.z = 0.22;
+    centerPlanetGroup.add(planetMesh);
 
-    // Ethereal Planetary Atmosphere / Limb Glow Shell
-    const atmoGeo = new THREE.SphereGeometry(planetRadius * 1.025, 36, 36);
-    const atmoMat = new THREE.MeshBasicMaterial({
-      color: 0x7c3aed,
+    // Atmospheric Ethereal Limb Glow Shell (Moody Aurora Border)
+    const atmosphereGeo = new THREE.SphereGeometry(planetRadius * 1.03, 48, 48);
+    const atmosphereMat = new THREE.MeshBasicMaterial({
+      color: 0x8b5cf6,
       transparent: true,
       opacity: 0.28,
       blending: THREE.AdditiveBlending,
       side: THREE.BackSide,
     });
-    const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
-    planet1Group.add(atmoMesh);
+    const atmosphereMesh = new THREE.Mesh(atmosphereGeo, atmosphereMat);
+    centerPlanetGroup.add(atmosphereMesh);
 
-    // Planetary Rings
+    // Dynamic Atmospheric Cloud / Shroud Layer
+    const cloudGeo = new THREE.SphereGeometry(planetRadius * 1.012, 48, 48);
+    const cloudMat = new THREE.MeshStandardMaterial({
+      color: 0x181036,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      roughness: 0.8,
+    });
+    const cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+    centerPlanetGroup.add(cloudMesh);
+
+    // 7. Center Planet Majestic Rings (Multi-layered, tilted at a dramatic angle)
     const ringInnerR = planetRadius * 1.45;
-    const ringOuterR = planetRadius * 2.55;
-    const ringGeo = new THREE.RingGeometry(ringInnerR, ringOuterR, 96);
+    const ringOuterR = planetRadius * 2.75;
+    const ringGeo = new THREE.RingGeometry(ringInnerR, ringOuterR, 128);
 
-    // Map 1D radial texture across the ring geometry
-    const ringPos = ringGeo.attributes.position;
+    // UV mapping for radial gradient
+    const ringPositions = ringGeo.attributes.position;
     const ringUVs = ringGeo.attributes.uv;
-    for (let i = 0; i < ringPos.count; i++) {
-      const x = ringPos.getX(i);
-      const y = ringPos.getY(i);
-      const dist = Math.sqrt(x * x + y * y);
+    for (let i = 0; i < ringPositions.count; i++) {
+      const rx = ringPositions.getX(i);
+      const ry = ringPositions.getY(i);
+      const dist = Math.sqrt(rx * rx + ry * ry);
       const u = (dist - ringInnerR) / (ringOuterR - ringInnerR);
       ringUVs.setXY(i, u, 0.5);
     }
@@ -266,197 +247,169 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       map: ringTexture,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.85,
-      roughness: 0.4,
-      metalness: 0.3,
+      opacity: 0.88,
+      roughness: 0.35,
+      metalness: 0.25,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.rotation.x = Math.PI / 2.3;
-    ringMesh.rotation.y = -Math.PI / 6.5;
-    planet1Group.add(ringMesh);
+    ringMesh.rotation.x = Math.PI / 2.35;
+    ringMesh.rotation.y = -Math.PI / 8;
+    centerPlanetGroup.add(ringMesh);
 
-    // B. SECONDARY MOODY PLANET / MOON (Positioned in deep bottom-left perimeter)
-    const moonGroup = new THREE.Group();
-    moonGroup.position.set(isMobile ? -28 : -48, isMobile ? -22 : -28, -60);
-    scene.add(moonGroup);
-
-    const moonRadius = isMobile ? 8.5 : 12;
-    const moonGeo = new THREE.SphereGeometry(moonRadius, 36, 36);
-    const moonMat = new THREE.MeshStandardMaterial({
-      map: moonTexture,
-      roughness: 0.8,
-      metalness: 0.1,
-      emissive: 0x080414,
-      emissiveIntensity: 0.2,
-    });
-    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-    moonGroup.add(moonMesh);
-
-    // Crescent Atmosphere Glow on Moon
-    const moonAtmoGeo = new THREE.SphereGeometry(moonRadius * 1.03, 32, 32);
-    const moonAtmoMat = new THREE.MeshBasicMaterial({
+    // Secondary Thin Outer Gossamer Halo Ring
+    const haloRingGeo = new THREE.RingGeometry(planetRadius * 2.85, planetRadius * 3.25, 96);
+    const haloRingMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
+      side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.22,
       blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
+      depthWrite: false,
     });
-    const moonAtmoMesh = new THREE.Mesh(moonAtmoGeo, moonAtmoMat);
-    moonGroup.add(moonAtmoMesh);
+    const haloRingMesh = new THREE.Mesh(haloRingGeo, haloRingMat);
+    haloRingMesh.rotation.x = ringMesh.rotation.x;
+    haloRingMesh.rotation.y = ringMesh.rotation.y;
+    centerPlanetGroup.add(haloRingMesh);
 
-    // C. DISTANT ECLIPSED EXOPLANET / DWARF MOON
-    const distantPlanetGroup = new THREE.Group();
-    distantPlanetGroup.position.set(-8, 38, -110);
-    scene.add(distantPlanetGroup);
+    // 8. Orbiting Planetary Ring Particles & Accretion Dust (No floating balls, only ring dust!)
+    const ringParticleCount = isMobile ? 1200 : 2800;
+    const ringParticleGeo = new THREE.BufferGeometry();
+    const ringParticlePos = new Float32Array(ringParticleCount * 3);
+    const ringParticleColors = new Float32Array(ringParticleCount * 3);
+    const ringParticleRadii = new Float32Array(ringParticleCount);
+    const ringParticleAngles = new Float32Array(ringParticleCount);
+    const ringParticleSpeeds = new Float32Array(ringParticleCount);
+    const ringParticleHeights = new Float32Array(ringParticleCount);
 
-    const distantGeo = new THREE.SphereGeometry(6, 28, 28);
-    const distantMat = new THREE.MeshBasicMaterial({
-      color: 0x181030,
-    });
-    const distantMesh = new THREE.Mesh(distantGeo, distantMat);
-    distantPlanetGroup.add(distantMesh);
-
-    // Eerie Eclipse Ring Corona around distant planet
-    const eclipseGeo = new THREE.RingGeometry(6.1, 7.8, 48);
-    const eclipseMat = new THREE.MeshBasicMaterial({
-      color: 0x818cf8,
-      transparent: true,
-      opacity: 0.55,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-    });
-    const eclipseMesh = new THREE.Mesh(eclipseGeo, eclipseMat);
-    distantPlanetGroup.add(eclipseMesh);
-
-    // 7. Dynamic Orbiting Asteroid Belt (Around the Main Planet)
-    const asteroids: Asteroid[] = [];
-    const asteroidCount = isMobile ? 24 : 52;
-    const asteroidGeos = [
-      () => new THREE.DodecahedronGeometry(0.8 + Math.random() * 1.2, 0),
-      () => new THREE.OctahedronGeometry(0.7 + Math.random() * 1.0, 0),
-      () => new THREE.IcosahedronGeometry(0.6 + Math.random() * 0.9, 0),
-    ];
-
-    for (let a = 0; a < asteroidCount; a++) {
-      const geo = asteroidGeos[a % asteroidGeos.length]();
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x161028,
-        roughness: 0.85,
-        metalness: 0.2,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-
-      // Distribute in an inclined asteroid belt plane
-      const angle = (a / asteroidCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
-      const radius = planetRadius * 1.8 + Math.random() * (planetRadius * 1.4);
-      const tilt = Math.PI / 2.3 + (Math.random() - 0.5) * 0.15;
-      const speed = 0.25 + Math.random() * 0.35;
-      const baseY = (Math.random() - 0.5) * 4;
-
-      planet1Group.add(mesh);
-
-      asteroids.push({
-        mesh,
-        angle,
-        radius,
-        speed,
-        tilt,
-        baseY,
-        rotSpeed: new THREE.Vector3(
-          (Math.random() - 0.5) * 0.03,
-          (Math.random() - 0.5) * 0.04,
-          (Math.random() - 0.5) * 0.02
-        ),
-        velocity: new THREE.Vector3(0, 0, 0),
-      });
-    }
-
-    // 8. Swirling Cosmic Dust & Starlight Field (Interactive particles)
-    const starCount = isMobile ? 1200 : 2500;
-    const starGeo = new THREE.BufferGeometry();
-    const starPos = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
-    const starBasePos = new Float32Array(starCount * 3);
-    const starSpeeds = new Float32Array(starCount);
-
-    for (let s = 0; s < starCount; s++) {
-      const s3 = s * 3;
-      // Spread across wide starry abyss with center text corridor reduced
+    for (let p = 0; p < ringParticleCount; p++) {
+      const p3 = p * 3;
       const angle = Math.random() * Math.PI * 2;
-      const u = Math.random();
-      const r = 24 + Math.pow(u, 1.3) * 110;
+      // Between inner and outer ring
+      const rRatio = Math.random();
+      const r = ringInnerR * 0.95 + rRatio * (ringOuterR * 1.12 - ringInnerR * 0.95);
+      const h = (Math.random() - 0.5) * 2.5;
 
-      const px = Math.cos(angle) * r * 1.4;
-      const py = (Math.random() - 0.5) * 130;
-      const pz = -120 + Math.random() * 160;
+      ringParticleAngles[p] = angle;
+      ringParticleRadii[p] = r;
+      // Keplerian speed: closer orbits faster
+      ringParticleSpeeds[p] = (0.28 / Math.sqrt(r / planetRadius)) * (0.85 + Math.random() * 0.3);
+      ringParticleHeights[p] = h;
 
-      starPos[s3] = px;
-      starPos[s3 + 1] = py;
-      starPos[s3 + 2] = pz;
+      // Ring coordinate in ring plane
+      const rx = Math.cos(angle) * r;
+      const rz = Math.sin(angle) * r;
+      const ry = h;
 
-      starBasePos[s3] = px;
-      starBasePos[s3 + 1] = py;
-      starBasePos[s3 + 2] = pz;
+      // Rotate to match ring tilt (Math.PI / 2.35 around X, -Math.PI / 8 around Y)
+      const cosX = Math.cos(Math.PI / 2.35);
+      const sinX = Math.sin(Math.PI / 2.35);
+      const cosY = Math.cos(-Math.PI / 8);
+      const sinY = Math.sin(-Math.PI / 8);
 
-      starSpeeds[s] = 0.3 + Math.random() * 0.7;
+      const y1 = ry * cosX - rz * sinX;
+      const z1 = ry * sinX + rz * cosX;
+      const x2 = rx * cosY + z1 * sinY;
+      const z2 = -rx * sinY + z1 * cosY;
 
-      // Color gradation: spectral pale violet, cold cyan, and faint distant ember
-      const colType = Math.random();
+      ringParticlePos[p3] = x2;
+      ringParticlePos[p3 + 1] = y1;
+      ringParticlePos[p3 + 2] = z2;
+
+      // Color gradation: Pale Violet, Moonlight Teal, and Soft Starlight
       const col = new THREE.Color();
-      if (colType < 0.55) {
+      if (rRatio < 0.4) {
         col.lerpColors(new THREE.Color(0xa78bfa), new THREE.Color(0x818cf8), Math.random());
-      } else if (colType < 0.88) {
-        col.lerpColors(new THREE.Color(0x38bdf8), new THREE.Color(0x93c5fd), Math.random());
+      } else if (rRatio < 0.8) {
+        col.lerpColors(new THREE.Color(0x38bdf8), new THREE.Color(0xa5f3fc), Math.random());
       } else {
-        col.lerpColors(new THREE.Color(0xd97706), new THREE.Color(0xf59e0b), Math.random());
+        col.lerpColors(new THREE.Color(0xc084fc), new THREE.Color(0xf59e0b), Math.random() * 0.4);
       }
 
-      starColors[s3] = col.r;
-      starColors[s3 + 1] = col.g;
-      starColors[s3 + 2] = col.b;
+      ringParticleColors[p3] = col.r;
+      ringParticleColors[p3 + 1] = col.g;
+      ringParticleColors[p3 + 2] = col.b;
     }
 
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+    ringParticleGeo.setAttribute('position', new THREE.BufferAttribute(ringParticlePos, 3));
+    ringParticleGeo.setAttribute('color', new THREE.BufferAttribute(ringParticleColors, 3));
 
-    const starMat = new THREE.PointsMaterial({
-      size: isMobile ? 3.2 : 3.8,
-      map: starSprite,
+    const ringParticleMat = new THREE.PointsMaterial({
+      size: isMobile ? 2.6 : 3.4,
+      map: particleSprite,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.85,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
     });
-    const starField = new THREE.Points(starGeo, starMat);
-    scene.add(starField);
+    const ringParticlesMesh = new THREE.Points(ringParticleGeo, ringParticleMat);
+    centerPlanetGroup.add(ringParticlesMesh);
 
-    // 9. Lighting Setup (Gloomy Space Contrast with Eerie Spectral Illumination)
-    // Shadowy ambient light
-    const ambientLight = new THREE.AmbientLight(0x0e071c, 1.5);
+    // 9. Ambient Gloomy Stardust (Deep background starlight)
+    const stardustCount = isMobile ? 800 : 1800;
+    const stardustGeo = new THREE.BufferGeometry();
+    const stardustPos = new Float32Array(stardustCount * 3);
+    const stardustColors = new Float32Array(stardustCount * 3);
+
+    for (let s = 0; s < stardustCount; s++) {
+      const s3 = s * 3;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(Math.random() * 2 - 1);
+      const rad = 75 + Math.random() * 160;
+
+      stardustPos[s3] = rad * Math.sin(phi) * Math.cos(theta) * 1.5;
+      stardustPos[s3 + 1] = rad * Math.sin(phi) * Math.sin(theta);
+      stardustPos[s3 + 2] = -50 - rad * Math.abs(Math.cos(phi));
+
+      const col = new THREE.Color();
+      col.lerpColors(new THREE.Color(0x8b5cf6), new THREE.Color(0x38bdf8), Math.random());
+      stardustColors[s3] = col.r;
+      stardustColors[s3 + 1] = col.g;
+      stardustColors[s3 + 2] = col.b;
+    }
+
+    stardustGeo.setAttribute('position', new THREE.BufferAttribute(stardustPos, 3));
+    stardustGeo.setAttribute('color', new THREE.BufferAttribute(stardustColors, 3));
+
+    const stardustMat = new THREE.PointsMaterial({
+      size: isMobile ? 2.2 : 2.8,
+      map: particleSprite,
+      transparent: true,
+      opacity: 0.6,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    const stardustField = new THREE.Points(stardustGeo, stardustMat);
+    scene.add(stardustField);
+
+    // 10. Ethereal 3D Lighting Setup (Gloomy High Contrast)
+    // Deep gloomy ambient light
+    const ambientLight = new THREE.AmbientLight(0x0e081e, 1.4);
     scene.add(ambientLight);
 
-    // Distant Star Light (Casting dramatic crescent shadow on the planets)
-    const starSunLight = new THREE.DirectionalLight(0xdbeafe, 2.8);
-    starSunLight.position.set(70, 45, 60);
-    scene.add(starSunLight);
+    // Distant Cold Sun / Starlight (Casts crescent shadow terminator across the Center Planet)
+    const sunLight = new THREE.DirectionalLight(0xdbeafe, 2.8);
+    sunLight.position.set(65, 40, 50);
+    scene.add(sunLight);
 
-    // Moody Atmospheric Backlight
-    const rimLight = new THREE.DirectionalLight(0x7c3aed, 1.4);
-    rimLight.position.set(-60, -40, -50);
+    // Rim Backlight (Accentuates the silhouette edges)
+    const rimLight = new THREE.DirectionalLight(0x7c3aed, 1.6);
+    rimLight.position.set(-60, -45, -40);
     scene.add(rimLight);
 
-    // Interactive 3D Cursor Probe Light - illuminates the night sides of planets in 3D!
+    // Interactive 3D Cursor Probe Light - illuminates the night side of the center planet!
     const cursorProbeLight = new THREE.PointLight(0xa78bfa, 3.8, 160);
     cursorProbeLight.position.set(0, 0, 30);
     scene.add(cursorProbeLight);
 
-    // 10. Click Shockwave / Planetary Flare Ring
-    const flareGeo = new THREE.RingGeometry(1, 4.0, 64);
-    const flareMat = new THREE.MeshBasicMaterial({
+    // 11. Interactive Shockwave (Expanding Planetary Auroral Ring)
+    const shockwaveGeo = new THREE.RingGeometry(1, 4.0, 64);
+    const shockwaveMat = new THREE.MeshBasicMaterial({
       color: 0x818cf8,
       side: THREE.DoubleSide,
       transparent: true,
@@ -464,14 +417,14 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const flareMesh = new THREE.Mesh(flareGeo, flareMat);
-    flareMesh.position.set(0, 0, 10);
-    scene.add(flareMesh);
+    const shockwaveMesh = new THREE.Mesh(shockwaveGeo, shockwaveMat);
+    shockwaveMesh.position.set(0, 0, 10);
+    scene.add(shockwaveMesh);
 
-    let flareActive = false;
-    let flareScale = 1.0;
+    let shockwaveActive = false;
+    let shockwaveScale = 1.0;
 
-    // 11. Interactive Pointer & Raycasting Physics
+    // 12. Pointer, Raycasting & Drag Interaction
     const mouse = new THREE.Vector2(0, 0);
     const targetMouse = new THREE.Vector2(0, 0);
     const raycaster = new THREE.Raycaster();
@@ -497,8 +450,8 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       if (isPointerDown) {
         const deltaX = clientX - dragStartX;
         const deltaY = clientY - dragStartY;
-        targetDragRot.y = (deltaX / window.innerWidth) * 0.6;
-        targetDragRot.x = (deltaY / window.innerHeight) * 0.5;
+        targetDragRot.y = (deltaX / window.innerWidth) * 0.9;
+        targetDragRot.x = (deltaY / window.innerHeight) * 0.7;
       }
     };
 
@@ -515,24 +468,18 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     };
 
     const onWindowClick = () => {
-      // Trigger celestial shockwave pulse
-      flareActive = true;
-      flareScale = 1.0;
-      flareMat.opacity = 0.95;
-      flareMesh.position.set(mouse3D.x, mouse3D.y, 5);
+      // Trigger auroral shockwave on click
+      shockwaveActive = true;
+      shockwaveScale = 1.0;
+      shockwaveMat.opacity = 0.95;
+      shockwaveMesh.position.set(mouse3D.x, mouse3D.y, 5);
 
       cursorProbeLight.intensity = 8.5;
 
-      // Burst spin to planets and asteroids
-      planetMesh.rotation.y += 0.35;
-      ringMesh.rotation.z += 0.25;
-      moonMesh.rotation.y += 0.4;
-
-      for (const ast of asteroids) {
-        ast.speed += 0.4;
-        ast.rotSpeed.x += (Math.random() - 0.5) * 0.08;
-        ast.rotSpeed.y += (Math.random() - 0.5) * 0.08;
-      }
+      // Burst of angular acceleration to planet and rings
+      planetMesh.rotation.y += 0.4;
+      cloudMesh.rotation.y += 0.6;
+      ringMesh.rotation.z += 0.3;
     };
 
     const onScroll = () => {
@@ -555,7 +502,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
 
-    // 12. 60FPS Planetary Simulation Loop
+    // 13. 60FPS Planetary Simulation Loop
     const clock = new THREE.Clock();
     let animId = 0;
 
@@ -577,111 +524,107 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       raycaster.setFromCamera(mouse, camera);
       raycaster.ray.intersectPlane(planeZ, mouse3D);
 
-      // Cursor Light smoothly tracks coordinates and dims back to ambient
+      // Interactive Cursor Probe Light glides with pointer
       cursorProbeLight.position.set(mouse3D.x, mouse3D.y, mouse3D.z + 24);
       cursorProbeLight.intensity = Math.max(3.4, cursorProbeLight.intensity * 0.96);
 
       // Smooth 3D Camera Parallax
-      const targetCamX = mouse.x * 14 + dragRotOffset.y * 22;
-      const targetCamY = mouse.y * 9 - (scrollY * 0.02) - dragRotOffset.x * 18;
+      const targetCamX = mouse.x * 12 + dragRotOffset.y * 20;
+      const targetCamY = mouse.y * 8 - (scrollY * 0.02) - dragRotOffset.x * 16;
       camera.position.x += (targetCamX - camera.position.x) * 0.04;
       camera.position.y += (targetCamY - camera.position.y) * 0.04;
-      camera.lookAt(0, -(scrollY * 0.015), -20);
+      camera.lookAt(0, -(scrollY * 0.015), -26);
 
-      // Rotate Main Planet & Rings
+      // Rotate Center Planet & Cloud Layer
       planetMesh.rotation.y += delta * 0.12;
-      ringMesh.rotation.z += delta * 0.06;
-      atmoMesh.rotation.y += delta * 0.15;
+      cloudMesh.rotation.y += delta * 0.18;
+      atmosphereMesh.rotation.y += delta * 0.06;
 
-      // Subtle planetary floating harmonic oscillation
-      planet1Group.position.y = (isMobile ? 12 : 18) + Math.sin(elapsedTime * 0.6) * 2.2;
-      planet1Group.rotation.z = Math.sin(elapsedTime * 0.4) * 0.04 + mouse.x * 0.06;
-      planet1Group.rotation.x = Math.cos(elapsedTime * 0.3) * 0.03 + mouse.y * 0.05;
+      // Center Planet subtle harmonic breathing
+      const breath = 1.0 + Math.sin(elapsedTime * 0.8) * 0.015;
+      planetMesh.scale.set(breath, breath, breath);
 
-      // Rotate Moon
-      moonMesh.rotation.y -= delta * 0.08;
-      moonGroup.position.y = (isMobile ? -22 : -28) + Math.cos(elapsedTime * 0.5) * 2.0;
+      // Interactive Gyroscopic Tilt of the entire Center Planet System toward cursor & drag
+      const targetTiltY = mouse.x * 0.25 + dragRotOffset.y * 0.5;
+      const targetTiltX = mouse.y * 0.2 + dragRotOffset.x * 0.4;
+      centerPlanetGroup.rotation.y += (targetTiltY - centerPlanetGroup.rotation.y) * 0.04;
+      centerPlanetGroup.rotation.x += (targetTiltX - centerPlanetGroup.rotation.x) * 0.04;
 
-      // Distant Planet corona shimmer
-      eclipseMesh.rotation.z += delta * 0.1;
-      const coronaPulse = 1.0 + Math.sin(elapsedTime * 2.2) * 0.06;
-      eclipseMesh.scale.set(coronaPulse, coronaPulse, 1);
+      // Rotate Rings
+      ringMesh.rotation.z += delta * 0.05;
+      haloRingMesh.rotation.z += delta * 0.03;
 
-      // Update Orbiting Asteroids in the Belt
-      for (const ast of asteroids) {
-        ast.angle += ast.speed * delta;
-        ast.speed = Math.max(0.2, ast.speed * 0.995); // return to normal orbit speed
-
-        const cosA = Math.cos(ast.angle);
-        const sinA = Math.sin(ast.angle);
-
-        const x = cosA * ast.radius;
-        const z = sinA * ast.radius;
-        const y = Math.sin(ast.angle * 2) * (ast.radius * 0.15) + ast.baseY;
-
-        // Apply belt tilt
-        ast.mesh.position.set(x, y * Math.cos(ast.tilt) - z * Math.sin(ast.tilt), z * Math.cos(ast.tilt) + y * Math.sin(ast.tilt));
-
-        ast.mesh.rotation.x += ast.rotSpeed.x;
-        ast.mesh.rotation.y += ast.rotSpeed.y;
-        ast.mesh.rotation.z += ast.rotSpeed.z;
-      }
-
-      // Update Flare Shockwave
-      if (flareActive) {
-        flareScale += 60.0 * delta;
-        flareMesh.scale.set(flareScale, flareScale, 1);
-        flareMat.opacity = Math.max(0, 0.95 - flareScale / 85.0);
-        if (flareScale >= 85.0) {
-          flareActive = false;
+      // Update Shockwave Ripple
+      if (shockwaveActive) {
+        shockwaveScale += 62.0 * delta;
+        shockwaveMesh.scale.set(shockwaveScale, shockwaveScale, 1);
+        shockwaveMat.opacity = Math.max(0, 0.95 - shockwaveScale / 85.0);
+        if (shockwaveScale >= 85.0) {
+          shockwaveActive = false;
         }
       }
 
-      // Update Swirling Cosmic Dust & Starlight Field (Interactive fluid wake)
-      const sPosAttr = starGeo.attributes.position as THREE.BufferAttribute;
-      const sPosArr = sPosAttr.array as Float32Array;
+      // Update Orbiting Ring Particles in Keplerian Orbits
+      const rPosAttr = ringParticleGeo.attributes.position as THREE.BufferAttribute;
+      const rPosArr = rPosAttr.array as Float32Array;
 
-      for (let s = 0; s < starCount; s++) {
-        const s3 = s * 3;
-        const spd = starSpeeds[s];
+      // Matrix transforms for ring plane
+      const cosX = Math.cos(Math.PI / 2.35);
+      const sinX = Math.sin(Math.PI / 2.35);
+      const cosY = Math.cos(-Math.PI / 8);
+      const sinY = Math.sin(-Math.PI / 8);
 
-        // Ambient gentle drift
-        const oscY = Math.sin(elapsedTime * spd + s) * 2.0;
-        const oscX = Math.cos(elapsedTime * (spd * 0.8) + s) * 1.6;
+      for (let p = 0; p < ringParticleCount; p++) {
+        const p3 = p * 3;
+        ringParticleAngles[p] += ringParticleSpeeds[p] * delta * 0.8;
+        const angle = ringParticleAngles[p];
+        const r = ringParticleRadii[p];
+        const h = ringParticleHeights[p];
 
-        let px = starBasePos[s3] + oscX;
-        let py = starBasePos[s3 + 1] + oscY;
-        let pz = starBasePos[s3 + 2];
+        const rx = Math.cos(angle) * r;
+        const rz = Math.sin(angle) * r;
+        const ry = h;
 
-        // Cursor Repulsion & Swirl Wake
-        const dx = px - mouse3D.x;
-        const dy = py - mouse3D.y;
-        const dz = pz - mouse3D.z;
+        // Rotate into inclined ring plane
+        const y1 = ry * cosX - rz * sinX;
+        const z1 = ry * sinX + rz * cosX;
+        let px = rx * cosY + z1 * sinY;
+        let py = y1;
+        let pz = -rx * sinY + z1 * cosY;
+
+        // Interactive cursor repulsion in ring space
+        const worldX = px + centerPlanetGroup.position.x;
+        const worldY = py + centerPlanetGroup.position.y;
+        const worldZ = pz + centerPlanetGroup.position.z;
+
+        const dx = worldX - mouse3D.x;
+        const dy = worldY - mouse3D.y;
+        const dz = worldZ - mouse3D.z;
         const distSq = dx * dx + dy * dy + dz * dz;
 
-        if (distSq < 1900 && distSq > 0.001) {
+        if (distSq < 1600 && distSq > 0.001) {
           const dist = Math.sqrt(distSq);
-          const force = (1 - dist / 43.0) * 18.0;
+          const force = (1 - dist / 40.0) * 14.0;
           px += (dx / dist) * force;
           py += (dy / dist) * force;
-          // Swirl around pointer
-          px += (-dy / dist) * (force * 0.45);
-          py += (dx / dist) * (force * 0.45);
-          pz += (dz / dist) * force * 0.3;
+          pz += (dz / dist) * force * 0.4;
         }
 
-        sPosArr[s3] = px;
-        sPosArr[s3 + 1] = py;
-        sPosArr[s3 + 2] = pz;
+        rPosArr[p3] = px;
+        rPosArr[p3 + 1] = py;
+        rPosArr[p3 + 2] = pz;
       }
-      sPosAttr.needsUpdate = true;
+      rPosAttr.needsUpdate = true;
+
+      // Stardust slow ambient drift
+      stardustField.rotation.y += delta * 0.015;
 
       renderer.render(scene, camera);
     };
 
     animId = requestAnimationFrame(animate);
 
-    // 13. Resource Cleanup
+    // 14. Resource Cleanup
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('pointermove', onPointerMove);
@@ -700,35 +643,23 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
       planetGeo.dispose();
       planetMat.dispose();
-      atmoGeo.dispose();
-      atmoMat.dispose();
+      atmosphereGeo.dispose();
+      atmosphereMat.dispose();
+      cloudGeo.dispose();
+      cloudMat.dispose();
       ringGeo.dispose();
       ringMat.dispose();
-      moonGeo.dispose();
-      moonMat.dispose();
-      moonAtmoGeo.dispose();
-      moonAtmoMat.dispose();
-      distantGeo.dispose();
-      distantMat.dispose();
-      eclipseGeo.dispose();
-      eclipseMat.dispose();
-      starGeo.dispose();
-      starMat.dispose();
-      flareGeo.dispose();
-      flareMat.dispose();
-      gasGiantTexture.dispose();
+      haloRingGeo.dispose();
+      haloRingMat.dispose();
+      ringParticleGeo.dispose();
+      ringParticleMat.dispose();
+      stardustGeo.dispose();
+      stardustMat.dispose();
+      shockwaveGeo.dispose();
+      shockwaveMat.dispose();
+      planetTexture.dispose();
       ringTexture.dispose();
-      moonTexture.dispose();
-      starSprite.dispose();
-
-      for (const ast of asteroids) {
-        ast.mesh.geometry.dispose();
-        if (Array.isArray(ast.mesh.material)) {
-          ast.mesh.material.forEach((m) => m.dispose());
-        } else {
-          ast.mesh.material.dispose();
-        }
-      }
+      particleSprite.dispose();
 
       renderer.dispose();
     };
@@ -748,9 +679,9 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       ref={containerRef}
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
       style={{
-        // Deep space cosmic gradient with atmospheric vignette ensuring 100% crystal text visibility
+        // Deep moody cosmic abyss gradient with central planetary depth
         background:
-          'radial-gradient(ellipse at 75% 20%, #110726 0%, #06030f 50%, #030107 100%)',
+          'radial-gradient(ellipse at 50% 35%, #0f0722 0%, #06030e 55%, #020106 100%)',
       }}
       aria-hidden="true"
     >
@@ -759,16 +690,16 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse at 35% 45%, rgba(4, 2, 10, 0.65) 0%, rgba(3, 2, 7, 0.3) 55%, rgba(2, 1, 5, 0.85) 100%)',
+            'radial-gradient(ellipse at 50% 40%, rgba(4, 2, 10, 0.62) 0%, rgba(3, 2, 7, 0.25) 50%, rgba(2, 1, 5, 0.85) 100%)',
         }}
       />
 
-      {/* Atmospheric cosmic nebula dust / starry rim glow */}
+      {/* Atmospheric planetary cosmic rim glow */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-30 mix-blend-screen"
+        className="absolute inset-0 pointer-events-none opacity-25 mix-blend-screen"
         style={{
           background:
-            'radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.18) 0%, transparent 60%), radial-gradient(circle at 15% 75%, rgba(56, 189, 248, 0.12) 0%, transparent 55%)',
+            'radial-gradient(circle at 50% 30%, rgba(139, 92, 246, 0.2) 0%, transparent 60%)',
         }}
       />
     </div>
