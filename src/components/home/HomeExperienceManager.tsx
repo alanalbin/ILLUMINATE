@@ -22,7 +22,7 @@ export default function HomeExperienceManager() {
         onComplete={() => setPlayIntro(false)}
       />
 
-      {/* 3 Layered Background Animations with Interactive Dock & Mouse Physics */}
+      {/* Interactive 3D Cosmic Constellation Background with Pointer Physics */}
       <BackgroundCanvas3D onReplayIntro={handleReplayIntro} />
     </>
   );

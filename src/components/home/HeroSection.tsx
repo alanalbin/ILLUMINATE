@@ -157,11 +157,11 @@ export default function HeroSection({ event }: HeroSectionProps) {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
                     </span>
                     <Zap className="w-3 h-3 text-amber-400" />
-                    Workshop Date: 21 Oct 2026
+                    Workshop Date: 22 Oct 2026
                   </span>
                   <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline at KMCT Campus</p>
                 </div>
-                <EventCountdown targetDate={event.date || event.registrationClosingDate || '2026-10-21T23:59:59+05:30'} />
+                <EventCountdown targetDate={event.date || event.registrationClosingDate || '2026-10-22T23:59:59+05:30'} />
               </div>
             </motion.div>
 

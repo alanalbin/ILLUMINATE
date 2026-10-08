@@ -28,7 +28,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col relative bg-transparent overflow-x-hidden">
-      {/* 3D Beam Intro Loading Screen & 3 Layered Background Animations with Interactive Controls */}
+      {/* 3D Beam Intro Loading Screen & Interactive Cosmic Background */}
       <HomeExperienceManager />
 
       {/* Hero Section */}

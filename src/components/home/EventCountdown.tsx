@@ -27,17 +27,17 @@ export function getEffectiveTargetTimestamp(targetDate?: string | Date | null): 
     return parsed;
   }
 
-  // Authoritative Workshop Date: 21st of October 2026 (23:59:59 IST)
-  const october21Target = new Date('2026-10-21T23:59:59+05:30').getTime();
-  if (october21Target > Date.now()) {
+  // Authoritative Workshop Date: 22nd of October 2026 (23:59:59 IST)
+  const october22Target = new Date('2026-10-22T23:59:59+05:30').getTime();
+  if (october22Target > Date.now()) {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('illuminate_countdown_target', october21Target.toString());
+        localStorage.setItem('illuminate_countdown_target', october22Target.toString());
       } catch {
         // Storage access blocked or restricted
       }
     }
-    return october21Target;
+    return october22Target;
   }
 
   // Fallback to persistent deadline in localStorage so it doesn't reset on every refresh

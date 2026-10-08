@@ -22,7 +22,7 @@ describe('Event Configuration & Safety Rules', () => {
   });
 
   it('specifies confirmed workshop date and coordinator contact', () => {
-    expect(DEFAULT_EVENT_CONFIG.date).toBe('21 October 2026');
+    expect(DEFAULT_EVENT_CONFIG.date).toBe('22 October 2026');
     expect(DEFAULT_EVENT_CONFIG.localCoordinator?.name).toBe('Alan Albin');
     expect(DEFAULT_EVENT_CONFIG.localCoordinator?.phone).toBe('8848563266');
   });
