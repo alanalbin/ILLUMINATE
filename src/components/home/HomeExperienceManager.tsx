@@ -22,7 +22,7 @@ export default function HomeExperienceManager() {
         onComplete={() => setPlayIntro(false)}
       />
 
-      {/* Interactive 3D Cosmic Constellation Background with Pointer Physics */}
+      {/* Interactive 3D Black Hole Singularity Background */}
       <BackgroundCanvas3D onReplayIntro={handleReplayIntro} />
     </>
   );
