@@ -7,12 +7,24 @@ interface BackgroundCanvas3DProps {
   onReplayIntro?: () => void;
 }
 
+interface FloatingPrism {
+  group: THREE.Group;
+  mesh: THREE.Mesh;
+  edges: THREE.LineSegments;
+  basePos: THREE.Vector3;
+  velocity: THREE.Vector3;
+  rotSpeed: THREE.Vector3;
+  floatSpeed: number;
+  floatAmp: number;
+  phase: number;
+}
+
 export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(true);
 
   useEffect(() => {
-    // 1. WebGL Support Verification
+    // 1. WebGL Verification
     try {
       const testCanvas = document.createElement('canvas');
       const gl =
@@ -33,17 +45,17 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
 
     const isMobile = window.innerWidth < 768;
 
-    // 2. Scene, Camera & Deep Cosmic Fog
+    // 2. Scene, Camera & Deep Atmospheric Fog
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x030208, 0.0022);
+    scene.fog = new THREE.FogExp2(0x04020a, 0.0024);
 
     const camera = new THREE.PerspectiveCamera(
-      50,
+      52,
       window.innerWidth / window.innerHeight,
       1,
-      1400
+      1200
     );
-    camera.position.set(0, 6, 120);
+    camera.position.set(0, 4, 118);
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -54,7 +66,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.35;
+    renderer.toneMappingExposure = 1.25;
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
@@ -63,11 +75,28 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.domElement.style.pointerEvents = 'none';
     container.appendChild(renderer.domElement);
 
-    // Root 3D group for black hole system (allows collective tilt & spin)
-    const blackHoleGroup = new THREE.Group();
-    scene.add(blackHoleGroup);
+    // Root Gimbal Group for central quantum artifact
+    const quantumNexusGroup = new THREE.Group();
+    scene.add(quantumNexusGroup);
 
-    // 3. High-Quality Glowing Star Sprite Texture
+    // 3. Dynamic 3D Lights
+    const ambientLight = new THREE.AmbientLight(0x0e061e, 2.0);
+    scene.add(ambientLight);
+
+    const coreLight = new THREE.PointLight(0x00f0ff, 4.0, 160);
+    coreLight.position.set(0, 0, 0);
+    quantumNexusGroup.add(coreLight);
+
+    // Dynamic 3D Cursor Light that follows pointer in 3D world space
+    const cursorLight = new THREE.PointLight(0xa855f7, 4.2, 180);
+    cursorLight.position.set(0, 0, 30);
+    scene.add(cursorLight);
+
+    const amberFillLight = new THREE.PointLight(0xf59e0b, 2.5, 200);
+    amberFillLight.position.set(50, -35, -20);
+    scene.add(amberFillLight);
+
+    // 4. Custom Luminous Particle Texture Sprite
     const pCanvas = document.createElement('canvas');
     pCanvas.width = 64;
     pCanvas.height = 64;
@@ -75,8 +104,8 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     if (pCtx) {
       const grad = pCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.18, 'rgba(235, 245, 255, 0.95)');
-      grad.addColorStop(0.42, 'rgba(168, 85, 247, 0.55)');
+      grad.addColorStop(0.18, 'rgba(216, 235, 255, 0.95)');
+      grad.addColorStop(0.44, 'rgba(168, 85, 247, 0.55)');
       grad.addColorStop(0.72, 'rgba(6, 182, 212, 0.2)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       pCtx.fillStyle = grad;
@@ -84,194 +113,163 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     }
     const particleTexture = new THREE.CanvasTexture(pCanvas);
 
-    // 4. The Event Horizon (Pure Black Void Singularity)
-    // Absolute pitch-black sphere that absorbs all light and occludes objects behind it
-    const horizonRadius = 15.2;
-    const horizonGeo = new THREE.SphereGeometry(horizonRadius, 64, 64);
-    const horizonMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      depthWrite: true,
-    });
-    const horizonMesh = new THREE.Mesh(horizonGeo, horizonMat);
-    blackHoleGroup.add(horizonMesh);
+    // 5. Central Holographic Quantum Cybersphere (The Innovation Core)
+    // Multi-layer nested geodesic shell that glows and breathes
+    const sphereRadius = 13.5;
 
-    // 5. The Photon Sphere / Inner Relativistic Rings
-    // Intense glowing razor-sharp rings hugging the event horizon
-    const photonRingGeo1 = new THREE.RingGeometry(15.1, 16.6, 128);
-    const photonRingMat1 = new THREE.MeshBasicMaterial({
+    // Inner glowing core sphere
+    const innerCoreGeo = new THREE.SphereGeometry(6.5, 32, 32);
+    const innerCoreMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
-      side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.75,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
     });
-    const photonRing1 = new THREE.Mesh(photonRingGeo1, photonRingMat1);
-    photonRing1.rotation.x = Math.PI / 2.3;
-    blackHoleGroup.add(photonRing1);
+    const innerCoreMesh = new THREE.Mesh(innerCoreGeo, innerCoreMat);
+    quantumNexusGroup.add(innerCoreMesh);
 
-    const photonRingGeo2 = new THREE.RingGeometry(16.5, 19.8, 128);
-    const photonRingMat2 = new THREE.MeshBasicMaterial({
-      color: 0xa855f7,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.55,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const photonRing2 = new THREE.Mesh(photonRingGeo2, photonRingMat2);
-    photonRing2.rotation.x = Math.PI / 2.3;
-    blackHoleGroup.add(photonRing2);
-
-    // Subtle spherical outer corona halo around event horizon
-    const coronaGeo = new THREE.RingGeometry(15.1, 18.2, 96);
-    const coronaMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      side: THREE.DoubleSide,
+    // Middle Geodesic Icosahedron Cage
+    const cageGeo = new THREE.IcosahedronGeometry(sphereRadius, 1);
+    const cageMat = new THREE.MeshStandardMaterial({
+      color: 0x0b041a,
+      roughness: 0.25,
+      metalness: 0.9,
+      wireframe: true,
       transparent: true,
       opacity: 0.65,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
     });
-    const coronaMesh = new THREE.Mesh(coronaGeo, coronaMat);
-    // Faces camera directly
-    coronaMesh.position.z = 0.1;
-    blackHoleGroup.add(coronaMesh);
+    const cageMesh = new THREE.Mesh(cageGeo, cageMat);
+    quantumNexusGroup.add(cageMesh);
 
-    // 6. Equatorial Accretion Disk (Swirling Superheated Plasma Particles)
-    const diskParticleCount = isMobile ? 2200 : 4500;
-    const diskGeo = new THREE.BufferGeometry();
-    const diskPositions = new Float32Array(diskParticleCount * 3);
-    const diskColors = new Float32Array(diskParticleCount * 3);
+    // Outer Holographic Longitude/Latitude Cyber Wireframe Sphere
+    const cyberGlobeGeo = new THREE.SphereGeometry(sphereRadius * 1.25, 24, 16);
+    const cyberGlobeMat = new THREE.MeshBasicMaterial({
+      color: 0xa855f7,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+    });
+    const cyberGlobeMesh = new THREE.Mesh(cyberGlobeGeo, cyberGlobeMat);
+    quantumNexusGroup.add(cyberGlobeMesh);
 
-    // Particle state tracking
-    const diskRadii = new Float32Array(diskParticleCount);
-    const diskAngles = new Float32Array(diskParticleCount);
-    const diskSpeeds = new Float32Array(diskParticleCount);
-    const diskHeights = new Float32Array(diskParticleCount);
-    const diskInfallSpeeds = new Float32Array(diskParticleCount);
+    // 6. Three Concentric 3D Gyroscopic Quantum Rings
+    // Ring 1: Neon Cyan inner orbital ring
+    const ringGeo1 = new THREE.TorusGeometry(22, 0.35, 12, 90);
+    const ringMat1 = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+    });
+    const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
+    ringMesh1.rotation.x = Math.PI / 4;
+    quantumNexusGroup.add(ringMesh1);
 
-    const minRadius = 16.5;
-    const maxRadius = 78.0;
+    // Ring 2: Electric Violet middle orbital ring (offset angle)
+    const ringGeo2 = new THREE.TorusGeometry(28, 0.4, 12, 100);
+    const ringMat2 = new THREE.MeshBasicMaterial({
+      color: 0xa855f7,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
+    });
+    const ringMesh2 = new THREE.Mesh(ringGeo2, ringMat2);
+    ringMesh2.rotation.x = -Math.PI / 3;
+    ringMesh2.rotation.y = Math.PI / 6;
+    quantumNexusGroup.add(ringMesh2);
 
-    for (let i = 0; i < diskParticleCount; i++) {
+    // Ring 3: Amber Gold outer celestial ring
+    const ringGeo3 = new THREE.TorusGeometry(35, 0.45, 12, 110);
+    const ringMat3 = new THREE.MeshBasicMaterial({
+      color: 0xf59e0b,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+    });
+    const ringMesh3 = new THREE.Mesh(ringGeo3, ringMat3);
+    ringMesh3.rotation.y = Math.PI / 2.5;
+    quantumNexusGroup.add(ringMesh3);
+
+    // Orbiting Venture Data Nodes traveling along Ring 1 & Ring 2
+    const satelliteCount = 6;
+    const satellites: Array<{ mesh: THREE.Mesh; ringIndex: number; speed: number; angle: number; radius: number }> = [];
+
+    for (let s = 0; s < satelliteCount; s++) {
+      const satGeo = new THREE.OctahedronGeometry(1.2, 0);
+      const satMat = new THREE.MeshBasicMaterial({
+        color: s % 2 === 0 ? 0x00f0ff : 0xf59e0b,
+        wireframe: true,
+      });
+      const satMesh = new THREE.Mesh(satGeo, satMat);
+      quantumNexusGroup.add(satMesh);
+
+      satellites.push({
+        mesh: satMesh,
+        ringIndex: s % 3,
+        speed: 0.8 + Math.random() * 0.6,
+        angle: (s / satelliteCount) * Math.PI * 2,
+        radius: s % 3 === 0 ? 22 : s % 3 === 1 ? 28 : 35,
+      });
+    }
+
+    // 7. Swirling 3D Fluid Particle Torus (Cosmic Quantum Stream)
+    const particleCount = isMobile ? 1800 : 3600;
+    const particleGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const baseAngles = new Float32Array(particleCount);
+    const baseRadii = new Float32Array(particleCount);
+    const speeds = new Float32Array(particleCount);
+    const verticalPhases = new Float32Array(particleCount);
+    const verticalAmps = new Float32Array(particleCount);
+
+    const minR = 26;
+    const maxR = 92;
+
+    for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3;
-
-      // Concentration distribution: more dense near the event horizon
-      const u = Math.random();
-      const radius = minRadius + Math.pow(u, 1.8) * (maxRadius - minRadius);
       const angle = Math.random() * Math.PI * 2;
+      const u = Math.random();
+      const r = minR + Math.pow(u, 1.4) * (maxR - minR);
 
-      // Keplerian differential rotation: v ~ 1 / sqrt(r)
-      const speed = (0.75 / Math.sqrt(radius)) * (0.85 + Math.random() * 0.3);
-      // Vertical flare thickness increases toward outer edge
-      const height = (Math.random() - 0.5) * (1.2 + (radius / maxRadius) * 4.5);
+      baseAngles[i] = angle;
+      baseRadii[i] = r;
+      speeds[i] = (0.35 / Math.sqrt(r)) * (0.8 + Math.random() * 0.4);
+      verticalPhases[i] = Math.random() * Math.PI * 2;
+      verticalAmps[i] = 1.5 + (r / maxR) * 6.0;
 
-      diskRadii[i] = radius;
-      diskAngles[i] = angle;
-      diskSpeeds[i] = speed;
-      diskHeights[i] = height;
-      diskInfallSpeeds[i] = 0.02 + Math.random() * 0.04;
+      const y = Math.sin(verticalPhases[i]) * verticalAmps[i];
+      const x = Math.cos(angle) * r;
+      const z = Math.sin(angle) * r;
 
-      const x = Math.cos(angle) * radius;
-      const y = height;
-      const z = Math.sin(angle) * radius;
+      positions[i3] = x;
+      positions[i3 + 1] = y;
+      positions[i3 + 2] = z;
 
-      diskPositions[i3] = x;
-      diskPositions[i3 + 1] = y;
-      diskPositions[i3 + 2] = z;
-
-      // Radial color grading:
-      // Inner edge: Incandescent White / Electric Cyan (superhot)
-      // Middle: High-energy Violet / Magenta
-      // Outer rim: Radiant Amber Gold / Cosmic Plasma
-      const t = (radius - minRadius) / (maxRadius - minRadius);
+      // Color gradation: Cyan -> Neon Violet -> Amber Starlight
+      const t = (r - minR) / (maxR - minR);
       let col = new THREE.Color();
-
-      if (t < 0.2) {
-        col.lerpColors(new THREE.Color(0xffffff), new THREE.Color(0x00f0ff), t / 0.2);
-      } else if (t < 0.6) {
-        col.lerpColors(new THREE.Color(0x00f0ff), new THREE.Color(0xa855f7), (t - 0.2) / 0.4);
+      if (t < 0.35) {
+        col.lerpColors(new THREE.Color(0x00f0ff), new THREE.Color(0xa855f7), t / 0.35);
       } else {
-        col.lerpColors(new THREE.Color(0xa855f7), new THREE.Color(0xf59e0b), (t - 0.6) / 0.4);
+        col.lerpColors(new THREE.Color(0xa855f7), new THREE.Color(0xf59e0b), (t - 0.35) / 0.65);
       }
 
-      diskColors[i3] = col.r;
-      diskColors[i3 + 1] = col.g;
-      diskColors[i3 + 2] = col.b;
+      colors[i3] = col.r;
+      colors[i3 + 1] = col.g;
+      colors[i3 + 2] = col.b;
     }
 
-    diskGeo.setAttribute('position', new THREE.BufferAttribute(diskPositions, 3));
-    diskGeo.setAttribute('color', new THREE.BufferAttribute(diskColors, 3));
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    const diskMat = new THREE.PointsMaterial({
+    const particleMat = new THREE.PointsMaterial({
       size: isMobile ? 3.4 : 4.0,
-      map: particleTexture,
-      transparent: true,
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      sizeAttenuation: true,
-      opacity: 0.9,
-    });
-
-    const accretionDisk = new THREE.Points(diskGeo, diskMat);
-    accretionDisk.rotation.x = Math.PI / 2.3;
-    blackHoleGroup.add(accretionDisk);
-
-    // 7. Gravitational Lensing Light Halo (The Iconic Interstellar Upper/Lower Light Arc)
-    // Light from the back of the accretion disk gravitationally bent over the event horizon
-    const haloParticleCount = isMobile ? 900 : 1800;
-    const haloGeo = new THREE.BufferGeometry();
-    const haloPositions = new Float32Array(haloParticleCount * 3);
-    const haloColors = new Float32Array(haloParticleCount * 3);
-
-    const haloAngles = new Float32Array(haloParticleCount);
-    const haloRadii = new Float32Array(haloParticleCount);
-    const haloSpeeds = new Float32Array(haloParticleCount);
-    const haloIsUpper = new Uint8Array(haloParticleCount);
-
-    for (let i = 0; i < haloParticleCount; i++) {
-      const i3 = i * 3;
-      const isUpper = Math.random() > 0.45 ? 1 : 0;
-      haloIsUpper[i] = isUpper;
-
-      // Arc spans over the top/bottom behind the horizon
-      const angle = isUpper
-        ? 0.1 + Math.random() * (Math.PI - 0.2)
-        : Math.PI + 0.1 + Math.random() * (Math.PI - 0.2);
-
-      const r = 16.5 + Math.pow(Math.random(), 1.5) * 26.0;
-      haloAngles[i] = angle;
-      haloRadii[i] = r;
-      haloSpeeds[i] = (0.55 / Math.sqrt(r)) * (0.8 + Math.random() * 0.4);
-
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      const z = (Math.random() - 0.5) * 6.0 - 5.0; // Behind black hole equator
-
-      haloPositions[i3] = x;
-      haloPositions[i3 + 1] = y;
-      haloPositions[i3 + 2] = z;
-
-      // Glowing cyan & violet lens light
-      const t = (r - 16.5) / 26.0;
-      const col = new THREE.Color().lerpColors(
-        new THREE.Color(0x00f0ff),
-        new THREE.Color(0xa855f7),
-        t
-      );
-
-      haloColors[i3] = col.r;
-      haloColors[i3 + 1] = col.g;
-      haloColors[i3 + 2] = col.b;
-    }
-
-    haloGeo.setAttribute('position', new THREE.BufferAttribute(haloPositions, 3));
-    haloGeo.setAttribute('color', new THREE.BufferAttribute(haloColors, 3));
-
-    const haloMat = new THREE.PointsMaterial({
-      size: isMobile ? 3.6 : 4.4,
       map: particleTexture,
       transparent: true,
       vertexColors: true,
@@ -281,82 +279,79 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       opacity: 0.85,
     });
 
-    const lensingHalo = new THREE.Points(haloGeo, haloMat);
-    blackHoleGroup.add(lensingHalo);
+    const particleCloud = new THREE.Points(particleGeo, particleMat);
+    particleCloud.rotation.x = Math.PI / 2.3;
+    quantumNexusGroup.add(particleCloud);
 
-    // 8. Relativistic Polar Jet Filaments (Subtle high-energy plasma along rotation axis)
-    const jetCount = isMobile ? 120 : 260;
-    const jetGeo = new THREE.BufferGeometry();
-    const jetPositions = new Float32Array(jetCount * 3);
-    const jetColors = new Float32Array(jetCount * 3);
+    // 8. Floating Kinetic Faceted 3D Crystals in the Periphery
+    const crystals: FloatingPrism[] = [];
+    const crystalCount = isMobile ? 6 : 12;
 
-    for (let i = 0; i < jetCount; i++) {
-      const i3 = i * 3;
-      const dir = i % 2 === 0 ? 1 : -1;
-      const dist = 14 + Math.random() * 85;
-      const spread = (dist / 85) * 5.0;
+    const crystalGeos = [
+      () => new THREE.OctahedronGeometry(3.6, 0),
+      () => new THREE.IcosahedronGeometry(3.8, 0),
+      () => new THREE.DodecahedronGeometry(3.2, 0),
+      () => new THREE.TorusGeometry(3.2, 0.6, 8, 20),
+    ];
 
-      jetPositions[i3] = (Math.random() - 0.5) * spread;
-      jetPositions[i3 + 1] = dir * dist;
-      jetPositions[i3 + 2] = (Math.random() - 0.5) * spread;
+    const crystalColors = [0x00f0ff, 0xa855f7, 0x38bdf8, 0xf59e0b];
 
-      const col = new THREE.Color(0x00f0ff).lerp(new THREE.Color(0xffffff), 0.5);
-      jetColors[i3] = col.r;
-      jetColors[i3 + 1] = col.g;
-      jetColors[i3 + 2] = col.b;
+    for (let c = 0; c < crystalCount; c++) {
+      const geo = crystalGeos[c % crystalGeos.length]();
+      const col = crystalColors[c % crystalColors.length];
+
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x090514,
+        roughness: 0.18,
+        metalness: 0.92,
+        transparent: true,
+        opacity: 0.85,
+      });
+
+      const mesh = new THREE.Mesh(geo, mat);
+
+      const edgeGeo = new THREE.EdgesGeometry(geo);
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: col,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
+      });
+      const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+
+      const group = new THREE.Group();
+      group.add(mesh);
+      group.add(edges);
+
+      // Position toward peripheral perimeter so center text is unobstructed
+      const angle = (c / crystalCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      const radius = 52 + Math.random() * 38;
+      const posX = Math.cos(angle) * radius * 1.45;
+      const posY = Math.sin(angle) * (radius * 0.65) + (Math.random() - 0.5) * 20;
+      const posZ = -10 + (Math.random() - 0.5) * 50;
+
+      group.position.set(posX, posY, posZ);
+      scene.add(group);
+
+      crystals.push({
+        group,
+        mesh,
+        edges,
+        basePos: new THREE.Vector3(posX, posY, posZ),
+        velocity: new THREE.Vector3(0, 0, 0),
+        rotSpeed: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.015,
+          (Math.random() - 0.5) * 0.018,
+          (Math.random() - 0.5) * 0.012
+        ),
+        floatSpeed: 0.5 + Math.random() * 0.5,
+        floatAmp: 2.2 + Math.random() * 2.8,
+        phase: Math.random() * Math.PI * 2,
+      });
     }
 
-    jetGeo.setAttribute('position', new THREE.BufferAttribute(jetPositions, 3));
-    jetGeo.setAttribute('color', new THREE.BufferAttribute(jetColors, 3));
-
-    const jetMat = new THREE.PointsMaterial({
-      size: 2.8,
-      map: particleTexture,
-      transparent: true,
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      opacity: 0.55,
-    });
-    const polarJets = new THREE.Points(jetGeo, jetMat);
-    polarJets.rotation.x = Math.PI / 2.3;
-    blackHoleGroup.add(polarJets);
-
-    // 9. Deep Field Ambient Stars (Subtle background starfield)
-    const starCount = isMobile ? 260 : 600;
-    const starGeo = new THREE.BufferGeometry();
-    const starPositions = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
-
-    for (let i = 0; i < starCount; i++) {
-      const i3 = i * 3;
-      starPositions[i3] = (Math.random() - 0.5) * 360;
-      starPositions[i3 + 1] = (Math.random() - 0.5) * 260;
-      starPositions[i3 + 2] = -50 - Math.random() * 180;
-
-      const isGold = Math.random() > 0.6;
-      starColors[i3] = isGold ? 0.96 : 0.45;
-      starColors[i3 + 1] = isGold ? 0.75 : 0.65;
-      starColors[i3 + 2] = isGold ? 0.35 : 0.98;
-    }
-
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-
-    const starMat = new THREE.PointsMaterial({
-      size: 2.2,
-      map: particleTexture,
-      transparent: true,
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      opacity: 0.6,
-    });
-    const backgroundStars = new THREE.Points(starGeo, starMat);
-    scene.add(backgroundStars);
-
-    // 10. Singularity Shockwave Ring (Click trigger)
-    const shockwaveGeo = new THREE.RingGeometry(15.2, 16.5, 96);
+    // 9. Interactive Holographic Energy Shockwave (Click Burst)
+    const shockwaveGeo = new THREE.RingGeometry(1, 3.5, 64);
     const shockwaveMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       side: THREE.DoubleSide,
@@ -367,12 +362,12 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     });
     const shockwaveMesh = new THREE.Mesh(shockwaveGeo, shockwaveMat);
     shockwaveMesh.rotation.x = Math.PI / 2.3;
-    blackHoleGroup.add(shockwaveMesh);
+    quantumNexusGroup.add(shockwaveMesh);
 
     let shockwaveActive = false;
-    let shockwaveRadius = 15.2;
+    let shockwaveScale = 1.0;
 
-    // 11. Interactive Mouse & Tracking State
+    // 10. Pointer Tracking & 3D Raycasting
     const mouse = new THREE.Vector2(0, 0);
     const targetMouse = new THREE.Vector2(0, 0);
     const raycaster = new THREE.Raycaster();
@@ -391,11 +386,23 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     };
 
     const onClick = () => {
-      // Trigger relativistic Hawking flare / gravitational shockwave
+      // Trigger holographic resonance shockwave
       shockwaveActive = true;
-      shockwaveRadius = 15.2;
-      shockwaveMat.opacity = 0.95;
-      photonRingMat1.opacity = 1.0;
+      shockwaveScale = 1.0;
+      shockwaveMat.opacity = 1.0;
+
+      // Energy flash on core light
+      coreLight.intensity = 8.0;
+
+      // Add angular momentum burst to orbital rings and crystals
+      ringMesh1.rotation.z += 0.4;
+      ringMesh2.rotation.z -= 0.5;
+      ringMesh3.rotation.z += 0.3;
+
+      for (const crystal of crystals) {
+        crystal.rotSpeed.x += (Math.random() - 0.5) * 0.06;
+        crystal.rotSpeed.y += (Math.random() - 0.5) * 0.06;
+      }
     };
 
     const onScroll = () => {
@@ -414,7 +421,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
 
-    // 12. 60FPS Relativistic Simulation Loop
+    // 11. 60FPS Quantum Simulation Loop
     const clock = new THREE.Clock();
     let animId = 0;
 
@@ -433,128 +440,142 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       raycaster.setFromCamera(mouse, camera);
       raycaster.ray.intersectPlane(planeZ, mouse3D);
 
-      // Camera Parallax
-      const targetCamX = mouse.x * 20;
-      const targetCamY = mouse.y * 12 - (scrollY * 0.02);
+      // Cursor light smoothly tracks mouse coordinates
+      cursorLight.position.set(mouse3D.x, mouse3D.y, mouse3D.z + 18);
+      coreLight.intensity = Math.max(3.8, coreLight.intensity * 0.96);
+
+      // Smooth 3D Camera Parallax Tilt
+      const targetCamX = mouse.x * 18;
+      const targetCamY = mouse.y * 11 - (scrollY * 0.02);
       camera.position.x += (targetCamX - camera.position.x) * 0.04;
       camera.position.y += (targetCamY - camera.position.y) * 0.04;
-      camera.lookAt(0, -(scrollY * 0.015), 0);
+      camera.lookAt(0, -(scrollY * 0.014), 0);
 
-      // Smooth interactive Black Hole Group Tilt based on cursor
-      // Warps the entire spacetime system toward pointer
-      const targetRotX = (mouse.y * 0.28) + (Math.sin(elapsedTime * 0.3) * 0.04);
-      const targetRotY = (mouse.x * 0.38) + (elapsedTime * 0.06);
-      blackHoleGroup.rotation.x += (targetRotX - blackHoleGroup.rotation.x) * 0.05;
-      blackHoleGroup.rotation.y += (targetRotY - blackHoleGroup.rotation.y) * 0.05;
+      // Interactive Gyroscopic Gimbal Tilt: warps whole system toward pointer
+      const targetTiltX = mouse.y * 0.32 + Math.sin(elapsedTime * 0.4) * 0.05;
+      const targetTiltY = mouse.x * 0.42 + elapsedTime * 0.08;
+      quantumNexusGroup.rotation.x += (targetTiltX - quantumNexusGroup.rotation.x) * 0.05;
+      quantumNexusGroup.rotation.y += (targetTiltY - quantumNexusGroup.rotation.y) * 0.05;
 
-      // Photon Rings subtle breath
-      const pulse = 1.0 + Math.sin(elapsedTime * 3.5) * 0.04;
-      coronaMesh.scale.set(pulse, pulse, 1);
-      photonRingMat1.opacity = Math.max(0.75, photonRingMat1.opacity * 0.98);
+      // Rotate Geodesic Shells
+      cageMesh.rotation.y += delta * 0.3;
+      cageMesh.rotation.x += delta * 0.15;
+      cyberGlobeMesh.rotation.y -= delta * 0.25;
+      cyberGlobeMesh.rotation.z += delta * 0.1;
 
-      // Update Singularity Shockwave
+      // Core breathing pulse
+      const breathe = 1.0 + Math.sin(elapsedTime * 2.8) * 0.08;
+      innerCoreMesh.scale.set(breathe, breathe, breathe);
+
+      // Gyroscopic Ring Rotations
+      ringMesh1.rotation.z += delta * 0.55;
+      ringMesh2.rotation.z -= delta * 0.45;
+      ringMesh3.rotation.z += delta * 0.35;
+
+      // Update Satellites along rings
+      for (const sat of satellites) {
+        sat.angle += sat.speed * delta;
+        const x = Math.cos(sat.angle) * sat.radius;
+        const y = Math.sin(sat.angle) * sat.radius * 0.3;
+        const z = Math.sin(sat.angle) * sat.radius;
+        sat.mesh.position.set(x, y, z);
+        sat.mesh.rotation.x += delta * 2.0;
+        sat.mesh.rotation.y += delta * 2.5;
+      }
+
+      // Update Shockwave Ring
       if (shockwaveActive) {
-        shockwaveRadius += 65.0 * delta;
-        shockwaveMesh.scale.set(
-          shockwaveRadius / 15.2,
-          shockwaveRadius / 15.2,
-          1
-        );
-        shockwaveMat.opacity = Math.max(0, 1 - shockwaveRadius / 95.0);
-        if (shockwaveRadius >= 95.0) {
+        shockwaveScale += 50.0 * delta;
+        shockwaveMesh.scale.set(shockwaveScale, shockwaveScale, 1);
+        shockwaveMat.opacity = Math.max(0, 1 - shockwaveScale / 75.0);
+        if (shockwaveScale >= 75.0) {
           shockwaveActive = false;
         }
       }
 
-      // Update Equatorial Accretion Disk Simulation
-      const dPosAttr = diskGeo.attributes.position as THREE.BufferAttribute;
-      const dColAttr = diskGeo.attributes.color as THREE.BufferAttribute;
-      const dPos = dPosAttr.array as Float32Array;
-      const dCol = dColAttr.array as Float32Array;
+      // Update Swirling Fluid Particle Torus
+      const posAttr = particleGeo.attributes.position as THREE.BufferAttribute;
+      const posArr = posAttr.array as Float32Array;
 
-      for (let i = 0; i < diskParticleCount; i++) {
+      for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
+        const spd = speeds[i];
+        let angle = baseAngles[i] + spd * delta * 2.4;
+        baseAngles[i] = angle;
 
-        // Differential Keplerian orbital angular velocity
-        let spd = diskSpeeds[i];
-        let angle = diskAngles[i] + spd * delta * 2.8;
+        const r = baseRadii[i];
+        const vWave = Math.sin(elapsedTime * 1.2 + verticalPhases[i]) * verticalAmps[i];
 
-        // Gravitational infalling spiral toward event horizon
-        let r = diskRadii[i] - diskInfallSpeeds[i] * delta * 12.0;
+        let px = Math.cos(angle) * r;
+        let py = vWave;
+        let pz = Math.sin(angle) * r;
 
-        // If particle falls beyond event horizon, recycle to outer disk boundary
-        if (r < minRadius) {
-          r = maxRadius - Math.random() * 4.0;
-          angle = Math.random() * Math.PI * 2;
-          diskSpeeds[i] = (0.75 / Math.sqrt(r)) * (0.85 + Math.random() * 0.3);
+        // Interactive cursor repulsion / magnetic wake
+        const dx = px - mouse3D.x;
+        const dy = py - mouse3D.y;
+        const dz = pz - mouse3D.z;
+        const distSq = dx * dx + dy * dy + dz * dz;
+
+        if (distSq < 1600 && distSq > 0.001) {
+          const dist = Math.sqrt(distSq);
+          const force = (1 - dist / 40.0) * 16.0;
+          px += (dx / dist) * force;
+          py += (dy / dist) * force;
+          pz += (dz / dist) * force * 0.4;
         }
 
-        diskRadii[i] = r;
-        diskAngles[i] = angle;
+        posArr[i3] = px;
+        posArr[i3 + 1] = py;
+        posArr[i3 + 2] = pz;
+      }
+      posAttr.needsUpdate = true;
 
-        // Spiral arm modulation
-        const spiralPhase = angle * 2.0 - r * 0.12 + elapsedTime * 0.8;
-        const armDensity = Math.sin(spiralPhase);
-        const yOffset = diskHeights[i] + armDensity * 0.45;
+      // Update Floating Peripheral Crystals
+      for (let i = 0; i < crystals.length; i++) {
+        const crystal = crystals[i];
 
-        dPos[i3] = Math.cos(angle) * r;
-        dPos[i3 + 1] = yOffset;
-        dPos[i3 + 2] = Math.sin(angle) * r;
+        crystal.group.rotation.x += crystal.rotSpeed.x;
+        crystal.group.rotation.y += crystal.rotSpeed.y;
+        crystal.group.rotation.z += crystal.rotSpeed.z;
 
-        // Relativistic Doppler Beaming: Particles moving towards camera are boosted
-        // (x-component of velocity: -sin(angle) * r)
-        const vTowards = -Math.sin(angle);
-        const dopplerBoost = 1.0 + vTowards * 0.38;
+        crystal.rotSpeed.x *= 0.995;
+        crystal.rotSpeed.y *= 0.995;
 
-        // Base color according to current radius
-        const t = (r - minRadius) / (maxRadius - minRadius);
-        let cr = 1, cg = 1, cb = 1;
+        // Harmonic bobbing
+        const floatY = Math.sin(elapsedTime * crystal.floatSpeed + crystal.phase) * crystal.floatAmp;
+        const targetX = crystal.basePos.x;
+        const targetY = crystal.basePos.y + floatY;
+        const targetZ = crystal.basePos.z;
 
-        if (t < 0.2) {
-          cr = 0.85; cg = 0.95; cb = 1.0;
-        } else if (t < 0.6) {
-          cr = 0.45 + (t - 0.2) * 0.8;
-          cg = 0.35;
-          cb = 0.95;
-        } else {
-          cr = 0.95;
-          cg = 0.62;
-          cb = 0.18;
+        // Cursor magnetic physics
+        const dx = crystal.group.position.x - mouse3D.x;
+        const dy = crystal.group.position.y - mouse3D.y;
+        const dz = crystal.group.position.z - mouse3D.z;
+        const distSq = dx * dx + dy * dy + dz * dz;
+
+        if (distSq < 2304 && distSq > 0.001) {
+          const dist = Math.sqrt(distSq);
+          const repel = (1 - dist / 48.0) * 20.0;
+          crystal.velocity.x += (dx / dist) * repel * delta;
+          crystal.velocity.y += (dy / dist) * repel * delta;
+          crystal.velocity.z += (dz / dist) * (repel * 0.4) * delta;
         }
 
-        dCol[i3] = Math.min(1.0, cr * dopplerBoost);
-        dCol[i3 + 1] = Math.min(1.0, cg * dopplerBoost);
-        dCol[i3 + 2] = Math.min(1.0, cb * dopplerBoost);
+        // Spring return
+        crystal.velocity.x += (targetX - crystal.group.position.x) * 0.04;
+        crystal.velocity.y += (targetY - crystal.group.position.y) * 0.04;
+        crystal.velocity.z += (targetZ - crystal.group.position.z) * 0.04;
+        crystal.velocity.multiplyScalar(0.92);
+
+        crystal.group.position.add(crystal.velocity);
       }
-
-      dPosAttr.needsUpdate = true;
-      dColAttr.needsUpdate = true;
-
-      // Update Gravitational Lensing Halo (Upper & Lower bent arcs)
-      const hPosAttr = haloGeo.attributes.position as THREE.BufferAttribute;
-      const hPos = hPosAttr.array as Float32Array;
-
-      for (let i = 0; i < haloParticleCount; i++) {
-        const i3 = i * 3;
-        const spd = haloSpeeds[i];
-        let angle = haloAngles[i] + spd * delta * 2.2;
-        haloAngles[i] = angle;
-
-        const r = haloRadii[i];
-        hPos[i3] = Math.cos(angle) * r;
-        hPos[i3 + 1] = Math.sin(angle) * r;
-      }
-      hPosAttr.needsUpdate = true;
-
-      // Polar jet subtle pulse
-      polarJets.rotation.y = elapsedTime * 0.8;
 
       renderer.render(scene, camera);
     };
 
     animId = requestAnimationFrame(animate);
 
-    // 13. Resource Cleanup
+    // 12. Resource Disposal
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('pointermove', onPointerMove);
@@ -567,25 +588,39 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
         container.removeChild(renderer.domElement);
       }
 
-      horizonGeo.dispose();
-      horizonMat.dispose();
-      photonRingGeo1.dispose();
-      photonRingMat1.dispose();
-      photonRingGeo2.dispose();
-      photonRingMat2.dispose();
-      coronaGeo.dispose();
-      coronaMat.dispose();
-      diskGeo.dispose();
-      diskMat.dispose();
-      haloGeo.dispose();
-      haloMat.dispose();
-      jetGeo.dispose();
-      jetMat.dispose();
-      starGeo.dispose();
-      starMat.dispose();
+      innerCoreGeo.dispose();
+      innerCoreMat.dispose();
+      cageGeo.dispose();
+      cageMat.dispose();
+      cyberGlobeGeo.dispose();
+      cyberGlobeMat.dispose();
+      ringGeo1.dispose();
+      ringMat1.dispose();
+      ringGeo2.dispose();
+      ringMat2.dispose();
+      ringGeo3.dispose();
+      ringMat3.dispose();
+      particleGeo.dispose();
+      particleMat.dispose();
       shockwaveGeo.dispose();
       shockwaveMat.dispose();
       particleTexture.dispose();
+
+      for (const crystal of crystals) {
+        crystal.mesh.geometry.dispose();
+        if (Array.isArray(crystal.mesh.material)) {
+          crystal.mesh.material.forEach((m) => m.dispose());
+        } else {
+          crystal.mesh.material.dispose();
+        }
+        crystal.edges.geometry.dispose();
+        if (Array.isArray(crystal.edges.material)) {
+          crystal.edges.material.forEach((m) => m.dispose());
+        } else {
+          crystal.edges.material.dispose();
+        }
+      }
+
       renderer.dispose();
     };
   }, []);
@@ -593,7 +628,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
   if (!webglSupported) {
     return (
       <div
-        className="fixed inset-0 pointer-events-none z-0 bg-[#040208]"
+        className="fixed inset-0 pointer-events-none z-0 bg-[#04020a]"
         aria-hidden="true"
       />
     );
@@ -604,7 +639,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       ref={containerRef}
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
       style={{
-        background: 'radial-gradient(ellipse at 50% 35%, #0e051c 0%, #05020c 60%, #020106 100%)',
+        background: 'radial-gradient(ellipse at 50% 30%, #0d0520 0%, #05020c 60%, #020106 100%)',
       }}
       aria-hidden="true"
     />

@@ -22,7 +22,7 @@ export default function HomeExperienceManager() {
         onComplete={() => setPlayIntro(false)}
       />
 
-      {/* Interactive 3D Black Hole Singularity Background */}
+      {/* Interactive 3D Holographic Quantum Cybersphere Background */}
       <BackgroundCanvas3D onReplayIntro={handleReplayIntro} />
     </>
   );
