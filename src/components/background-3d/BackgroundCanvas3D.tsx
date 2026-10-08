@@ -7,6 +7,18 @@ interface BackgroundCanvas3DProps {
   onReplayIntro?: () => void;
 }
 
+interface FloatingCrystal {
+  group: THREE.Group;
+  mesh: THREE.Mesh;
+  edges: THREE.LineSegments;
+  basePos: THREE.Vector3;
+  velocity: THREE.Vector3;
+  rotSpeed: THREE.Vector3;
+  floatSpeed: number;
+  floatAmplitude: number;
+  phase: number;
+}
+
 export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(true);
@@ -32,19 +44,18 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     if (!container) return;
 
     const isMobile = window.innerWidth < 768;
-    const totalParticles = isMobile ? 480 : 1100;
 
-    // 2. Scene, Camera & Renderer
+    // 2. Scene, Camera & Atmospheric Fog Setup
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x05030a, 0.0025);
+    scene.fog = new THREE.FogExp2(0x05030a, 0.0032);
 
     const camera = new THREE.PerspectiveCamera(
-      55,
+      52,
       window.innerWidth / window.innerHeight,
       1,
-      1000
+      1200
     );
-    camera.position.set(0, 0, 115);
+    camera.position.set(0, 5, 115);
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -54,6 +65,8 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
@@ -62,138 +75,196 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     renderer.domElement.style.pointerEvents = 'none';
     container.appendChild(renderer.domElement);
 
-    // 3. Ambient & Mouse Cursor Glow Lights
-    const ambientLight = new THREE.AmbientLight(0x1a0f35, 1.8);
+    // 3. Dynamic 3D Lights Setup (Highlights 3D geometry facets in real time)
+    const ambientLight = new THREE.AmbientLight(0x0e061e, 2.2);
     scene.add(ambientLight);
 
-    const cursorLight = new THREE.PointLight(0x06b6d4, 3.2, 160);
+    const dirLight = new THREE.DirectionalLight(0xa855f7, 2.0);
+    dirLight.position.set(40, 60, 50);
+    scene.add(dirLight);
+
+    // Interactive 3D Cursor Point Light (Electric Cyan)
+    const cursorLight = new THREE.PointLight(0x00f0ff, 4.8, 160);
     cursorLight.position.set(0, 0, 30);
     scene.add(cursorLight);
 
-    const ambientPurpleLight = new THREE.PointLight(0x8b5cf6, 2.5, 260);
-    ambientPurpleLight.position.set(0, 30, -20);
-    scene.add(ambientPurpleLight);
+    // Complementary Cosmic Violet Light
+    const violetLight = new THREE.PointLight(0x9333ea, 3.5, 220);
+    violetLight.position.set(-45, -20, 25);
+    scene.add(violetLight);
 
-    // 4. Custom Particle Sprite Texture (High-clarity soft starburst)
-    const pCanvas = document.createElement('canvas');
-    pCanvas.width = 64;
-    pCanvas.height = 64;
-    const pCtx = pCanvas.getContext('2d');
-    if (pCtx) {
-      const grad = pCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.2, 'rgba(216, 180, 254, 0.9)');
-      grad.addColorStop(0.45, 'rgba(99, 102, 241, 0.45)');
-      grad.addColorStop(0.75, 'rgba(6, 182, 212, 0.15)');
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      pCtx.fillStyle = grad;
-      pCtx.fillRect(0, 0, 64, 64);
-    }
-    const particleTexture = new THREE.CanvasTexture(pCanvas);
+    // 4. Undulating 3D Interactive Cyber Wave Lattice Plane
+    // Sits in 3D perspective space and physically undulates with fluid wave physics
+    const planeCols = isMobile ? 32 : 54;
+    const planeRows = isMobile ? 24 : 40;
+    const planeWidth = 260;
+    const planeDepth = 200;
 
-    // 5. Particle Attributes & Interactive Physics State
-    const positions = new Float32Array(totalParticles * 3);
-    const colors = new Float32Array(totalParticles * 3);
-    const basePositions = new Float32Array(totalParticles * 3);
-    const velocities = new Float32Array(totalParticles * 3);
-    const phases = new Float32Array(totalParticles);
-    const orbitSpeeds = new Float32Array(totalParticles);
-    const orbitRadii = new Float32Array(totalParticles);
+    const wavePlaneGeo = new THREE.PlaneGeometry(
+      planeWidth,
+      planeDepth,
+      planeCols,
+      planeRows
+    );
+    wavePlaneGeo.rotateX(-Math.PI / 2.3);
+    wavePlaneGeo.translate(0, -38, -35);
 
-    // Palette of refined colors: Purple, Violet, Cyan, Gold & Bright Starlight
-    const palette = [
-      new THREE.Color(0xa855f7), // Bright Purple
-      new THREE.Color(0x06b6d4), // Electric Cyan
-      new THREE.Color(0x6366f1), // Indigo
-      new THREE.Color(0x38bdf8), // Sky Blue
-      new THREE.Color(0xfbbf24), // Amber Starlight
-      new THREE.Color(0xffffff), // Pure Starlight White
+    const waveOrigPositions = Float32Array.from(wavePlaneGeo.attributes.position.array);
+
+    const wavePlaneMat = new THREE.MeshStandardMaterial({
+      color: 0x12072e,
+      roughness: 0.35,
+      metalness: 0.85,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const wavePlaneMesh = new THREE.Mesh(wavePlaneGeo, wavePlaneMat);
+    scene.add(wavePlaneMesh);
+
+    // 5. Floating Interactive 3D Low-Poly Kinetic Crystals & Polyhedra
+    // Multiple 3D geometric shapes with metallic facets that react directly to cursor
+    const crystals: FloatingCrystal[] = [];
+    const crystalCount = isMobile ? 8 : 15;
+
+    // Distinct 3D geometries
+    const geometries = [
+      () => new THREE.IcosahedronGeometry(4.2, 0),
+      () => new THREE.OctahedronGeometry(4.0, 0),
+      () => new THREE.DodecahedronGeometry(3.6, 0),
+      () => new THREE.TorusGeometry(3.8, 0.7, 10, 24),
+      () => new THREE.TorusKnotGeometry(2.8, 0.45, 36, 8, 2, 3),
+      () => new THREE.IcosahedronGeometry(5.2, 1),
     ];
 
-    const spreadX = 260;
-    const spreadY = 170;
-    const spreadZ = 120;
+    const crystalColors = [
+      { fill: 0x090514, edge: 0x00f0ff }, // Cyber Cyan
+      { fill: 0x120324, edge: 0xa855f7 }, // Neon Violet
+      { fill: 0x06081e, edge: 0x38bdf8 }, // Sky Blue
+      { fill: 0x1e0e02, edge: 0xf59e0b }, // Amber Gold
+      { fill: 0x0a031c, edge: 0xc084fc }, // Radiant Purple
+    ];
 
-    for (let i = 0; i < totalParticles; i++) {
-      const i3 = i * 3;
+    // Distribute around perimeter and deep space to keep center content clear
+    for (let i = 0; i < crystalCount; i++) {
+      const geoFactory = geometries[i % geometries.length];
+      const geo = geoFactory();
+      const colorScheme = crystalColors[i % crystalColors.length];
 
-      // Spacious distribution across 3D depth to prevent visual clutter
-      const x = (Math.random() - 0.5) * spreadX;
-      const y = (Math.random() - 0.5) * spreadY;
-      const z = (Math.random() - 0.5) * spreadZ;
+      // Solid metallic faceted 3D body
+      const mat = new THREE.MeshStandardMaterial({
+        color: colorScheme.fill,
+        roughness: 0.15,
+        metalness: 0.92,
+        transparent: true,
+        opacity: 0.88,
+      });
 
-      positions[i3] = x;
-      positions[i3 + 1] = y;
-      positions[i3 + 2] = z;
+      const mesh = new THREE.Mesh(geo, mat);
 
-      basePositions[i3] = x;
-      basePositions[i3 + 1] = y;
-      basePositions[i3 + 2] = z;
+      // Crisp luminous wireframe edges
+      const edgeGeo = new THREE.EdgesGeometry(geo);
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: colorScheme.edge,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
+      });
+      const edges = new THREE.LineSegments(edgeGeo, edgeMat);
 
-      velocities[i3] = 0;
-      velocities[i3 + 1] = 0;
-      velocities[i3 + 2] = 0;
+      const group = new THREE.Group();
+      group.add(mesh);
+      group.add(edges);
 
-      phases[i] = Math.random() * Math.PI * 2;
-      orbitSpeeds[i] = 0.25 + Math.random() * 0.45;
-      orbitRadii[i] = 1.5 + Math.random() * 3.0;
+      // Position in 3D space: keep edges more populated to preserve hero readability
+      const angle = (i / crystalCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      const radius = 45 + Math.random() * 45;
+      const posX = Math.cos(angle) * radius * 1.5;
+      const posY = Math.sin(angle) * (radius * 0.7) + (Math.random() - 0.5) * 20;
+      const posZ = -15 + (Math.random() - 0.5) * 65;
 
-      // Select color with weighted preference for soothing purples and cyans
-      const chosenColor = palette[Math.floor(Math.random() * palette.length)];
-      colors[i3] = chosenColor.r;
-      colors[i3 + 1] = chosenColor.g;
-      colors[i3 + 2] = chosenColor.b;
+      group.position.set(posX, posY, posZ);
+
+      // Random starting rotation
+      group.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+
+      scene.add(group);
+
+      crystals.push({
+        group,
+        mesh,
+        edges,
+        basePos: new THREE.Vector3(posX, posY, posZ),
+        velocity: new THREE.Vector3(0, 0, 0),
+        rotSpeed: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.018,
+          (Math.random() - 0.5) * 0.022,
+          (Math.random() - 0.5) * 0.016
+        ),
+        floatSpeed: 0.4 + Math.random() * 0.6,
+        floatAmplitude: 2.5 + Math.random() * 3.5,
+        phase: Math.random() * Math.PI * 2,
+      });
     }
 
-    const particleGeometry = new THREE.BufferGeometry();
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    // 6. Subtle Volumetric 3D Starlight Dust Embers
+    const emberCount = isMobile ? 220 : 550;
+    const emberGeo = new THREE.BufferGeometry();
+    const emberPos = new Float32Array(emberCount * 3);
+    const emberCol = new Float32Array(emberCount * 3);
 
-    const particleMaterial = new THREE.PointsMaterial({
-      size: isMobile ? 3.6 : 4.4,
-      map: particleTexture,
+    for (let i = 0; i < emberCount; i++) {
+      const i3 = i * 3;
+      emberPos[i3] = (Math.random() - 0.5) * 280;
+      emberPos[i3 + 1] = (Math.random() - 0.5) * 200;
+      emberPos[i3 + 2] = (Math.random() - 0.5) * 160;
+
+      const isCyan = Math.random() > 0.45;
+      emberCol[i3] = isCyan ? 0.05 : 0.65;
+      emberCol[i3 + 1] = isCyan ? 0.75 : 0.35;
+      emberCol[i3 + 2] = isCyan ? 0.95 : 0.98;
+    }
+
+    emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
+    emberGeo.setAttribute('color', new THREE.BufferAttribute(emberCol, 3));
+
+    // Particle sprite
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 32;
+    pCanvas.height = 32;
+    const pCtx = pCanvas.getContext('2d');
+    if (pCtx) {
+      const grad = pCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.3, 'rgba(168, 85, 247, 0.7)');
+      grad.addColorStop(0.7, 'rgba(0, 240, 255, 0.2)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      pCtx.fillStyle = grad;
+      pCtx.fillRect(0, 0, 32, 32);
+    }
+    const emberTexture = new THREE.CanvasTexture(pCanvas);
+
+    const emberMat = new THREE.PointsMaterial({
+      size: isMobile ? 3.0 : 3.6,
+      map: emberTexture,
       transparent: true,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
-      opacity: 0.85,
+      opacity: 0.7,
     });
 
-    const particlePoints = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particlePoints);
+    const embers = new THREE.Points(emberGeo, emberMat);
+    scene.add(embers);
 
-    // 6. Interactive Constellation Lines (Ethereal connections between nearby stars & cursor)
-    const maxLineConnections = isMobile ? 120 : 260;
-    const linePositions = new Float32Array(maxLineConnections * 6);
-    const lineColors = new Float32Array(maxLineConnections * 6);
-
-    const lineGeometry = new THREE.BufferGeometry();
-    lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-    lineGeometry.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
-
-    const lineMaterial = new THREE.LineBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.38,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    const constellationLines = new THREE.LineSegments(lineGeometry, lineMaterial);
-    scene.add(constellationLines);
-
-    // 7. Interactive Click Pulse Ripple System
-    const ripples: Array<{
-      center: THREE.Vector3;
-      radius: number;
-      maxRadius: number;
-      speed: number;
-      strength: number;
-      opacity: number;
-    }> = [];
-
-    // 8. Pointer & Mouse Tracking
+    // 7. Interactive Pointer & Physics Tracking
     const mouse = new THREE.Vector2(0, 0);
     const targetMouse = new THREE.Vector2(0, 0);
     const raycaster = new THREE.Raycaster();
@@ -203,6 +274,15 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     let scrollY = 0;
     let targetScrollY = 0;
 
+    // Interactive Shockwaves on Click
+    const clickPulses: Array<{
+      origin: THREE.Vector3;
+      radius: number;
+      maxRadius: number;
+      speed: number;
+      strength: number;
+    }> = [];
+
     const onPointerMove = (e: MouseEvent | TouchEvent) => {
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -211,23 +291,29 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       targetMouse.y = -(clientY / window.innerHeight) * 2 + 1;
     };
 
-    const onClick = (e: MouseEvent) => {
-      // Create expanding ripple wave from click position
+    const onClick = () => {
+      // Create radial impulse in 3D
       raycaster.setFromCamera(mouse, camera);
-      const hitPoint = new THREE.Vector3();
-      raycaster.ray.intersectPlane(planeZ, hitPoint);
+      const hit = new THREE.Vector3();
+      raycaster.ray.intersectPlane(planeZ, hit);
 
-      ripples.push({
-        center: hitPoint,
+      clickPulses.push({
+        origin: hit,
         radius: 0.1,
-        maxRadius: 75,
-        speed: 55,
-        strength: 22,
-        opacity: 1,
+        maxRadius: 90,
+        speed: 75,
+        strength: 28,
       });
 
-      // Momentary light burst on click
-      cursorLight.intensity = 5.5;
+      // Momentary high-intensity flash on cursor light
+      cursorLight.intensity = 8.0;
+
+      // Add angular momentum to all 3D crystals on click
+      for (const crystal of crystals) {
+        crystal.rotSpeed.x += (Math.random() - 0.5) * 0.08;
+        crystal.rotSpeed.y += (Math.random() - 0.5) * 0.08;
+        crystal.rotSpeed.z += (Math.random() - 0.5) * 0.08;
+      }
     };
 
     const onScroll = () => {
@@ -246,7 +332,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
 
-    // 9. High-Performance Render Loop
+    // 8. 60FPS High-Performance 3D Simulation Loop
     const clock = new THREE.Clock();
     let animId = 0;
 
@@ -256,189 +342,142 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       const delta = Math.min(clock.getDelta(), 0.08);
       const elapsedTime = clock.getElapsedTime();
 
-      // Smooth pointer easing
-      mouse.x += (targetMouse.x - mouse.x) * 0.08;
-      mouse.y += (targetMouse.y - mouse.y) * 0.08;
-      scrollY += (targetScrollY - scrollY) * 0.06;
+      // Smooth pointer & scroll damping
+      mouse.x += (targetMouse.x - mouse.x) * 0.07;
+      mouse.y += (targetMouse.y - mouse.y) * 0.07;
+      scrollY += (targetScrollY - scrollY) * 0.05;
 
       // Project mouse into 3D world space
       raycaster.setFromCamera(mouse, camera);
       raycaster.ray.intersectPlane(planeZ, mouse3D);
 
-      // Cursor light tracks 3D pointer position
-      cursorLight.position.set(mouse3D.x, mouse3D.y, mouse3D.z + 18);
-      cursorLight.intensity = Math.max(3.0, cursorLight.intensity * 0.96);
+      // Cursor 3D light follows mouse position smoothly
+      cursorLight.position.set(mouse3D.x, mouse3D.y, mouse3D.z + 16);
+      cursorLight.intensity = Math.max(4.2, cursorLight.intensity * 0.95);
 
-      // Subtle responsive 3D camera parallax (spacious, non-dizzying)
-      const targetCamX = mouse.x * 12;
-      const targetCamY = mouse.y * 8 - (scrollY * 0.025);
-      camera.position.x += (targetCamX - camera.position.x) * 0.04;
-      camera.position.y += (targetCamY - camera.position.y) * 0.04;
-      camera.lookAt(0, -(scrollY * 0.015), 0);
+      // Complementary light orbits subtly in 3D
+      violetLight.position.x = Math.sin(elapsedTime * 0.35) * 55;
+      violetLight.position.y = Math.cos(elapsedTime * 0.4) * 35;
 
-      // Update click ripple waves
-      for (let r = ripples.length - 1; r >= 0; r--) {
-        const rip = ripples[r];
-        rip.radius += rip.speed * delta;
-        rip.opacity = Math.max(0, 1 - rip.radius / rip.maxRadius);
-        if (rip.radius >= rip.maxRadius) {
-          ripples.splice(r, 1);
+      // Cinematic 3D Camera Parallax Tilt
+      const targetCamX = mouse.x * 16;
+      const targetCamY = mouse.y * 10 - (scrollY * 0.02);
+      camera.position.x += (targetCamX - camera.position.x) * 0.035;
+      camera.position.y += (targetCamY - camera.position.y) * 0.035;
+      camera.lookAt(0, -(scrollY * 0.012), 0);
+
+      // Update click shockwave pulses
+      for (let p = clickPulses.length - 1; p >= 0; p--) {
+        const pulse = clickPulses[p];
+        pulse.radius += pulse.speed * delta;
+        if (pulse.radius >= pulse.maxRadius) {
+          clickPulses.splice(p, 1);
         }
       }
 
-      // Update interactive particle physics
-      const posAttr = particleGeometry.getAttribute('position') as THREE.BufferAttribute;
-      const posArr = posAttr.array as Float32Array;
+      // 9. Update Undulating 3D Cyber Wave Mesh Vertices
+      const wavePosAttr = wavePlaneGeo.attributes.position as THREE.BufferAttribute;
+      const wavePosArr = wavePosAttr.array as Float32Array;
+      const vertexCount = wavePosArr.length / 3;
 
-      const cursorInfluenceRadius = isMobile ? 32 : 46;
-      const cursorInfluenceRadiusSq = cursorInfluenceRadius * cursorInfluenceRadius;
+      for (let v = 0; v < vertexCount; v++) {
+        const v3 = v * 3;
+        const origX = waveOrigPositions[v3];
+        const origY = waveOrigPositions[v3 + 1];
+        const origZ = waveOrigPositions[v3 + 2];
 
-      // Line rendering buffers
-      const lPos = linePositions;
-      const lCol = lineColors;
-      let lineVertexIdx = 0;
+        // Harmonic organic 3D wave mathematics
+        const wave1 = Math.sin(origX * 0.035 + elapsedTime * 1.2) * 5.5;
+        const wave2 = Math.cos(origY * 0.045 + elapsedTime * 0.9) * 4.5;
+        const wave3 = Math.sin((origX + origY) * 0.025 + elapsedTime * 1.5) * 3.0;
 
-      for (let i = 0; i < totalParticles; i++) {
-        const i3 = i * 3;
-        let px = posArr[i3];
-        let py = posArr[i3 + 1];
-        let pz = posArr[i3 + 2];
+        // Interactive mouse disturbance on 3D plane
+        const distToMouse = Math.sqrt(
+          (origX - mouse3D.x) * (origX - mouse3D.x) +
+          (origY - mouse3D.y) * (origY - mouse3D.y)
+        );
 
-        const bx = basePositions[i3];
-        const by = basePositions[i3 + 1];
-        const bz = basePositions[i3 + 2];
+        let mouseElevation = 0;
+        if (distToMouse < 45) {
+          mouseElevation = (1 - distToMouse / 45) * 9.0 * Math.sin(elapsedTime * 4.0);
+        }
 
-        // Harmonious orbital float around base position
-        const pSpeed = orbitSpeeds[i];
-        const pPhase = phases[i];
-        const pRadius = orbitRadii[i];
+        // Click pulse ripple effect on 3D grid
+        let pulseElevation = 0;
+        for (let p = 0; p < clickPulses.length; p++) {
+          const pulse = clickPulses[p];
+          const distToPulse = Math.abs(distToMouse - pulse.radius);
+          if (distToPulse < 12) {
+            pulseElevation += (1 - distToPulse / 12) * pulse.strength * 0.45;
+          }
+        }
 
-        const targetBaseX = bx + Math.cos(elapsedTime * pSpeed + pPhase) * pRadius;
-        const targetBaseY = by + Math.sin(elapsedTime * pSpeed * 0.8 + pPhase) * pRadius;
-        const targetBaseZ = bz + Math.sin(elapsedTime * 0.3 + pPhase) * (pRadius * 0.5);
+        wavePosArr[v3 + 2] = origZ + wave1 + wave2 + wave3 + mouseElevation + pulseElevation;
+      }
+      wavePosAttr.needsUpdate = true;
 
-        // Distance to 3D mouse cursor
-        const dx = px - mouse3D.x;
-        const dy = py - mouse3D.y;
-        const dz = pz - mouse3D.z;
+      // 10. Update Floating 3D Crystals (Kinetic Rotations & Mouse Magnetic Physics)
+      for (let i = 0; i < crystals.length; i++) {
+        const crystal = crystals[i];
+
+        // 3D Rotation on all axes
+        crystal.group.rotation.x += crystal.rotSpeed.x;
+        crystal.group.rotation.y += crystal.rotSpeed.y;
+        crystal.group.rotation.z += crystal.rotSpeed.z;
+
+        // Damped rotational friction back to baseline
+        crystal.rotSpeed.x *= 0.995;
+        crystal.rotSpeed.y *= 0.995;
+        crystal.rotSpeed.z *= 0.995;
+
+        // Smooth vertical floating harmonic bobbing
+        const floatY = Math.sin(elapsedTime * crystal.floatSpeed + crystal.phase) * crystal.floatAmplitude;
+        const floatZ = Math.cos(elapsedTime * (crystal.floatSpeed * 0.7) + crystal.phase) * (crystal.floatAmplitude * 0.6);
+
+        const targetX = crystal.basePos.x;
+        const targetY = crystal.basePos.y + floatY;
+        const targetZ = crystal.basePos.z + floatZ;
+
+        // Magnetic 3D Cursor Physics (Repulsion & Alignment)
+        const dx = crystal.group.position.x - mouse3D.x;
+        const dy = crystal.group.position.y - mouse3D.y;
+        const dz = crystal.group.position.z - mouse3D.z;
         const distSq = dx * dx + dy * dy + dz * dz;
 
-        // Interactive cursor repulsion / elastic drift
-        if (distSq < cursorInfluenceRadiusSq && distSq > 0.001) {
+        const cursorRange = 48;
+        if (distSq < cursorRange * cursorRange && distSq > 0.001) {
           const dist = Math.sqrt(distSq);
-          const force = (1 - dist / cursorInfluenceRadius) * 28;
-          velocities[i3] += (dx / dist) * force * delta;
-          velocities[i3 + 1] += (dy / dist) * force * delta;
-          velocities[i3 + 2] += (dz / dist) * (force * 0.4) * delta;
+          const repelForce = (1 - dist / cursorRange) * 22;
+          crystal.velocity.x += (dx / dist) * repelForce * delta;
+          crystal.velocity.y += (dy / dist) * repelForce * delta;
+          crystal.velocity.z += (dz / dist) * (repelForce * 0.5) * delta;
+
+          // Faster spin when close to cursor
+          crystal.rotSpeed.x += (Math.random() - 0.5) * 0.012;
+          crystal.rotSpeed.y += (Math.random() - 0.5) * 0.012;
         }
 
-        // Ripple impulse from clicks
-        for (let r = 0; r < ripples.length; r++) {
-          const rip = ripples[r];
-          const rx = px - rip.center.x;
-          const ry = py - rip.center.y;
-          const rz = pz - rip.center.z;
-          const rDist = Math.sqrt(rx * rx + ry * ry + rz * rz);
-          const diff = Math.abs(rDist - rip.radius);
-          if (diff < 12) {
-            const waveStrength = (1 - diff / 12) * rip.strength * rip.opacity;
-            velocities[i3] += (rx / (rDist + 0.1)) * waveStrength * delta;
-            velocities[i3 + 1] += (ry / (rDist + 0.1)) * waveStrength * delta;
-            velocities[i3 + 2] += (rz / (rDist + 0.1)) * waveStrength * delta;
-          }
-        }
+        // Spring return to base floating position
+        crystal.velocity.x += (targetX - crystal.group.position.x) * 0.04;
+        crystal.velocity.y += (targetY - crystal.group.position.y) * 0.04;
+        crystal.velocity.z += (targetZ - crystal.group.position.z) * 0.04;
 
-        // Spring return to resting base position
-        const springK = 0.045;
-        const damping = 0.91;
+        // Velocity damping
+        crystal.velocity.multiplyScalar(0.92);
 
-        velocities[i3] += (targetBaseX - px) * springK;
-        velocities[i3 + 1] += (targetBaseY - py) * springK;
-        velocities[i3 + 2] += (targetBaseZ - pz) * springK;
-
-        velocities[i3] *= damping;
-        velocities[i3 + 1] *= damping;
-        velocities[i3 + 2] *= damping;
-
-        px += velocities[i3];
-        py += velocities[i3 + 1];
-        pz += velocities[i3 + 2];
-
-        posArr[i3] = px;
-        posArr[i3 + 1] = py;
-        posArr[i3 + 2] = pz;
-
-        // Interactive constellation line connections
-        // 1. Connect nearby stars to the cursor
-        if (lineVertexIdx < maxLineConnections * 6 && distSq < 1100 && i % 3 === 0) {
-          const lineAlpha = (1 - Math.sqrt(distSq) / 33.1) * 0.7;
-
-          // From particle
-          lPos[lineVertexIdx] = px;
-          lPos[lineVertexIdx + 1] = py;
-          lPos[lineVertexIdx + 2] = pz;
-          lCol[lineVertexIdx] = 0.02 * lineAlpha;
-          lCol[lineVertexIdx + 1] = 0.71 * lineAlpha;
-          lCol[lineVertexIdx + 2] = 0.83 * lineAlpha;
-          lineVertexIdx += 3;
-
-          // To cursor
-          lPos[lineVertexIdx] = mouse3D.x;
-          lPos[lineVertexIdx + 1] = mouse3D.y;
-          lPos[lineVertexIdx + 2] = mouse3D.z;
-          lCol[lineVertexIdx] = 0.65 * lineAlpha;
-          lCol[lineVertexIdx + 1] = 0.33 * lineAlpha;
-          lCol[lineVertexIdx + 2] = 0.96 * lineAlpha;
-          lineVertexIdx += 3;
-        }
-
-        // 2. Connect neighboring particles
-        if (lineVertexIdx < maxLineConnections * 6 && i % 8 === 0) {
-          const neighborIdx = (i + 13) % totalParticles;
-          const n3 = neighborIdx * 3;
-          const nx = posArr[n3];
-          const ny = posArr[n3 + 1];
-          const nz = posArr[n3 + 2];
-
-          const nDistSq = (px - nx) * (px - nx) + (py - ny) * (py - ny) + (pz - nz) * (pz - nz);
-          if (nDistSq < 625) {
-            const nAlpha = (1 - Math.sqrt(nDistSq) / 25) * 0.35;
-
-            lPos[lineVertexIdx] = px;
-            lPos[lineVertexIdx + 1] = py;
-            lPos[lineVertexIdx + 2] = pz;
-            lCol[lineVertexIdx] = 0.54 * nAlpha;
-            lCol[lineVertexIdx + 1] = 0.33 * nAlpha;
-            lCol[lineVertexIdx + 2] = 0.96 * nAlpha;
-            lineVertexIdx += 3;
-
-            lPos[lineVertexIdx] = nx;
-            lPos[lineVertexIdx + 1] = ny;
-            lPos[lineVertexIdx + 2] = nz;
-            lCol[lineVertexIdx] = 0.02 * nAlpha;
-            lCol[lineVertexIdx + 1] = 0.71 * nAlpha;
-            lCol[lineVertexIdx + 2] = 0.83 * nAlpha;
-            lineVertexIdx += 3;
-          }
-        }
+        crystal.group.position.add(crystal.velocity);
       }
 
-      // Zero out unused line segments
-      for (let j = lineVertexIdx; j < maxLineConnections * 6; j++) {
-        lPos[j] = 0;
-        lCol[j] = 0;
-      }
-
-      posAttr.needsUpdate = true;
-      (lineGeometry.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
-      (lineGeometry.getAttribute('color') as THREE.BufferAttribute).needsUpdate = true;
+      // Embers slow drift
+      embers.rotation.y = elapsedTime * 0.02;
+      embers.rotation.x = Math.sin(elapsedTime * 0.015) * 0.05;
 
       renderer.render(scene, camera);
     };
 
     animId = requestAnimationFrame(animate);
 
-    // 10. Clean Cleanup on Unmount
+    // 11. Clean Resource Disposal on Component Unmount
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('pointermove', onPointerMove);
@@ -451,11 +490,27 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
         container.removeChild(renderer.domElement);
       }
 
-      particleGeometry.dispose();
-      particleMaterial.dispose();
-      particleTexture.dispose();
-      lineGeometry.dispose();
-      lineMaterial.dispose();
+      wavePlaneGeo.dispose();
+      wavePlaneMat.dispose();
+
+      for (const crystal of crystals) {
+        crystal.mesh.geometry.dispose();
+        if (Array.isArray(crystal.mesh.material)) {
+          crystal.mesh.material.forEach((m) => m.dispose());
+        } else {
+          crystal.mesh.material.dispose();
+        }
+        crystal.edges.geometry.dispose();
+        if (Array.isArray(crystal.edges.material)) {
+          crystal.edges.material.forEach((m) => m.dispose());
+        } else {
+          crystal.edges.material.dispose();
+        }
+      }
+
+      emberGeo.dispose();
+      emberMat.dispose();
+      emberTexture.dispose();
       renderer.dispose();
     };
   }, []);
@@ -474,7 +529,7 @@ export default function BackgroundCanvas3D({ onReplayIntro }: BackgroundCanvas3D
       ref={containerRef}
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
       style={{
-        background: 'radial-gradient(ellipse at 50% 25%, #0e0724 0%, #05030a 65%, #020106 100%)',
+        background: 'radial-gradient(ellipse at 50% 25%, #0d0622 0%, #05030a 65%, #020106 100%)',
       }}
       aria-hidden="true"
     />
