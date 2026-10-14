@@ -8,12 +8,17 @@ import { useAuth } from '@/context/AuthContext';
 
 interface ScrollFloatingPopupProps {
   fee?: number;
+  registrationsClosed?: boolean;
 }
 
-export default function ScrollFloatingPopup({ fee = 699 }: ScrollFloatingPopupProps) {
+export default function ScrollFloatingPopup({ fee = 699, registrationsClosed }: ScrollFloatingPopupProps) {
   const { user } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+
+  if (registrationsClosed) {
+    return null;
+  }
 
   useEffect(() => {
     // Check if dismissed previously during this session

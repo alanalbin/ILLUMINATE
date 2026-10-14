@@ -8,9 +8,10 @@ import TouchInteractiveTilt from '@/components/ui/TouchInteractiveTilt';
 
 interface CtaBannerProps {
   fee: number;
+  registrationsClosed?: boolean;
 }
 
-export default function CtaBanner({ fee }: CtaBannerProps) {
+export default function CtaBanner({ fee, registrationsClosed }: CtaBannerProps) {
   return (
     <section className="pt-6 pb-8 bg-[#05030a]/40 backdrop-blur-[2px] relative overflow-hidden border-t border-purple-950/40 z-10">
       
@@ -36,25 +37,43 @@ export default function CtaBanner({ fee }: CtaBannerProps) {
 
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-900/50 border border-purple-500/40 text-xs font-bold text-purple-300 mb-6 shadow-sm relative z-10">
                 <img src="/logo-icon.png" alt="" className="w-4 h-4 object-contain" />
-                <span>Offline Masterclass • Kasaragod</span>
+                <span>
+                  {registrationsClosed
+                    ? 'Offline Masterclass • Kasaragod • Cohort Finalized'
+                    : 'Offline Masterclass • Kasaragod'}
+                </span>
               </div>
 
               <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
-                Ready to Experience the Startup Journey?
+                {registrationsClosed
+                  ? 'Registrations Are Now Closed'
+                  : 'Ready to Experience the Startup Journey?'}
               </h2>
 
               <p className="mt-4 text-slate-300 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
-                Secure your seat for the 6-hour offline ILLUMINATE workshop at KMCT College. Receive your official E-Cell IIT Bombay certificate and startup kit.
+                {registrationsClosed
+                  ? 'Thank you for the tremendous response! Registrations for the 6-hour offline ILLUMINATE workshop at KMCT College have officially closed. Confirmed participants can check their digital pass.'
+                  : 'Secure your seat for the 6-hour offline ILLUMINATE workshop at KMCT College. Receive your official E-Cell IIT Bombay certificate and startup kit.'}
               </p>
 
               <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/login?redirect=/register"
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-base shadow-xl shadow-purple-950/80 hover:shadow-purple-700/50 transition-all flex items-center justify-center gap-2.5 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <span>Register with Google (₹{fee})</span>
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
+                {registrationsClosed ? (
+                  <Link
+                    href="/success"
+                    className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-base shadow-xl shadow-purple-950/80 hover:shadow-purple-700/50 transition-all flex items-center justify-center gap-2.5 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <span>Access / Lookup Your Pass</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login?redirect=/register"
+                    className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-base shadow-xl shadow-purple-950/80 hover:shadow-purple-700/50 transition-all flex items-center justify-center gap-2.5 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <span>Register with Google (₹{fee})</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                )}
                 <a
                   href="https://www.ecell.in/illuminate/"
                   target="_blank"
@@ -68,7 +87,11 @@ export default function CtaBanner({ fee }: CtaBannerProps) {
 
               <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-400">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Instant Google verification • Digital confirmation pass included</span>
+                <span>
+                  {registrationsClosed
+                    ? 'Confirmed attendees only • Digital verification at venue gate'
+                    : 'Instant Google verification • Digital confirmation pass included'}
+                </span>
               </div>
 
             </div>

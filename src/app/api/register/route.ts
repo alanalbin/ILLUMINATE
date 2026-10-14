@@ -55,21 +55,39 @@ export async function POST(req: NextRequest) {
           },
           { status: 409 }
         );
-      } else {
-        return NextResponse.json(
-          {
-            success: true,
-            isExistingPending: true,
-            registrationId: existing.id,
-            registration: {
-              ...existing,
-              registrationNumber: '', // Ticket ID is only issued after payment
-            },
-            message: 'An existing pending registration was found for this email. Proceeding to payment...',
-          },
-          { status: 200 }
-        );
       }
+    }
+
+    // Check if registrations are officially closed
+    const isClosed =
+      eventConfig.registrationsClosed ||
+      (eventConfig.registrationClosingDate && new Date(eventConfig.registrationClosingDate).getTime() <= Date.now());
+
+    if (isClosed) {
+      return NextResponse.json(
+        {
+          success: false,
+          registrationsClosed: true,
+          message: 'Registrations are now officially closed for ILLUMINATE 2026. Thank you for your overwhelming response!',
+        },
+        { status: 403 }
+      );
+    }
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          success: true,
+          isExistingPending: true,
+          registrationId: existing.id,
+          registration: {
+            ...existing,
+            registrationNumber: '', // Ticket ID is only issued after payment
+          },
+          message: 'An existing pending registration was found for this email. Proceeding to payment...',
+        },
+        { status: 200 }
+      );
     }
 
     // 4. Create new registration

@@ -78,11 +78,11 @@ export default async function HomePage() {
 
       {/* Final Action Banner */}
       <Scroll3DPopup delay={0.05}>
-        <CtaBanner fee={event.registrationFee} />
+        <CtaBanner fee={event.registrationFee} registrationsClosed={event.registrationsClosed} />
       </Scroll3DPopup>
 
       {/* Interactive Floating Scroll Pop-up Banner */}
-      <ScrollFloatingPopup fee={event.registrationFee} />
+      <ScrollFloatingPopup fee={event.registrationFee} registrationsClosed={event.registrationsClosed} />
     </div>
   );
 }

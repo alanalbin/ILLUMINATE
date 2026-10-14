@@ -187,13 +187,29 @@ export default function HeroSection({ event }: HeroSectionProps) {
 
             {/* Action Buttons */}
             <motion.div variants={itemVariants} className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                href={user ? "/register" : "/login?redirect=/register"}
-                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-sm sm:text-base transition-all shadow-xl shadow-purple-950/80 hover:shadow-purple-700/50 flex items-center gap-2.5 group hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <span>Register with Google (₹{fee})</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+              {event.registrationsClosed ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="px-7 py-4 rounded-2xl bg-zinc-800/90 border border-zinc-700/70 text-zinc-300 font-extrabold text-sm sm:text-base flex items-center gap-2.5 shadow-xl">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                    <span>Registrations Closed</span>
+                  </div>
+                  <Link
+                    href="/success"
+                    className="px-6 py-4 rounded-2xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 border border-purple-500/30 text-sm font-semibold transition-all backdrop-blur-md active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <span>View / Lookup Pass</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              ) : (
+                <Link
+                  href={user ? "/register" : "/login?redirect=/register"}
+                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-sm sm:text-base transition-all shadow-xl shadow-purple-950/80 hover:shadow-purple-700/50 flex items-center gap-2.5 group hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <span>Register with Google (₹{fee})</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              )}
               <a
                 href="#workshop"
                 className="px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 border border-purple-500/20 text-sm font-medium transition-all backdrop-blur-md active:scale-[0.98]"
@@ -300,9 +316,15 @@ export default function HeroSection({ event }: HeroSectionProps) {
                     <span className="text-xs text-slate-300">Cohort Target:</span>
                     <span className="text-xs font-bold text-white">Min. {event.minimumTarget || 70} Attendees</span>
                   </div>
-                  <span className="text-xs font-extrabold text-purple-300 bg-purple-900/50 px-2.5 py-1 rounded-lg border border-purple-600/30">
-                    ₹{fee}/- Pass
-                  </span>
+                  {event.registrationsClosed ? (
+                    <span className="text-xs font-extrabold text-rose-300 bg-rose-950/60 px-2.5 py-1 rounded-lg border border-rose-600/40">
+                      Closed
+                    </span>
+                  ) : (
+                    <span className="text-xs font-extrabold text-purple-300 bg-purple-900/50 px-2.5 py-1 rounded-lg border border-purple-600/30">
+                      ₹{fee}/- Pass
+                    </span>
+                  )}
                 </div>
 
               </div>

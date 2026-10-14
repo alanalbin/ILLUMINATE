@@ -17,22 +17,38 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     let { amount, currency = 'INR', receipt, registrationId, registration, registrationData } = body;
 
+    const eventConfig = await DataStore.getEventConfig();
+    const isClosed =
+      eventConfig.registrationsClosed ||
+      (eventConfig.registrationClosingDate && new Date(eventConfig.registrationClosingDate).getTime() <= Date.now());
+
+    if (isClosed && !registrationId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Registrations and ticket sales are now closed for ILLUMINATE 2026.',
+        },
+        { status: 403 }
+      );
+    }
+
     const candidateRecord = registration || registrationData;
     if (candidateRecord && (candidateRecord.email || candidateRecord.fullName)) {
-      try {
-        await DataStore.saveRegistrationDirect({
-          ...candidateRecord,
-          id: candidateRecord.id || registrationId || `reg_${Date.now()}`,
-        });
-      } catch (err) {
-        console.warn('Could not persist registration in create-order:', err);
+      if (!isClosed) {
+        try {
+          await DataStore.saveRegistrationDirect({
+            ...candidateRecord,
+            id: candidateRecord.id || registrationId || `reg_${Date.now()}`,
+          });
+        } catch (err) {
+          console.warn('Could not persist registration in create-order:', err);
+        }
       }
     }
 
     // If registrationId is provided but amount is missing, resolve authoritative amount
     if ((!amount || typeof amount !== 'number') && registrationId) {
       const reg = await DataStore.getRegistrationById(registrationId);
-      const eventConfig = await DataStore.getEventConfig();
       amount = reg?.amountPaise || Math.round((eventConfig.registrationFee || 699) * 100);
       if (!receipt && reg) {
         receipt = reg.registrationNumber || reg.id.slice(-40);

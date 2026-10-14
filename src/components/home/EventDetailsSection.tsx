@@ -75,8 +75,22 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
 
                     <div>
                       <p className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Registration Deadline</p>
-                      <p className="text-base font-bold text-amber-400 mt-1">22 October 2026</p>
-                      <p className="text-xs text-slate-400 mt-0.5">Registration closes at midnight on 22nd October</p>
+                      {event.registrationsClosed ? (
+                        <>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-base font-bold text-rose-400">Closed</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-950/80 border border-rose-800 text-rose-300 font-semibold">
+                              Cohort Finalized
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-0.5">Registration window has concluded</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-base font-bold text-amber-400 mt-1">22 October 2026</p>
+                          <p className="text-xs text-slate-400 mt-0.5">Registration closes at midnight on 22nd October</p>
+                        </>
+                      )}
                     </div>
 
                     <div>
@@ -200,13 +214,20 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
                 </div>
 
                 <div className="pt-4 border-t border-white/[0.08]">
-                  <Link
-                    href="/login?redirect=/register"
-                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-center text-white text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-950/80 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                  >
-                    <span>Secure Your Seat (₹699)</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  {event.registrationsClosed ? (
+                    <div className="w-full py-3 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 text-center text-zinc-400 text-xs font-bold uppercase tracking-wider shadow-inner flex items-center justify-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-rose-500" />
+                      <span>Registrations Closed</span>
+                    </div>
+                  ) : (
+                    <Link
+                      href="/login?redirect=/register"
+                      className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-center text-white text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-950/80 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                    >
+                      <span>Secure Your Seat (₹699)</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                 </div>
               </div>
             </TouchInteractiveTilt>

@@ -17,6 +17,9 @@ import {
   Phone,
   LogIn,
   UserCheck,
+  Lock,
+  Mail,
+  Ticket,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -34,12 +37,36 @@ export default function RegisterPage() {
     privacyConsent: false,
   });
 
-  // Enforce login first: redirect unauthenticated visitors to /login
+  const [isClosed, setIsClosed] = useState<boolean | null>(null);
+
+  // Check if registrations are closed
   useEffect(() => {
-    if (!authLoading && !user) {
+    async function checkEventStatus() {
+      try {
+        const res = await fetch('/api/event');
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.event) {
+            const closed =
+              Boolean(data.event.registrationsClosed) ||
+              (Boolean(data.event.registrationClosingDate) &&
+                new Date(data.event.registrationClosingDate).getTime() <= Date.now());
+            setIsClosed(closed);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check event status:', err);
+      }
+    }
+    checkEventStatus();
+  }, []);
+
+  // Enforce login first only if registrations are still open
+  useEffect(() => {
+    if (!authLoading && !user && isClosed === false) {
       router.push('/login?redirect=/register');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, isClosed]);
 
   // Pre-fill form details if user is signed in
   useEffect(() => {
@@ -159,6 +186,95 @@ export default function RegisterPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (isClosed) {
+    return (
+      <div className="min-h-screen bg-[#05030a] py-32 flex flex-col items-center justify-center px-6 relative">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-purple-900/15 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-xl w-full mx-auto relative z-10 text-center">
+          <div className="rounded-3xl bg-white/[0.02] border border-white/[0.08] p-8 sm:p-12 backdrop-blur-2xl shadow-2xl shadow-purple-950/50 relative overflow-hidden">
+            {/* Top Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold uppercase tracking-wider mb-6">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              <span>Registrations Closed</span>
+            </div>
+
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-rose-950/40">
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Registrations Are Now Closed
+            </h1>
+
+            <p className="mt-4 text-sm sm:text-base text-zinc-300 leading-relaxed">
+              Thank you for the overwhelming interest! The registration period for the 6-hour offline{' '}
+              <strong className="text-white">ILLUMINATE Workshop</strong> by E-Cell, IIT Bombay at KMCT College has officially concluded.
+            </p>
+
+            <div className="mt-8 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-left">
+              <h3 className="text-xs uppercase font-mono tracking-wider text-purple-400 font-bold mb-1.5 flex items-center gap-2">
+                <Ticket className="w-4 h-4" />
+                <span>Already Registered & Paid?</span>
+              </h3>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                If you have previously completed your registration and payment, your entry pass and seat reservation remain confirmed.
+              </p>
+              <div className="mt-3">
+                <Link
+                  href="/success"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 text-xs font-bold transition-all"
+                >
+                  <span>Access / Lookup Your Ticket Pass</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Coordinator Contact Card */}
+            <div className="mt-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-left">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold">
+                Coordinator & Support
+              </p>
+              <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div>
+                  <p className="font-semibold text-white">Alan Albin</p>
+                  <p className="text-zinc-400 text-[11px]">Lead Coordinator, KMCT E-Cell</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href="tel:8848563266"
+                    className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-purple-400" />
+                    <span>+91 8848563266</span>
+                  </a>
+                  <a
+                    href="mailto:alan.albin@kmct.edu.in"
+                    className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-purple-400" />
+                    <span>alan.albin@kmct.edu.in</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex items-center justify-center">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-semibold text-zinc-200 hover:text-white transition-all active:scale-95"
+              >
+                <ArrowLeft className="w-4 h-4 text-purple-400" />
+                <span>Return to Homepage</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (authLoading || !user) {
     return (

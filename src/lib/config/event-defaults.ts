@@ -19,7 +19,8 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
   endTime: '04:30 PM',
   venue: 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod, Kerala',
   roomNumber: 'Main Seminar Hall / Campus Auditorium',
-  registrationClosingDate: '2026-10-22T23:59:59+05:30',
+  registrationClosingDate: '2026-10-14T14:49:00+05:30',
+  registrationsClosed: true,
 
   // Pricing & Capacities
   registrationFee: 699, // Official NEC Discounted Fee: ₹699

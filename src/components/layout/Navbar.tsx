@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Sparkles, Menu, X, ArrowUpRight, Shield, User, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +8,28 @@ import { useAuth } from '@/context/AuthContext';
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, openAuthModal, signOut } = useAuth();
+  const [registrationsClosed, setRegistrationsClosed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/event');
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.event) {
+            const closed =
+              Boolean(data.event.registrationsClosed) ||
+              (Boolean(data.event.registrationClosingDate) &&
+                new Date(data.event.registrationClosingDate).getTime() <= Date.now());
+            setRegistrationsClosed(closed);
+          }
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    checkStatus();
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#05030a]/80 backdrop-blur-xl border-b border-purple-950/40">
@@ -115,12 +137,22 @@ export default function Navbar() {
             </Link>
           )}
 
-          <Link
-            href={user ? "/register" : "/login?redirect=/register"}
-            className="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-purple-950/60 hover:shadow-purple-700/40"
-          >
-            Register (₹699)
-          </Link>
+          {registrationsClosed ? (
+            <Link
+              href="/register"
+              className="px-4 py-2 rounded-full bg-zinc-800/90 border border-zinc-700/80 text-zinc-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:border-zinc-500 transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              <span>Registrations Closed</span>
+            </Link>
+          ) : (
+            <Link
+              href={user ? "/register" : "/login?redirect=/register"}
+              className="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-purple-950/60 hover:shadow-purple-700/40"
+            >
+              Register (₹699)
+            </Link>
+          )}
         </div>
 
         {/* Mobile menu trigger */}
@@ -237,13 +269,24 @@ export default function Navbar() {
             <ArrowUpRight className="w-4 h-4 text-zinc-400" />
           </a>
           <div className="pt-2">
-            <Link
-              href={user ? "/register" : "/login?redirect=/register"}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block w-full py-3 rounded-xl text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-purple-950"
-            >
-              Register (₹699)
-            </Link>
+            {registrationsClosed ? (
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full py-3 rounded-xl text-center bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold text-sm shadow-lg flex items-center justify-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span>Registrations Closed</span>
+              </Link>
+            ) : (
+              <Link
+                href={user ? "/register" : "/login?redirect=/register"}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full py-3 rounded-xl text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-purple-950"
+              >
+                Register (₹699)
+              </Link>
+            )}
           </div>
         </div>
       )}
