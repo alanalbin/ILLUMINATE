@@ -46,8 +46,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // If registrationId is provided but amount is missing, resolve authoritative amount
-    if ((!amount || typeof amount !== 'number') && registrationId) {
+    // If amount is provided but invalid, reject immediately with 400
+    if (amount !== undefined && (typeof amount !== 'number' || isNaN(amount))) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Invalid amount. Minimum amount is 100 paise (₹1.00).',
+        },
+        { status: 400 }
+      );
+    }
+
+    // If registrationId is provided but amount is omitted, resolve authoritative amount
+    if (amount === undefined && registrationId) {
       const reg = await DataStore.getRegistrationById(registrationId);
       amount = reg?.amountPaise || Math.round((eventConfig.registrationFee || 699) * 100);
       if (!receipt && reg) {

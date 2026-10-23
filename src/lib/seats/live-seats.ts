@@ -160,7 +160,7 @@ async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetC
 
   // 1. Gather confirmed from Razorpay
   for (const p of capturedPayments) {
-    const email = (p.email || p.notes?.email || '').toLowerCase().trim();
+    const email = (p.notes?.email || p.email || '').toLowerCase().trim();
     const name = p.notes?.fullName || p.notes?.name || '';
     if (email && !isTestRecord(email, name)) {
       confirmedEmails.add(email);
@@ -181,14 +181,14 @@ async function reconcileWithDataStore(capturedPayments: any[], sheetRows: SheetC
 
     // Sync Razorpay payments
     for (const p of capturedPayments) {
-      const email = (p.email || p.notes?.email || '').toLowerCase().trim();
+      const email = (p.notes?.email || p.email || '').toLowerCase().trim();
       const name = p.notes?.fullName || p.notes?.name || '';
       if (!email || isTestRecord(email, name)) continue;
 
       const sheet = sheetMap.get(email);
       const regNumber = sheet?.registrationNumber || formatCandidateTicketId(p.notes?.registrationId, p.id);
       const fullName = sheet?.fullName || p.notes?.fullName || p.notes?.name || email.split('@')[0];
-      const phone = sheet?.phone || p.contact?.replace(/^\+91/, '') || p.notes?.phone || '';
+      const phone = sheet?.phone || p.notes?.phone || p.contact?.replace(/^\+91/, '') || '';
       const institution = sheet?.institution || p.notes?.institution || 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod';
       const course = sheet?.course || p.notes?.course || 'Engineering';
       const yearOfStudy = sheet?.yearOfStudy || p.notes?.yearOfStudy || '1st Year';
@@ -383,14 +383,14 @@ export async function syncAllMissingCapturedPaymentsToSheet(): Promise<{
   const errors: string[] = [];
 
   for (const p of rzpPayments) {
-    const email = (p.email || p.notes?.email || '').toLowerCase().trim();
+    const email = (p.notes?.email || p.email || '').toLowerCase().trim();
     const name = p.notes?.fullName || p.notes?.name || '';
     if (!email || isTestRecord(email, name)) continue;
 
     if (!sheetMap.has(email)) {
       const regNumber = formatCandidateTicketId(p.notes?.registrationId, p.id);
       const fullName = p.notes?.fullName || p.notes?.name || email.split('@')[0];
-      const phone = p.contact?.replace(/^\+91/, '') || p.notes?.phone || '';
+      const phone = p.notes?.phone || p.contact?.replace(/^\+91/, '') || '';
       const institution = p.notes?.institution || 'KMCT College of Engineering for Emerging Technologies and Management, Kasaragod';
       const course = p.notes?.course || 'Engineering';
       const yearOfStudy = p.notes?.yearOfStudy || '1st Year';

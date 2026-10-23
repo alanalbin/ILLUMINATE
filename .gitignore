@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 *.pem
+*.pdf
+/logo2.png
+/l.png
 
 # debug
 npm-debug.log*

@@ -73,6 +73,15 @@ export default function Navbar() {
             Benefits
           </a>
           <a
+            href="/#gallery"
+            className="text-xs uppercase font-medium tracking-wider text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 group"
+          >
+            <span>Gallery</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/40 group-hover:border-purple-400">
+              AI
+            </span>
+          </a>
+          <a
             href="/#faq"
             className="text-xs uppercase font-medium tracking-wider text-slate-300 hover:text-white transition-colors"
           >
@@ -234,6 +243,16 @@ export default function Navbar() {
             className="block text-sm font-medium text-slate-200 hover:text-purple-400"
           >
             Incentives & Benefits
+          </a>
+          <a
+            href="/#gallery"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center justify-between text-sm font-medium text-slate-200 hover:text-purple-400"
+          >
+            <span>Workshop Gallery</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/30">
+              AI Scan
+            </span>
           </a>
           <a
             href="/#faq"

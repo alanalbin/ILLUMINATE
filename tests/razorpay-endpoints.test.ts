@@ -32,6 +32,7 @@ describe('Razorpay Standard Checkout API Endpoints', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          registrationId: testRegistrationId,
           amount: 50, // below 100 paise
           currency: 'INR',
         }),
@@ -49,6 +50,7 @@ describe('Razorpay Standard Checkout API Endpoints', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          registrationId: testRegistrationId,
           amount: 'invalid',
         }),
       });
