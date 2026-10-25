@@ -49,6 +49,7 @@ export interface EventConfig {
   roomNumber: string | null;
   registrationClosingDate: string | null;
   registrationsClosed?: boolean;
+  eventCompleted?: boolean;
   
   // Pricing & Capacities
   registrationFee: number; // in INR e.g. 699

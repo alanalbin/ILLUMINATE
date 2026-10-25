@@ -21,6 +21,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
   roomNumber: 'Main Seminar Hall / Campus Auditorium',
   registrationClosingDate: '2026-10-14T14:49:00+05:30',
   registrationsClosed: true,
+  eventCompleted: true,
 
   // Pricing & Capacities
   registrationFee: 699, // Official NEC Discounted Fee: ₹699

@@ -47,4 +47,17 @@ describe('Event Countdown Live Timer Logic', () => {
     const target = getEffectiveTargetTimestamp(null);
     expect(target).toBeGreaterThan(Date.now());
   });
+
+  it('preserves configured target date even when date has passed so timer completes', () => {
+    const pastIso = '2026-10-22T23:59:59+05:30';
+    const target = getEffectiveTargetTimestamp(pastIso);
+    expect(target).toBe(new Date(pastIso).getTime());
+
+    const remaining = calculateTimeRemaining(target, new Date('2026-10-25T12:00:00+05:30').getTime());
+    expect(remaining.isEnded).toBe(true);
+    expect(remaining.days).toBe(0);
+    expect(remaining.hours).toBe(0);
+    expect(remaining.minutes).toBe(0);
+    expect(remaining.seconds).toBe(0);
+  });
 });

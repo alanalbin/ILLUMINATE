@@ -38,6 +38,7 @@ export default function HeroSection({ event }: HeroSectionProps) {
   const fee = event.registrationFee || 699;
   const coordinatorName = event.localCoordinator?.name || 'Alan Albin';
   const coordinatorPhone = event.localCoordinator?.phone || '8848563266';
+  const isEventCompleted = Boolean(event.eventCompleted) || (event.date ? (new Date(event.date).getTime() < Date.now()) : true);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -147,21 +148,45 @@ export default function HeroSection({ event }: HeroSectionProps) {
               </span>
             </motion.div>
 
-            {/* Live Workshop Date Countdown */}
-            <motion.div variants={itemVariants} className="mt-7 p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/[0.1] backdrop-blur-md max-w-lg shadow-xl shadow-purple-950/30">
+            {/* Workshop Status & Countdown / Event Completed */}
+            <motion.div
+              variants={itemVariants}
+              className={`mt-7 p-4 sm:p-5 rounded-2xl backdrop-blur-md max-w-lg shadow-xl ${
+                isEventCompleted
+                  ? 'bg-emerald-950/20 border border-emerald-500/30 shadow-emerald-950/20'
+                  : 'bg-white/[0.03] border border-white/[0.1] shadow-purple-950/30'
+              }`}
+            >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-bold">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                    </span>
-                    <Zap className="w-3 h-3 text-amber-400" />
-                    Workshop Date: 22 Oct 2026
-                  </span>
-                  <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline at KMCT Campus</p>
+                  {isEventCompleted ? (
+                    <>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 font-bold">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        Event Completed
+                      </span>
+                      <p className="text-xs text-zinc-300 font-semibold mt-0.5">
+                        Concluded on {event.date || '22 Oct 2026'} • KMCT Campus
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-bold">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                        </span>
+                        <Zap className="w-3 h-3 text-amber-400" />
+                        Workshop Date: {event.date || '22 Oct 2026'}
+                      </span>
+                      <p className="text-xs text-zinc-300 font-semibold mt-0.5">Offline at KMCT Campus</p>
+                    </>
+                  )}
                 </div>
-                <EventCountdown targetDate={event.date || event.registrationClosingDate || '2026-10-22T23:59:59+05:30'} />
+                <EventCountdown
+                  targetDate={event.date || event.registrationClosingDate || '2026-10-22T23:59:59+05:30'}
+                  isCompleted={isEventCompleted}
+                />
               </div>
             </motion.div>
 
@@ -187,11 +212,11 @@ export default function HeroSection({ event }: HeroSectionProps) {
 
             {/* Action Buttons */}
             <motion.div variants={itemVariants} className="mt-8 flex flex-wrap items-center gap-4">
-              {event.registrationsClosed ? (
+              {isEventCompleted || event.registrationsClosed ? (
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="px-7 py-4 rounded-2xl bg-zinc-800/90 border border-zinc-700/70 text-zinc-300 font-extrabold text-sm sm:text-base flex items-center gap-2.5 shadow-xl">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                    <span>Registrations Closed</span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${isEventCompleted ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    <span>{isEventCompleted ? 'Event Completed' : 'Registrations Closed'}</span>
                   </div>
                   <Link
                     href="/success"
@@ -316,7 +341,11 @@ export default function HeroSection({ event }: HeroSectionProps) {
                     <span className="text-xs text-slate-300">Cohort Target:</span>
                     <span className="text-xs font-bold text-white">Min. {event.minimumTarget || 70} Attendees</span>
                   </div>
-                  {event.registrationsClosed ? (
+                  {isEventCompleted ? (
+                    <span className="text-xs font-extrabold text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-600/40">
+                      Concluded
+                    </span>
+                  ) : event.registrationsClosed ? (
                     <span className="text-xs font-extrabold text-rose-300 bg-rose-950/60 px-2.5 py-1 rounded-lg border border-rose-600/40">
                       Closed
                     </span>

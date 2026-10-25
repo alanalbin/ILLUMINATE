@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 
 export interface EventCountdownProps {
   targetDate?: string | Date | null;
+  isCompleted?: boolean;
   className?: string;
 }
 
@@ -23,7 +24,7 @@ export function parseTargetTimestamp(targetDate?: string | Date | null): number 
 
 export function getEffectiveTargetTimestamp(targetDate?: string | Date | null): number {
   const parsed = parseTargetTimestamp(targetDate);
-  if (parsed !== null && parsed > Date.now()) {
+  if (parsed !== null) {
     return parsed;
   }
 
@@ -55,7 +56,7 @@ export function getEffectiveTargetTimestamp(targetDate?: string | Date | null): 
     }
   }
 
-  // Create rolling target 14 days from now aligned to end of day if past Oct 2026
+  // Create rolling target 14 days from now aligned to end of day if past Oct 2026 and no date configured
   const fallback = new Date();
   fallback.setDate(fallback.getDate() + 14);
   fallback.setHours(23, 59, 59, 999);
@@ -79,19 +80,46 @@ export function calculateTimeRemaining(targetTs: number, currentNow: number = Da
   };
 }
 
-export default function EventCountdown({ targetDate, className = '' }: EventCountdownProps) {
+export default function EventCountdown({ targetDate, isCompleted = false, className = '' }: EventCountdownProps) {
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => {
+    if (isCompleted) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: true };
+    }
     const targetTs = getEffectiveTargetTimestamp(targetDate);
     return calculateTimeRemaining(targetTs);
   });
 
   useEffect(() => {
     setMounted(true);
-    const targetTs = getEffectiveTargetTimestamp(targetDate);
 
-    // Initial exact calculation
-    setTimeLeft(calculateTimeRemaining(targetTs));
+    if (isCompleted) {
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: true });
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('illuminate_countdown_target');
+        } catch {
+          // ignore
+        }
+      }
+      return;
+    }
+
+    const targetTs = getEffectiveTargetTimestamp(targetDate);
+    const initial = calculateTimeRemaining(targetTs);
+    setTimeLeft(initial);
+
+    // If event target timestamp has passed, stop and clean up
+    if (initial.isEnded) {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('illuminate_countdown_target');
+        } catch {
+          // ignore
+        }
+      }
+      return;
+    }
 
     const interval = setInterval(() => {
       const updated = calculateTimeRemaining(targetTs);
@@ -102,13 +130,15 @@ export default function EventCountdown({ targetDate, className = '' }: EventCoun
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [targetDate, isCompleted]);
+
+  const isFinished = isCompleted || timeLeft.isEnded;
 
   const units = [
-    { label: 'Days', val: String(timeLeft.days).padStart(2, '0') },
-    { label: 'Hours', val: String(timeLeft.hours).padStart(2, '0') },
-    { label: 'Mins', val: String(timeLeft.minutes).padStart(2, '0') },
-    { label: 'Secs', val: String(timeLeft.seconds).padStart(2, '0'), isSec: true },
+    { label: 'Days', val: String(isFinished ? 0 : timeLeft.days).padStart(2, '0') },
+    { label: 'Hours', val: String(isFinished ? 0 : timeLeft.hours).padStart(2, '0') },
+    { label: 'Mins', val: String(isFinished ? 0 : timeLeft.minutes).padStart(2, '0') },
+    { label: 'Secs', val: String(isFinished ? 0 : timeLeft.seconds).padStart(2, '0'), isSec: true },
   ];
 
   return (
@@ -116,19 +146,27 @@ export default function EventCountdown({ targetDate, className = '' }: EventCoun
       {units.map((item, idx) => (
         <div
           key={idx}
-          className={`flex flex-col items-center justify-center min-w-[54px] sm:min-w-[62px] py-2 px-1.5 rounded-xl bg-purple-950/40 border backdrop-blur-md shadow-inner transition-all duration-300 ${
-            item.isSec
-              ? 'border-purple-600/60 shadow-purple-900/20'
-              : 'border-purple-700/40 hover:border-purple-500/60'
+          className={`flex flex-col items-center justify-center min-w-[54px] sm:min-w-[62px] py-2 px-1.5 rounded-xl backdrop-blur-md shadow-inner transition-all duration-300 ${
+            isFinished
+              ? 'bg-emerald-950/20 border border-emerald-500/30 shadow-emerald-950/10'
+              : item.isSec
+              ? 'bg-purple-950/40 border border-purple-600/60 shadow-purple-900/20'
+              : 'bg-purple-950/40 border border-purple-700/40 hover:border-purple-500/60'
           }`}
         >
           <span
             suppressHydrationWarning
-            className="text-lg sm:text-xl font-black font-mono tabular-nums tracking-tight text-white transition-colors"
+            className={`text-lg sm:text-xl font-black font-mono tabular-nums tracking-tight transition-colors ${
+              isFinished ? 'text-emerald-400' : 'text-white'
+            }`}
           >
             {item.val}
           </span>
-          <span className="text-[10px] uppercase font-bold tracking-wider text-purple-400/80 mt-0.5">
+          <span
+            className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${
+              isFinished ? 'text-emerald-400/80' : 'text-purple-400/80'
+            }`}
+          >
             {item.label}
           </span>
         </div>

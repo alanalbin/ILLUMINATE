@@ -67,7 +67,7 @@ export default function EventDetailsSection({ event }: EventDetailsSectionProps)
                           {event.date || '22 October 2026'}
                         </span>
                         <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-800 text-emerald-300 font-semibold">
-                          Confirmed Date
+                          {event.eventCompleted ? 'Completed' : 'Confirmed Date'}
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">KMCT Campus, Kasaragod</p>
